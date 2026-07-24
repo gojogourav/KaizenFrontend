@@ -54,8 +54,20 @@ import {
   Globe,
   ToggleLeft,
   ToggleRight,
-  Image as ImageIcon
+  Image as ImageIcon,
+  User as UserIcon,
+  LogOut,
+  LayoutDashboard
 } from 'lucide-react';
+
+import { useAuth } from './context/AuthContext';
+import { AuthModal } from './components/AuthModal';
+import { DashboardView } from './components/DashboardView';
+import { FavoritesView } from './components/FavoritesView';
+import { BookingsView } from './components/BookingsView';
+import { LockPurchaseModal } from './components/LockPurchaseModal';
+import { AdminLayout } from './components/admin/AdminLayout';
+import { HowItWorks } from './components/HowItWorks';
 
 // Platform Colors & Icons map
 const PLATFORM_CONFIG: Record<string, { bg: string; text: string; border: string; iconLabel: string }> = {
@@ -102,8 +114,10 @@ const AVAILABLE_PLATFORMS = ['Airbnb', 'Vrbo', 'Booking.com', 'Zillow', 'Direct 
 import { AirbnbSearchBar, GuestCount, SearchPayload } from './components/AirbnbSearchBar';
 
 export default function App() {
+  const { user, isAuthenticated, logout, favorites, toggleFavorite } = useAuth();
+
   // Navigation & View States
-  const [activeTab, setActiveTab] = useState<'properties' | 'blogs' | 'stories' | 'experiences' | 'about' | 'admin'>('properties');
+  const [activeTab, setActiveTab] = useState<'properties' | 'how-it-works' | 'blogs' | 'stories' | 'experiences' | 'about' | 'admin' | 'dashboard' | 'favorites' | 'bookings'>('properties');
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<'ALL' | 'AVAILABLE' | 'UNDER CONTRACT' | 'UNDER REVIEW'>('ALL');
   
@@ -121,37 +135,14 @@ export default function App() {
   
   // Storage & Core Data States
   const [deals, setDeals] = useState<Deal[]>([]);
-  
-  // Favorites system
-  const [favorites, setFavorites] = useState<string[]>(() => {
-    try {
-      const saved = localStorage.getItem('kaizen_favorites');
-      return saved ? JSON.parse(saved) : [];
-    } catch {
-      return [];
-    }
-  });
   const [showFavoritesOnly, setShowFavoritesOnly] = useState(false);
 
-  // Authentication & Admin Modal States
-  const [showLoginModal, setShowLoginModal] = useState(false);
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
-  const [loggedInUser, setLoggedInUser] = useState<{ name: string; email: string; isAdmin: boolean } | null>(null);
-
-  // Sync favorites helper
-  const toggleFavorite = (dealId: string) => {
-    const isFav = favorites.includes(dealId);
-    let updated;
-    if (isFav) {
-      updated = favorites.filter(id => id !== dealId);
-      triggerNotification('Property removed from saved list.', 'info');
-    } else {
-      updated = [...favorites, dealId];
-      triggerNotification('Property added to saved list!', 'success');
-    }
-    setFavorites(updated);
-    localStorage.setItem('kaizen_favorites', JSON.stringify(updated));
-  };
+  // Authentication & Lock Modals
+  const [showAuthModal, setShowAuthModal] = useState(false);
+  const [showLockPurchaseModal, setShowLockPurchaseModal] = useState(false);
+  const [userDropdownOpen, setUserDropdownOpen] = useState(false);
+  const [pendingAction, setPendingAction] = useState<(() => void) | null>(null);
+  const [pendingTab, setPendingTab] = useState<string | null>(null);
   
   // Property Modal & Image Gallery States
   const [selectedDeal, setSelectedDeal] = useState<Deal | null>(null);
@@ -214,24 +205,6 @@ export default function App() {
 
   const [newImageUrlInput, setNewImageUrlInput] = useState('');
 
-  // Handle URL route checking (e.g. /admin or #admin)
-  useEffect(() => {
-    const handleLocationCheck = () => {
-      const path = window.location.pathname;
-      const hash = window.location.hash;
-      if (path === '/admin' || hash === '#admin') {
-        setActiveTab('admin');
-      }
-    };
-    handleLocationCheck();
-    window.addEventListener('popstate', handleLocationCheck);
-    window.addEventListener('hashchange', handleLocationCheck);
-    return () => {
-      window.removeEventListener('popstate', handleLocationCheck);
-      window.removeEventListener('hashchange', handleLocationCheck);
-    };
-  }, []);
-
   // Initialize Data
   useEffect(() => {
     setDeals(getStoredDeals());
@@ -244,6 +217,56 @@ export default function App() {
       setNotification(null);
     }, 4000);
   };
+
+  const isAdmin = Boolean(
+    user?.is_staff ||
+    user?.is_superuser ||
+    user?.role === 'ADMIN' ||
+    user?.role === 'admin'
+  );
+
+  // Lazy Auth Guard helper for Phase 2 Transactional Actions & Protected Routes
+  const requireAuth = (onAuthSuccess: () => void, targetTabName?: string) => {
+    if (isAuthenticated) {
+      onAuthSuccess();
+    } else {
+      setPendingAction(() => onAuthSuccess);
+      if (targetTabName) setPendingTab(targetTabName);
+      setShowAuthModal(true);
+      triggerNotification('Please sign in to proceed with your booking transaction.', 'info');
+    }
+  };
+
+  // Handle URL route checking (e.g. /admin or #admin) & route protection guard
+  useEffect(() => {
+    const handleLocationCheck = () => {
+      const path = window.location.pathname;
+      const hash = window.location.hash;
+      if (path === '/admin' || hash === '#admin') {
+        if (!isAuthenticated) {
+          setActiveTab('properties');
+          if (window.location.hash === '#admin') window.location.hash = '';
+          setPendingTab('admin');
+          setShowAuthModal(true);
+          triggerNotification('Admin Area Protected: Please sign in with admin credentials (admin / admin123).', 'info');
+        } else if (!isAdmin) {
+          setActiveTab('properties');
+          if (window.location.hash === '#admin') window.location.hash = '';
+          triggerNotification('403 Access Denied: Admin privileges required.', 'error');
+        } else {
+          setActiveTab('admin');
+        }
+      }
+    };
+
+    handleLocationCheck();
+    window.addEventListener('popstate', handleLocationCheck);
+    window.addEventListener('hashchange', handleLocationCheck);
+    return () => {
+      window.removeEventListener('popstate', handleLocationCheck);
+      window.removeEventListener('hashchange', handleLocationCheck);
+    };
+  }, [isAuthenticated, isAdmin]);
 
   // Backend Search State
   const [isSearching, setIsSearching] = useState(false);
@@ -486,6 +509,608 @@ export default function App() {
     triggerNotification('Property catalog exported to JSON.');
   };
 
+  // Render Isolated Admin Layout if activeTab === 'admin'
+  if (activeTab === 'admin') {
+    return (
+      <div className="min-h-screen bg-[#080312] text-slate-100 font-sans selection:bg-purple-600 selection:text-white">
+        
+        {/* Toast Notification Banner */}
+        {notification && (
+          <div className={`fixed top-4 right-4 z-50 px-5 py-4 rounded-xl shadow-2xl flex items-center gap-3 border backdrop-blur-xl transition-all duration-300 animate-slide-in ${
+            notification.type === 'success' ? 'bg-[#121124]/90 border-emerald-500/40 text-emerald-300 shadow-emerald-950/50' :
+            notification.type === 'error' ? 'bg-[#121124]/90 border-red-500/40 text-red-300 shadow-red-950/50' :
+            'bg-[#121124]/90 border-purple-500/40 text-purple-200 shadow-purple-950/50'
+          }`}>
+            <div className={`w-2 h-2 rounded-full ${
+              notification.type === 'success' ? 'bg-emerald-400 shadow-[0_0_8px_#34d399]' :
+              notification.type === 'error' ? 'bg-red-400 shadow-[0_0_8px_#f87171]' : 'bg-purple-400 shadow-[0_0_8px_#c084fc]'
+            }`} />
+            <p className="text-xs font-bold tracking-wide uppercase font-mono">
+              {notification.message}
+            </p>
+          </div>
+        )}
+
+        {/* Dedicated Isolated Admin Layout */}
+        <AdminLayout
+          onExitAdmin={() => {
+            setActiveTab('properties');
+            window.location.hash = '';
+          }}
+          propertyManagementView={
+            <div className="space-y-8 animate-fade-in">
+              
+              {/* Admin Header & Stats Banner */}
+              <div className="glass-card rounded-3xl border border-purple-500/30 p-8 shadow-2xl relative overflow-hidden">
+                <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-6 relative z-10">
+                  <div>
+                    <div className="inline-flex items-center gap-2 px-3 py-1 bg-purple-950/80 rounded-full mb-3 border border-purple-500/30">
+                      <Lock className="w-3.5 h-3.5 text-purple-400" />
+                      <span className="text-[10px] font-bold text-purple-300 tracking-wider uppercase font-mono">Kaizen Property Portal</span>
+                    </div>
+                    <h1 className="text-3xl font-extrabold text-white font-serif tracking-tight">
+                      Property Management Workspace
+                    </h1>
+                    <p className="text-slate-400 text-xs mt-1 max-w-xl leading-relaxed">
+                      Manage luxury villa listings, specs, photo galleries, and platform booking links (Airbnb, Vrbo, Booking.com, Zillow, Direct Site). Changes update the customer portal instantly.
+                    </p>
+                  </div>
+
+                  <div className="flex flex-wrap items-center gap-3">
+                    <button 
+                      onClick={handleDownloadDealsJson}
+                      className="px-4 py-2.5 bg-[#141226] hover:bg-purple-950 border border-purple-900/40 text-purple-300 rounded-xl text-xs font-bold transition-all flex items-center gap-2 font-mono"
+                    >
+                      <Download className="w-4 h-4 text-purple-400" />
+                      Export Schema
+                    </button>
+                    <button 
+                      onClick={handleResetToDefault}
+                      className="px-4 py-2.5 bg-[#141226] hover:bg-red-950/60 border border-red-900/40 text-red-400 rounded-xl text-xs font-bold transition-all flex items-center gap-2 font-mono"
+                    >
+                      <RefreshCw className="w-4 h-4" />
+                      Reset Defaults
+                    </button>
+                    <button 
+                      onClick={handleOpenCreateModal}
+                      className="px-6 py-2.5 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white rounded-xl text-xs font-black uppercase tracking-widest transition-all shadow-lg shadow-purple-600/30 flex items-center gap-2 font-mono border border-purple-400/30 cursor-pointer"
+                    >
+                      <Plus className="w-4 h-4" />
+                      + Add New Property
+                    </button>
+                  </div>
+                </div>
+
+                {/* Quick High-Level Metrics Row */}
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-8 pt-6 border-t border-purple-900/30">
+                  <div className="bg-[#0B0A12]/80 p-4 rounded-xl border border-purple-900/40">
+                    <span className="text-[10px] text-slate-400 uppercase font-mono font-bold block">Total Properties</span>
+                    <span className="text-2xl font-black text-white font-mono mt-0.5 block">{deals.length} Units</span>
+                  </div>
+                  <div className="bg-[#0B0A12]/80 p-4 rounded-xl border border-purple-900/40">
+                    <span className="text-[10px] text-slate-400 uppercase font-mono font-bold block">Active Listings</span>
+                    <span className="text-2xl font-black text-emerald-400 font-mono mt-0.5 block">
+                      {deals.filter(d => d.status === 'AVAILABLE').length} Available
+                    </span>
+                  </div>
+                  <div className="bg-[#0B0A12]/80 p-4 rounded-xl border border-purple-900/40">
+                    <span className="text-[10px] text-slate-400 uppercase font-mono font-bold block">Active Platform Links</span>
+                    <span className="text-2xl font-black text-purple-300 font-mono mt-0.5 block">
+                      {deals.reduce((acc, d) => acc + d.listings.filter(l => l.isActive).length, 0)} Active
+                    </span>
+                  </div>
+                  <div className="bg-[#0B0A12]/80 p-4 rounded-xl border border-purple-900/40">
+                    <span className="text-[10px] text-slate-400 uppercase font-mono font-bold block">Total Net Monthly Yield</span>
+                    <span className="text-2xl font-black text-emerald-400 font-mono mt-0.5 block">
+                      ~${deals.reduce((acc, d) => acc + (parseInt(d.estNetMonthlyProfit.replace(/[^0-9]/g, '')) || 0), 0).toLocaleString()}/mo
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Property Overview Management Table */}
+              <div className="glass-card rounded-3xl border border-purple-500/20 p-6 shadow-2xl space-y-6">
+                
+                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                  <div>
+                    <h3 className="font-extrabold text-xl text-white font-serif flex items-center gap-2">
+                      <Building className="w-5 h-5 text-purple-400" />
+                      Property Management Table
+                    </h3>
+                    <p className="text-xs text-slate-400 mt-0.5">Toggle platform links, edit financial specs, or add new luxury listings.</p>
+                  </div>
+
+                  <button 
+                    onClick={handleOpenCreateModal}
+                    className="px-4 py-2 bg-purple-600 hover:bg-purple-500 text-white rounded-lg text-xs font-bold uppercase tracking-wider transition-all flex items-center gap-1.5 font-mono shadow-md cursor-pointer"
+                  >
+                    <Plus className="w-4 h-4" />
+                    Add Property
+                  </button>
+                </div>
+
+                {/* Table */}
+                <div className="overflow-x-auto rounded-2xl border border-purple-900/30 bg-[#0B0A12]/90">
+                  <table className="w-full text-left text-xs text-slate-300 border-collapse">
+                    <thead>
+                      <tr className="border-b border-purple-900/40 bg-[#121122] font-mono text-[11px] text-purple-300">
+                        <th className="py-3.5 px-4 font-bold">Property & Address</th>
+                        <th className="py-3.5 px-4 font-bold">Status / Occupancy</th>
+                        <th className="py-3.5 px-4 font-bold">Monthly Rent</th>
+                        <th className="py-3.5 px-4 font-bold">Net Monthly Profit</th>
+                        <th className="py-3.5 px-4 font-bold">Active Platforms</th>
+                        <th className="py-3.5 px-4 text-right font-bold">Actions</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-purple-900/20">
+                      {deals.map(deal => {
+                        const activeCount = deal.listings.filter(l => l.isActive).length;
+                        return (
+                          <tr key={deal.id} className="hover:bg-purple-900/10 transition-colors">
+                            <td className="py-3.5 px-4">
+                              <div className="flex items-center gap-3">
+                                <img 
+                                  src={deal.imageUrl} 
+                                  alt={deal.title}
+                                  className="w-12 h-12 rounded-lg object-cover border border-purple-900/40 shrink-0"
+                                  onError={(e) => {
+                                    (e.target as HTMLImageElement).src = 'https://images.unsplash.com/photo-1512917774080-9991f1c4c750?auto=format&fit=crop&w=800&q=80';
+                                  }}
+                                />
+                                <div>
+                                  <p className="font-extrabold text-white text-sm font-serif">{deal.title}</p>
+                                  <p className="text-[10px] text-purple-300/80 font-mono">{deal.location} • {deal.bedsBaths}</p>
+                                </div>
+                              </div>
+                            </td>
+
+                            <td className="py-3.5 px-4">
+                              <button
+                                onClick={() => handleToggleStatus(deal.id)}
+                                className={`px-2.5 py-1 rounded-full text-[10px] font-black font-mono border transition-all cursor-pointer ${
+                                  deal.status === 'AVAILABLE' ? 'bg-emerald-950/90 text-emerald-300 border-emerald-500/40 hover:bg-emerald-900' :
+                                  deal.status === 'OCCUPIED' ? 'bg-slate-900/90 text-slate-300 border-slate-700/40 hover:bg-slate-800' :
+                                  'bg-amber-950/90 text-amber-300 border-amber-500/40 hover:bg-amber-900'
+                                }`}
+                                title="Click to cycle status"
+                              >
+                                {deal.status}
+                              </button>
+                              <span className="block text-[10px] text-slate-400 font-mono mt-1">Est. Occ: {deal.estOccupancy}</span>
+                            </td>
+
+                            <td className="py-3.5 px-4 font-mono font-bold text-slate-200">
+                              {deal.monthlyRent}
+                            </td>
+
+                            <td className="py-3.5 px-4 font-mono font-extrabold text-emerald-400">
+                              {deal.estNetMonthlyProfit}
+                            </td>
+
+                            <td className="py-3.5 px-4">
+                              <div className="flex flex-wrap items-center gap-1.5 max-w-[200px]">
+                                {deal.listings.map((item, idx) => (
+                                  <button
+                                    key={idx}
+                                    onClick={() => handleToggleListingActive(deal.id, idx)}
+                                    className={`px-2 py-0.5 rounded text-[9px] font-bold font-mono transition-all border cursor-pointer ${
+                                      item.isActive 
+                                        ? 'bg-purple-950 text-purple-200 border-purple-500/40' 
+                                        : 'bg-slate-900/50 text-slate-500 border-slate-800 line-through'
+                                    }`}
+                                    title={`Toggle ${item.platform} ON/OFF`}
+                                  >
+                                    {item.platform}
+                                  </button>
+                                ))}
+                                {deal.listings.length === 0 && (
+                                  <span className="text-[10px] text-slate-500 italic font-mono">No platforms</span>
+                                )}
+                              </div>
+                              <span className="text-[9px] text-slate-400 font-mono block mt-1">
+                                {activeCount} of {deal.listings.length} Active
+                              </span>
+                            </td>
+
+                            <td className="py-3.5 px-4 text-right">
+                              <div className="flex items-center justify-end gap-2">
+                                <button 
+                                  onClick={() => handleOpenEditModal(deal)}
+                                  className="px-2.5 py-1.5 bg-[#141226] hover:bg-purple-900/60 text-purple-300 rounded-lg border border-purple-900/40 transition-colors flex items-center gap-1 font-mono text-[10px] cursor-pointer"
+                                >
+                                  <Edit className="w-3.5 h-3.5" />
+                                  Edit
+                                </button>
+                                <button 
+                                  onClick={() => handleDeleteProperty(deal.id)}
+                                  className="p-1.5 bg-[#141226] hover:bg-red-950/60 text-red-400 rounded-lg border border-red-900/40 transition-colors cursor-pointer"
+                                  title="Delete Property"
+                                >
+                                  <Trash2 className="w-3.5 h-3.5" />
+                                </button>
+                              </div>
+                            </td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+
+              </div>
+
+            </div>
+          }
+        />
+
+        {/* Global Property Editor Modal if triggered in Admin */}
+        {showPropertyEditorModal && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md font-sans">
+            <div className="relative w-full max-w-3xl bg-[#0D0B18] border border-purple-500/40 rounded-3xl p-6 sm:p-8 shadow-2xl max-h-[90vh] overflow-y-auto">
+              <button 
+                onClick={() => setShowPropertyEditorModal(false)}
+                className="absolute top-6 right-6 p-2 text-slate-400 hover:text-white rounded-full hover:bg-purple-900/40"
+              >
+                <X className="w-5 h-5" />
+              </button>
+
+              <h2 className="text-xl font-bold text-white mb-4">
+                {editingDealId ? 'Edit Property Specs' : 'Create New Luxury Property'}
+              </h2>
+
+              <form onSubmit={handleSaveProperty} className="space-y-4 text-xs">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-xs font-bold text-slate-400 uppercase mb-1 font-mono">Title</label>
+                    <input 
+                      type="text" 
+                      required
+                      value={adminForm.title}
+                      onChange={(e) => setAdminForm({...adminForm, title: e.target.value})}
+                      className="w-full px-3.5 py-2.5 bg-[#141226] border border-purple-900/40 rounded-xl text-white text-xs focus:outline-none focus:border-purple-500"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-bold text-slate-400 uppercase mb-1 font-mono">Location</label>
+                    <input 
+                      type="text" 
+                      required
+                      value={adminForm.location}
+                      onChange={(e) => setAdminForm({...adminForm, location: e.target.value})}
+                      className="w-full px-3.5 py-2.5 bg-[#141226] border border-purple-900/40 rounded-xl text-white text-xs focus:outline-none focus:border-purple-500"
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+                  <div>
+                    <label className="block text-xs font-bold text-slate-400 uppercase mb-1 font-mono">Beds/Baths</label>
+                    <input 
+                      type="text" 
+                      value={adminForm.bedsBaths}
+                      onChange={(e) => setAdminForm({...adminForm, bedsBaths: e.target.value})}
+                      className="w-full px-3.5 py-2.5 bg-[#141226] border border-purple-900/40 rounded-xl text-white text-xs focus:outline-none focus:border-purple-500 font-mono"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-bold text-slate-400 uppercase mb-1 font-mono">Monthly Rent</label>
+                    <input 
+                      type="text" 
+                      value={adminForm.monthlyRent}
+                      onChange={(e) => setAdminForm({...adminForm, monthlyRent: e.target.value})}
+                      className="w-full px-3.5 py-2.5 bg-[#141226] border border-purple-900/40 rounded-xl text-white text-xs focus:outline-none focus:border-purple-500 font-mono"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-bold text-slate-400 uppercase mb-1 font-mono">Net Profit</label>
+                    <input 
+                      type="text" 
+                      value={adminForm.estNetMonthlyProfit}
+                      onChange={(e) => setAdminForm({...adminForm, estNetMonthlyProfit: e.target.value})}
+                      className="w-full px-3.5 py-2.5 bg-[#141226] border border-purple-900/40 rounded-xl text-white text-xs focus:outline-none focus:border-purple-500 font-mono"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-bold text-slate-400 uppercase mb-1 font-mono">Status</label>
+                    <select
+                      value={adminForm.status}
+                      onChange={(e) => setAdminForm({...adminForm, status: e.target.value as any})}
+                      className="w-full px-3.5 py-2.5 bg-[#141226] border border-purple-900/40 rounded-xl text-white text-xs focus:outline-none focus:border-purple-500 font-mono"
+                    >
+                      <option value="AVAILABLE">AVAILABLE</option>
+                      <option value="UNDER CONTRACT">UNDER CONTRACT</option>
+                      <option value="UNDER REVIEW">UNDER REVIEW</option>
+                      <option value="OCCUPIED">OCCUPIED</option>
+                      <option value="MAINTENANCE">MAINTENANCE</option>
+                    </select>
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-xs font-bold text-slate-400 uppercase mb-1 font-mono">Cover Image URL</label>
+                  <input 
+                    type="text" 
+                    required
+                    value={adminForm.imageUrl}
+                    onChange={(e) => setAdminForm({...adminForm, imageUrl: e.target.value})}
+                    className="w-full px-3.5 py-2.5 bg-[#141226] border border-purple-900/40 rounded-xl text-white text-xs focus:outline-none focus:border-purple-500 font-mono"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-bold text-slate-400 uppercase mb-1 font-mono">Description</label>
+                  <textarea 
+                    rows={3}
+                    value={adminForm.description}
+                    onChange={(e) => setAdminForm({...adminForm, description: e.target.value})}
+                    className="w-full px-3.5 py-2.5 bg-[#141226] border border-purple-900/40 rounded-xl text-white text-xs focus:outline-none focus:border-purple-500 font-mono"
+                  />
+                </div>
+
+                <div className="pt-4 border-t border-purple-900/40 flex justify-end gap-3 font-mono">
+                  <button 
+                    type="button"
+                    onClick={() => setShowPropertyEditorModal(false)}
+                    className="px-5 py-2.5 bg-[#141226] text-slate-300 rounded-xl text-xs font-bold"
+                  >
+                    Cancel
+                  </button>
+                  <button 
+                    type="submit"
+                    className="px-6 py-2.5 bg-gradient-to-r from-purple-600 to-indigo-600 text-white rounded-xl text-xs font-black uppercase tracking-widest"
+                  >
+                    {editingDealId ? 'Save Changes' : 'Create Property'}
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        )}
+
+      </div>
+    );
+  }
+
+  const renderAdminView = () => {
+    if (!isAuthenticated || !isAdmin) {
+      return (
+        <div className="glass-card rounded-3xl border border-rose-500/40 p-10 shadow-2xl text-center max-w-lg mx-auto my-12 animate-fade-in space-y-4">
+          <div className="w-16 h-16 bg-rose-950/80 rounded-2xl border border-rose-500/50 text-rose-400 flex items-center justify-center mx-auto shadow-lg shadow-rose-950/50">
+            <Lock className="w-8 h-8" />
+          </div>
+          <span className="px-3 py-1 bg-rose-950 text-rose-300 font-mono text-[10px] font-bold uppercase rounded-full border border-rose-800/50 inline-block">
+            403 Access Denied
+          </span>
+          <h2 className="text-2xl font-extrabold text-white font-serif">Admin Portal Restricted</h2>
+          <p className="text-xs text-slate-300 leading-relaxed">
+            {!isAuthenticated 
+              ? "You must be signed in with an administrative account to access the Property Management Workspace."
+              : "Your account does not have administrator privileges to access this area."}
+          </p>
+          <div className="pt-3 flex flex-col sm:flex-row gap-3 justify-center">
+            <button
+              onClick={() => { setActiveTab('properties'); window.location.hash = ''; }}
+              className="px-5 py-2.5 bg-purple-950 hover:bg-purple-900 text-purple-200 border border-purple-800 rounded-xl text-xs font-bold font-mono transition-colors cursor-pointer"
+            >
+              Return to Properties
+            </button>
+            <button
+              onClick={() => setShowAuthModal(true)}
+              className="px-5 py-2.5 bg-gradient-to-r from-fuchsia-600 to-rose-600 hover:from-fuchsia-500 hover:to-rose-500 text-white rounded-xl text-xs font-bold font-mono transition-colors shadow-lg shadow-pink-600/30 cursor-pointer"
+            >
+              Sign In as Admin
+            </button>
+          </div>
+        </div>
+      );
+    }
+
+    return (
+      <div className="space-y-8 animate-fade-in">
+        
+        {/* Admin Header & Stats Banner */}
+        <div className="glass-card rounded-3xl border border-purple-500/30 p-8 shadow-2xl relative overflow-hidden">
+          <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-6 relative z-10">
+            <div>
+              <div className="inline-flex items-center gap-2 px-3 py-1 bg-purple-950/80 rounded-full mb-3 border border-purple-500/30">
+                <Lock className="w-3.5 h-3.5 text-purple-400" />
+                <span className="text-[10px] font-bold text-purple-300 tracking-wider uppercase font-mono">Kaizen Property Portal</span>
+              </div>
+              <h1 className="text-3xl font-extrabold text-white font-serif tracking-tight">
+                Property Management Workspace
+              </h1>
+              <p className="text-slate-400 text-xs mt-1 max-w-xl leading-relaxed">
+                Manage luxury villa listings, specs, photo galleries, and platform booking links (Airbnb, Vrbo, Booking.com, Zillow, Direct Site). Changes update the customer portal instantly.
+              </p>
+            </div>
+
+            <div className="flex flex-wrap items-center gap-3">
+              <button 
+                onClick={handleDownloadDealsJson}
+                className="px-4 py-2.5 bg-[#141226] hover:bg-purple-950 border border-purple-900/40 text-purple-300 rounded-xl text-xs font-bold transition-all flex items-center gap-2 font-mono"
+              >
+                <Download className="w-4 h-4 text-purple-400" />
+                Export Schema
+              </button>
+              <button 
+                onClick={handleResetToDefault}
+                className="px-4 py-2.5 bg-[#141226] hover:bg-red-950/60 border border-red-900/40 text-red-400 rounded-xl text-xs font-bold transition-all flex items-center gap-2 font-mono"
+              >
+                <RefreshCw className="w-4 h-4" />
+                Reset Defaults
+              </button>
+              <button 
+                onClick={handleOpenCreateModal}
+                className="px-6 py-2.5 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white rounded-xl text-xs font-black uppercase tracking-widest transition-all shadow-lg shadow-purple-600/30 flex items-center gap-2 font-mono border border-purple-400/30"
+              >
+                <Plus className="w-4 h-4" />
+                + Add New Property
+              </button>
+            </div>
+          </div>
+
+          {/* Quick High-Level Metrics Row */}
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-8 pt-6 border-t border-purple-900/30">
+            <div className="bg-[#0B0A12]/80 p-4 rounded-xl border border-purple-900/40">
+              <span className="text-[10px] text-slate-400 uppercase font-mono font-bold block">Total Properties</span>
+              <span className="text-2xl font-black text-white font-mono mt-0.5 block">{deals.length} Units</span>
+            </div>
+            <div className="bg-[#0B0A12]/80 p-4 rounded-xl border border-purple-900/40">
+              <span className="text-[10px] text-slate-400 uppercase font-mono font-bold block">Active Listings</span>
+              <span className="text-2xl font-black text-emerald-400 font-mono mt-0.5 block">
+                {deals.filter(d => d.status === 'AVAILABLE').length} Available
+              </span>
+            </div>
+            <div className="bg-[#0B0A12]/80 p-4 rounded-xl border border-purple-900/40">
+              <span className="text-[10px] text-slate-400 uppercase font-mono font-bold block">Active Platform Links</span>
+              <span className="text-2xl font-black text-purple-300 font-mono mt-0.5 block">
+                {deals.reduce((acc, d) => acc + d.listings.filter(l => l.isActive).length, 0)} Active
+              </span>
+            </div>
+            <div className="bg-[#0B0A12]/80 p-4 rounded-xl border border-purple-900/40">
+              <span className="text-[10px] text-slate-400 uppercase font-mono font-bold block">Total Net Monthly Yield</span>
+              <span className="text-2xl font-black text-emerald-400 font-mono mt-0.5 block">
+                ~${deals.reduce((acc, d) => acc + (parseInt(d.estNetMonthlyProfit.replace(/[^0-9]/g, '')) || 0), 0).toLocaleString()}/mo
+              </span>
+            </div>
+          </div>
+        </div>
+
+        {/* Property Overview Management Table */}
+        <div className="glass-card rounded-3xl border border-purple-500/20 p-6 shadow-2xl space-y-6">
+          
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+            <div>
+              <h3 className="font-extrabold text-xl text-white font-serif flex items-center gap-2">
+                <Building className="w-5 h-5 text-purple-400" />
+                Property Management Table
+              </h3>
+              <p className="text-xs text-slate-400 mt-0.5">Toggle platform links, edit financial specs, or add new luxury listings.</p>
+            </div>
+
+            <button 
+              onClick={handleOpenCreateModal}
+              className="px-4 py-2 bg-purple-600 hover:bg-purple-500 text-white rounded-lg text-xs font-bold uppercase tracking-wider transition-all flex items-center gap-1.5 font-mono shadow-md"
+            >
+              <Plus className="w-4 h-4" />
+              Add Property
+            </button>
+          </div>
+
+          {/* Table */}
+          <div className="overflow-x-auto rounded-2xl border border-purple-900/30 bg-[#0B0A12]/90">
+            <table className="w-full text-left text-xs text-slate-300 border-collapse">
+              <thead>
+                <tr className="border-b border-purple-900/40 bg-[#121122] font-mono text-[11px] text-purple-300">
+                  <th className="py-3.5 px-4 font-bold">Property & Address</th>
+                  <th className="py-3.5 px-4 font-bold">Status / Occupancy</th>
+                  <th className="py-3.5 px-4 font-bold">Monthly Rent</th>
+                  <th className="py-3.5 px-4 font-bold">Net Monthly Profit</th>
+                  <th className="py-3.5 px-4 font-bold">Active Platforms</th>
+                  <th className="py-3.5 px-4 text-right font-bold">Actions</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-purple-900/20">
+                {deals.map(deal => {
+                  const activeCount = deal.listings.filter(l => l.isActive).length;
+                  return (
+                    <tr key={deal.id} className="hover:bg-purple-900/10 transition-colors">
+                      <td className="py-3.5 px-4">
+                        <div className="flex items-center gap-3">
+                          <img 
+                            src={deal.imageUrl} 
+                            alt={deal.title}
+                            className="w-12 h-12 rounded-lg object-cover border border-purple-900/40 shrink-0"
+                            onError={(e) => {
+                              (e.target as HTMLImageElement).src = 'https://images.unsplash.com/photo-1512917774080-9991f1c4c750?auto=format&fit=crop&w=800&q=80';
+                            }}
+                          />
+                          <div>
+                            <p className="font-extrabold text-white text-sm font-serif">{deal.title}</p>
+                            <p className="text-[10px] text-purple-300/80 font-mono">{deal.location} • {deal.bedsBaths}</p>
+                          </div>
+                        </div>
+                      </td>
+
+                      <td className="py-3.5 px-4">
+                        <button
+                          onClick={() => handleToggleStatus(deal.id)}
+                          className={`px-2.5 py-1 rounded-full text-[10px] font-black font-mono border transition-all ${
+                            deal.status === 'AVAILABLE' ? 'bg-emerald-950/90 text-emerald-300 border-emerald-500/40 hover:bg-emerald-900' :
+                            deal.status === 'OCCUPIED' ? 'bg-slate-900/90 text-slate-300 border-slate-700/40 hover:bg-slate-800' :
+                            'bg-amber-950/90 text-amber-300 border-amber-500/40 hover:bg-amber-900'
+                          }`}
+                          title="Click to cycle status"
+                        >
+                          {deal.status}
+                        </button>
+                        <span className="block text-[10px] text-slate-400 font-mono mt-1">Est. Occ: {deal.estOccupancy}</span>
+                      </td>
+
+                      <td className="py-3.5 px-4 font-mono font-bold text-slate-200">
+                        {deal.monthlyRent}
+                      </td>
+
+                      <td className="py-3.5 px-4 font-mono font-extrabold text-emerald-400">
+                        {deal.estNetMonthlyProfit}
+                      </td>
+
+                      <td className="py-3.5 px-4">
+                        <div className="flex flex-wrap items-center gap-1.5 max-w-[200px]">
+                          {deal.listings.map((item, idx) => (
+                            <button
+                              key={idx}
+                              onClick={() => handleToggleListingActive(deal.id, idx)}
+                              className={`px-2 py-0.5 rounded text-[9px] font-bold font-mono transition-all border ${
+                                item.isActive 
+                                  ? 'bg-purple-950 text-purple-200 border-purple-500/40' 
+                                  : 'bg-slate-900/50 text-slate-500 border-slate-800 line-through'
+                              }`}
+                              title={`Toggle ${item.platform} ON/OFF`}
+                            >
+                              {item.platform}
+                            </button>
+                          ))}
+                          {deal.listings.length === 0 && (
+                            <span className="text-[10px] text-slate-500 italic font-mono">No platforms</span>
+                          )}
+                        </div>
+                        <span className="text-[9px] text-slate-400 font-mono block mt-1">
+                          {activeCount} of {deal.listings.length} Active
+                        </span>
+                      </td>
+
+                      <td className="py-3.5 px-4 text-right">
+                        <div className="flex items-center justify-end gap-2">
+                          <button 
+                            onClick={() => handleOpenEditModal(deal)}
+                            className="px-2.5 py-1.5 bg-[#141226] hover:bg-purple-900/60 text-purple-300 rounded-lg border border-purple-900/40 transition-colors flex items-center gap-1 font-mono text-[10px]"
+                          >
+                            <Edit className="w-3.5 h-3.5" />
+                            Edit
+                          </button>
+                          <button 
+                            onClick={() => handleDeleteProperty(deal.id)}
+                            className="p-1.5 bg-[#141226] hover:bg-red-950/60 text-red-400 rounded-lg border border-red-900/40 transition-colors"
+                            title="Delete Property"
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+
+        </div>
+
+      </div>
+    );
+  };
+
   return (
     <div className="min-h-screen bg-[#08090E] text-slate-100 font-sans flex flex-col selection:bg-purple-600 selection:text-white">
       
@@ -525,25 +1150,47 @@ export default function App() {
           </div>
 
           {/* Navigation Links */}
-          <nav className="hidden md:flex items-center gap-7 text-xs font-bold uppercase tracking-widest">
+          <nav className="hidden lg:flex items-center gap-6 text-xs font-bold uppercase tracking-widest">
             <button 
               onClick={() => { setActiveTab('properties'); setShowFavoritesOnly(false); setSearchQuery(''); window.location.hash = ''; }}
               className={`pb-1 border-b-2 transition-colors ${activeTab === 'properties' && !showFavoritesOnly ? 'border-purple-500 text-purple-300' : 'border-transparent text-slate-400 hover:text-slate-200'}`}
             >
               Properties
             </button>
+
             <button 
-              onClick={() => { setActiveTab('blogs'); window.location.hash = ''; }}
-              className={`pb-1 border-b-2 transition-colors ${activeTab === 'blogs' ? 'border-purple-500 text-purple-300' : 'border-transparent text-slate-400 hover:text-slate-200'}`}
+              onClick={() => { setActiveTab('how-it-works'); window.location.hash = ''; }}
+              className={`pb-1 border-b-2 transition-colors ${activeTab === 'how-it-works' ? 'border-purple-500 text-purple-300' : 'border-transparent text-slate-400 hover:text-slate-200'}`}
             >
-              Blogs
+              How It Works
             </button>
-            <button 
-              onClick={() => { setActiveTab('stories'); window.location.hash = ''; }}
-              className={`pb-1 border-b-2 transition-colors ${activeTab === 'stories' ? 'border-purple-500 text-purple-300' : 'border-transparent text-slate-400 hover:text-slate-200'}`}
-            >
-              Stories
-            </button>
+
+            {isAuthenticated && (
+              <>
+                <button 
+                  onClick={() => { setActiveTab('dashboard'); window.location.hash = ''; }}
+                  className={`pb-1 border-b-2 transition-colors flex items-center gap-1.5 ${activeTab === 'dashboard' ? 'border-fuchsia-500 text-fuchsia-300' : 'border-transparent text-slate-400 hover:text-slate-200'}`}
+                >
+                  <LayoutDashboard className="w-3.5 h-3.5" />
+                  Dashboard
+                </button>
+                <button 
+                  onClick={() => { setActiveTab('favorites'); window.location.hash = ''; }}
+                  className={`pb-1 border-b-2 transition-colors flex items-center gap-1.5 ${activeTab === 'favorites' ? 'border-pink-500 text-pink-300' : 'border-transparent text-slate-400 hover:text-slate-200'}`}
+                >
+                  <Heart className="w-3.5 h-3.5 text-pink-400" />
+                  Favorites
+                </button>
+                <button 
+                  onClick={() => { setActiveTab('bookings'); window.location.hash = ''; }}
+                  className={`pb-1 border-b-2 transition-colors flex items-center gap-1.5 ${activeTab === 'bookings' ? 'border-fuchsia-500 text-fuchsia-300' : 'border-transparent text-slate-400 hover:text-slate-200'}`}
+                >
+                  <Lock className="w-3.5 h-3.5 text-purple-400" />
+                  My Bookings
+                </button>
+              </>
+            )}
+
             <button 
               onClick={() => { setActiveTab('experiences'); window.location.hash = ''; }}
               className={`pb-1 border-b-2 transition-colors ${activeTab === 'experiences' ? 'border-purple-500 text-purple-300' : 'border-transparent text-slate-400 hover:text-slate-200'}`}
@@ -556,19 +1203,6 @@ export default function App() {
             >
               About
             </button>
-            
-            {/* Admin Portal Tab */}
-            <button 
-              onClick={() => { setActiveTab('admin'); window.location.hash = 'admin'; }}
-              className={`px-3 py-1.5 rounded-full text-[11px] font-black uppercase tracking-wider transition-all flex items-center gap-1.5 border ${
-                activeTab === 'admin' 
-                  ? 'bg-purple-600 text-white border-purple-400 shadow-md shadow-purple-600/30' 
-                  : 'bg-purple-950/40 text-purple-300 border-purple-800/40 hover:bg-purple-900/50'
-              }`}
-            >
-              <Lock className="w-3 h-3" />
-              Admin Portal
-            </button>
           </nav>
 
           {/* Right Controls */}
@@ -577,45 +1211,105 @@ export default function App() {
             {/* Saved Favorites Trigger */}
             <button 
               onClick={() => {
-                setShowFavoritesOnly(!showFavoritesOnly);
-                setActiveTab('properties');
-                if (!showFavoritesOnly) {
-                  triggerNotification('Showing saved favorites!', 'info');
+                if (isAuthenticated) {
+                  setActiveTab('favorites');
                 } else {
-                  triggerNotification('Showing all properties.', 'info');
+                  setShowFavoritesOnly(!showFavoritesOnly);
+                  setActiveTab('properties');
                 }
               }}
               className={`p-2.5 rounded-full transition-all duration-300 relative border ${
-                showFavoritesOnly 
-                  ? 'text-red-400 bg-red-950/50 border-red-500/40' 
-                  : 'text-slate-400 hover:text-red-400 hover:bg-purple-950/40 border-transparent hover:border-purple-500/30'
+                activeTab === 'favorites' || showFavoritesOnly 
+                  ? 'text-pink-400 bg-pink-950/50 border-pink-500/40' 
+                  : 'text-slate-400 hover:text-pink-400 hover:bg-purple-950/40 border-transparent hover:border-purple-500/30'
               }`}
               title="Saved Favorites"
             >
-              <Heart className={`w-5 h-5 ${showFavoritesOnly ? 'fill-current text-red-400' : ''}`} />
+              <Heart className={`w-5 h-5 ${favorites.length > 0 ? 'fill-pink-500 text-pink-500' : ''}`} />
               {favorites.length > 0 && (
-                <span className="absolute -top-0.5 -right-0.5 bg-purple-600 text-white font-mono text-[9px] font-bold w-4 h-4 rounded-full flex items-center justify-center border border-[#08090E]">
+                <span className="absolute -top-0.5 -right-0.5 bg-fuchsia-600 text-white font-mono text-[9px] font-bold w-4 h-4 rounded-full flex items-center justify-center border border-[#08090E]">
                   {favorites.length}
                 </span>
               )}
             </button>
 
-            {/* Quick Admin Toggle */}
-            <button 
-              onClick={() => {
-                if (activeTab === 'admin') {
-                  setActiveTab('properties');
-                  window.location.hash = '';
-                } else {
-                  setActiveTab('admin');
-                  window.location.hash = 'admin';
-                }
-              }}
-              className="px-4 py-2 bg-[#121122] hover:bg-purple-950/60 border border-purple-900/40 text-purple-300 rounded-full text-[11px] font-bold uppercase tracking-wider transition-all flex items-center gap-1.5"
-            >
-              <Settings className="w-3.5 h-3.5 text-purple-400" />
-              <span className="hidden sm:inline">{activeTab === 'admin' ? 'Exit Admin' : 'Admin Portal'}</span>
-            </button>
+            {/* Auth Button or User Profile */}
+            {isAuthenticated ? (
+              <div className="relative">
+                <button
+                  onClick={() => setUserDropdownOpen(!userDropdownOpen)}
+                  className="flex items-center gap-2.5 p-1.5 pr-3 bg-[#16082b] hover:bg-[#200c3e] border border-purple-700/60 rounded-full transition-colors cursor-pointer"
+                >
+                  {user?.avatarUrl ? (
+                    <img src={user.avatarUrl} alt={user.name} className="w-8 h-8 rounded-full border border-fuchsia-400 object-cover" />
+                  ) : (
+                    <div className="w-8 h-8 rounded-full bg-purple-800 text-white flex items-center justify-center text-xs font-bold font-mono">
+                      {user?.name?.[0] || 'U'}
+                    </div>
+                  )}
+                  <span className="text-xs font-bold text-slate-100 hidden sm:inline">{user?.name}</span>
+                </button>
+
+                {/* Dropdown Menu */}
+                {userDropdownOpen && (
+                  <div className="absolute right-0 mt-2 w-56 bg-[#130723] border border-purple-800/80 rounded-2xl p-2 shadow-2xl z-50 text-slate-100 font-sans space-y-1">
+                    <div className="px-3 py-2 border-b border-purple-900/60">
+                      <p className="text-xs font-bold text-white">{user?.name}</p>
+                      <p className="text-[10px] text-purple-300 font-mono truncate">{user?.email}</p>
+                    </div>
+
+                    {isAdmin && (
+                      <button
+                        onClick={() => { setActiveTab('admin'); window.location.hash = 'admin'; setUserDropdownOpen(false); }}
+                        className="w-full text-left px-3 py-2 text-xs font-bold text-fuchsia-300 hover:bg-fuchsia-950/60 rounded-xl flex items-center gap-2 transition-colors border border-fuchsia-500/30 my-1"
+                      >
+                        <ShieldCheck className="w-4 h-4 text-fuchsia-400" />
+                        <span>Admin Workspace</span>
+                      </button>
+                    )}
+
+                    <button
+                      onClick={() => { setActiveTab('dashboard'); setUserDropdownOpen(false); }}
+                      className="w-full text-left px-3 py-2 text-xs font-medium hover:bg-purple-900/50 rounded-xl flex items-center gap-2 transition-colors"
+                    >
+                      <LayoutDashboard className="w-4 h-4 text-fuchsia-400" />
+                      Buyer Dashboard
+                    </button>
+                    <button
+                      onClick={() => { setActiveTab('favorites'); setUserDropdownOpen(false); }}
+                      className="w-full text-left px-3 py-2 text-xs font-medium hover:bg-purple-900/50 rounded-xl flex items-center gap-2 transition-colors"
+                    >
+                      <Heart className="w-4 h-4 text-pink-400" />
+                      Saved Favorites
+                    </button>
+                    <button
+                      onClick={() => { setActiveTab('bookings'); setUserDropdownOpen(false); }}
+                      className="w-full text-left px-3 py-2 text-xs font-medium hover:bg-purple-900/50 rounded-xl flex items-center gap-2 transition-colors"
+                    >
+                      <Lock className="w-4 h-4 text-purple-400" />
+                      My Bookings & Holds
+                    </button>
+                    <div className="border-t border-purple-900/60 pt-1">
+                      <button
+                        onClick={() => { logout(); setUserDropdownOpen(false); }}
+                        className="w-full text-left px-3 py-2 text-xs font-medium text-rose-300 hover:bg-rose-950/60 rounded-xl flex items-center gap-2 transition-colors"
+                      >
+                        <LogOut className="w-4 h-4 text-rose-400" />
+                        Sign Out
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </div>
+            ) : (
+              <button
+                onClick={() => setShowAuthModal(true)}
+                className="px-5 py-2.5 bg-gradient-to-r from-fuchsia-600 via-pink-600 to-rose-600 hover:from-fuchsia-500 hover:to-rose-500 text-white rounded-full text-xs font-bold tracking-wider uppercase transition-all shadow-lg shadow-pink-600/30 flex items-center gap-1.5 cursor-pointer font-sans"
+              >
+                <UserIcon className="w-3.5 h-3.5" />
+                <span>Sign In</span>
+              </button>
+            )}
 
           </div>
 
@@ -651,210 +1345,20 @@ export default function App() {
       {/* Main Workspace Layout */}
       <main className="flex-1 max-w-7xl w-full mx-auto px-6 py-8">
 
-        {/* VIEW: ADMIN PORTAL (/admin) */}
-        {activeTab === 'admin' ? (
-          <div className="space-y-8 animate-fade-in">
-            
-            {/* Admin Header & Stats Banner */}
-            <div className="glass-card rounded-3xl border border-purple-500/30 p-8 shadow-2xl relative overflow-hidden">
-              <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-6 relative z-10">
-                <div>
-                  <div className="inline-flex items-center gap-2 px-3 py-1 bg-purple-950/80 rounded-full mb-3 border border-purple-500/30">
-                    <Lock className="w-3.5 h-3.5 text-purple-400" />
-                    <span className="text-[10px] font-bold text-purple-300 tracking-wider uppercase font-mono">Kaizen Property Portal</span>
-                  </div>
-                  <h1 className="text-3xl font-extrabold text-white font-serif tracking-tight">
-                    Property Management Workspace
-                  </h1>
-                  <p className="text-slate-400 text-xs mt-1 max-w-xl leading-relaxed">
-                    Manage luxury villa listings, specs, photo galleries, and platform booking links (Airbnb, Vrbo, Booking.com, Zillow, Direct Site). Changes update the customer portal instantly.
-                  </p>
-                </div>
-
-                <div className="flex flex-wrap items-center gap-3">
-                  <button 
-                    onClick={handleDownloadDealsJson}
-                    className="px-4 py-2.5 bg-[#141226] hover:bg-purple-950 border border-purple-900/40 text-purple-300 rounded-xl text-xs font-bold transition-all flex items-center gap-2 font-mono"
-                  >
-                    <Download className="w-4 h-4 text-purple-400" />
-                    Export Schema
-                  </button>
-                  <button 
-                    onClick={handleResetToDefault}
-                    className="px-4 py-2.5 bg-[#141226] hover:bg-red-950/60 border border-red-900/40 text-red-400 rounded-xl text-xs font-bold transition-all flex items-center gap-2 font-mono"
-                  >
-                    <RefreshCw className="w-4 h-4" />
-                    Reset Defaults
-                  </button>
-                  <button 
-                    onClick={handleOpenCreateModal}
-                    className="px-6 py-2.5 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white rounded-xl text-xs font-black uppercase tracking-widest transition-all shadow-lg shadow-purple-600/30 flex items-center gap-2 font-mono border border-purple-400/30"
-                  >
-                    <Plus className="w-4 h-4" />
-                    + Add New Property
-                  </button>
-                </div>
-              </div>
-
-              {/* Quick High-Level Metrics Row */}
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-8 pt-6 border-t border-purple-900/30">
-                <div className="bg-[#0B0A12]/80 p-4 rounded-xl border border-purple-900/40">
-                  <span className="text-[10px] text-slate-400 uppercase font-mono font-bold block">Total Properties</span>
-                  <span className="text-2xl font-black text-white font-mono mt-0.5 block">{deals.length} Units</span>
-                </div>
-                <div className="bg-[#0B0A12]/80 p-4 rounded-xl border border-purple-900/40">
-                  <span className="text-[10px] text-slate-400 uppercase font-mono font-bold block">Active Listings</span>
-                  <span className="text-2xl font-black text-emerald-400 font-mono mt-0.5 block">
-                    {deals.filter(d => d.status === 'AVAILABLE').length} Available
-                  </span>
-                </div>
-                <div className="bg-[#0B0A12]/80 p-4 rounded-xl border border-purple-900/40">
-                  <span className="text-[10px] text-slate-400 uppercase font-mono font-bold block">Active Platform Links</span>
-                  <span className="text-2xl font-black text-purple-300 font-mono mt-0.5 block">
-                    {deals.reduce((acc, d) => acc + d.listings.filter(l => l.isActive).length, 0)} Active
-                  </span>
-                </div>
-                <div className="bg-[#0B0A12]/80 p-4 rounded-xl border border-purple-900/40">
-                  <span className="text-[10px] text-slate-400 uppercase font-mono font-bold block">Total Net Monthly Yield</span>
-                  <span className="text-2xl font-black text-emerald-400 font-mono mt-0.5 block">
-                    ~${deals.reduce((acc, d) => acc + (parseInt(d.estNetMonthlyProfit.replace(/[^0-9]/g, '')) || 0), 0).toLocaleString()}/mo
-                  </span>
-                </div>
-              </div>
-            </div>
-
-            {/* Property Overview Management Table */}
-            <div className="glass-card rounded-3xl border border-purple-500/20 p-6 shadow-2xl space-y-6">
-              
-              <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-                <div>
-                  <h3 className="font-extrabold text-xl text-white font-serif flex items-center gap-2">
-                    <Building className="w-5 h-5 text-purple-400" />
-                    Property Management Table
-                  </h3>
-                  <p className="text-xs text-slate-400 mt-0.5">Toggle platform links, edit financial specs, or add new luxury listings.</p>
-                </div>
-
-                <button 
-                  onClick={handleOpenCreateModal}
-                  className="px-4 py-2 bg-purple-600 hover:bg-purple-500 text-white rounded-lg text-xs font-bold uppercase tracking-wider transition-all flex items-center gap-1.5 font-mono shadow-md"
-                >
-                  <Plus className="w-4 h-4" />
-                  Add Property
-                </button>
-              </div>
-
-              {/* Table */}
-              <div className="overflow-x-auto rounded-2xl border border-purple-900/30 bg-[#0B0A12]/90">
-                <table className="w-full text-left text-xs text-slate-300 border-collapse">
-                  <thead>
-                    <tr className="border-b border-purple-900/40 bg-[#121122] font-mono text-[11px] text-purple-300">
-                      <th className="py-3.5 px-4 font-bold">Property & Address</th>
-                      <th className="py-3.5 px-4 font-bold">Status / Occupancy</th>
-                      <th className="py-3.5 px-4 font-bold">Monthly Rent</th>
-                      <th className="py-3.5 px-4 font-bold">Net Monthly Profit</th>
-                      <th className="py-3.5 px-4 font-bold">Active Platforms</th>
-                      <th className="py-3.5 px-4 text-right font-bold">Actions</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-purple-900/20">
-                    {deals.map(deal => {
-                      const activeCount = deal.listings.filter(l => l.isActive).length;
-                      return (
-                        <tr key={deal.id} className="hover:bg-purple-900/10 transition-colors">
-                          <td className="py-3.5 px-4">
-                            <div className="flex items-center gap-3">
-                              <img 
-                                src={deal.imageUrl} 
-                                alt={deal.title}
-                                className="w-12 h-12 rounded-lg object-cover border border-purple-900/40 shrink-0"
-                                onError={(e) => {
-                                  (e.target as HTMLImageElement).src = 'https://images.unsplash.com/photo-1512917774080-9991f1c4c750?auto=format&fit=crop&w=800&q=80';
-                                }}
-                              />
-                              <div>
-                                <p className="font-extrabold text-white text-sm font-serif">{deal.title}</p>
-                                <p className="text-[10px] text-purple-300/80 font-mono">{deal.location} • {deal.bedsBaths}</p>
-                              </div>
-                            </div>
-                          </td>
-
-                          <td className="py-3.5 px-4">
-                            <button
-                              onClick={() => handleToggleStatus(deal.id)}
-                              className={`px-2.5 py-1 rounded-full text-[10px] font-black font-mono border transition-all ${
-                                deal.status === 'AVAILABLE' ? 'bg-emerald-950/90 text-emerald-300 border-emerald-500/40 hover:bg-emerald-900' :
-                                deal.status === 'OCCUPIED' ? 'bg-slate-900/90 text-slate-300 border-slate-700/40 hover:bg-slate-800' :
-                                'bg-amber-950/90 text-amber-300 border-amber-500/40 hover:bg-amber-900'
-                              }`}
-                              title="Click to cycle status"
-                            >
-                              {deal.status}
-                            </button>
-                            <span className="block text-[10px] text-slate-400 font-mono mt-1">Est. Occ: {deal.estOccupancy}</span>
-                          </td>
-
-                          <td className="py-3.5 px-4 font-mono font-bold text-slate-200">
-                            {deal.monthlyRent}
-                          </td>
-
-                          <td className="py-3.5 px-4 font-mono font-extrabold text-emerald-400">
-                            {deal.estNetMonthlyProfit}
-                          </td>
-
-                          <td className="py-3.5 px-4">
-                            <div className="flex flex-wrap items-center gap-1.5 max-w-[200px]">
-                              {deal.listings.map((item, idx) => (
-                                <button
-                                  key={idx}
-                                  onClick={() => handleToggleListingActive(deal.id, idx)}
-                                  className={`px-2 py-0.5 rounded text-[9px] font-bold font-mono transition-all border ${
-                                    item.isActive 
-                                      ? 'bg-purple-950 text-purple-200 border-purple-500/40' 
-                                      : 'bg-slate-900/50 text-slate-500 border-slate-800 line-through'
-                                  }`}
-                                  title={`Toggle ${item.platform} ON/OFF`}
-                                >
-                                  {item.platform}
-                                </button>
-                              ))}
-                              {deal.listings.length === 0 && (
-                                <span className="text-[10px] text-slate-500 italic font-mono">No platforms</span>
-                              )}
-                            </div>
-                            <span className="text-[9px] text-slate-400 font-mono block mt-1">
-                              {activeCount} of {deal.listings.length} Active
-                            </span>
-                          </td>
-
-                          <td className="py-3.5 px-4 text-right">
-                            <div className="flex items-center justify-end gap-2">
-                              <button 
-                                onClick={() => handleOpenEditModal(deal)}
-                                className="px-2.5 py-1.5 bg-[#141226] hover:bg-purple-900/60 text-purple-300 rounded-lg border border-purple-900/40 transition-colors flex items-center gap-1 font-mono text-[10px]"
-                              >
-                                <Edit className="w-3.5 h-3.5" />
-                                Edit
-                              </button>
-                              <button 
-                                onClick={() => handleDeleteProperty(deal.id)}
-                                className="p-1.5 bg-[#141226] hover:bg-red-950/60 text-red-400 rounded-lg border border-red-900/40 transition-colors"
-                                title="Delete Property"
-                              >
-                                <Trash2 className="w-3.5 h-3.5" />
-                              </button>
-                            </div>
-                          </td>
-                        </tr>
-                      );
-                    })}
-                  </tbody>
-                </table>
-              </div>
-
-            </div>
-
-          </div>
+        {/* VIEW: USER DASHBOARD */}
+        {activeTab === 'dashboard' ? (
+          <DashboardView
+            onNavigateToFavorites={() => setActiveTab('favorites')}
+            onNavigateToBookings={() => setActiveTab('bookings')}
+          />
+        ) : activeTab === 'favorites' ? (
+          <FavoritesView
+            onSelectDeal={(deal) => handleOpenProspectus(deal)}
+          />
+        ) : activeTab === 'bookings' ? (
+          <BookingsView />
+        ) : activeTab === 'admin' ? (
+          renderAdminView()
         ) : (
 
           /* CUSTOMER PUBLIC VIEW */
@@ -888,11 +1392,29 @@ export default function App() {
                   >
                     <div className="flex items-center justify-between">
                       <div>
-                        <p className="text-[10px] font-extrabold text-purple-400 uppercase mb-1 tracking-widest font-mono">Collection Catalog</p>
-                        <p className="text-sm font-bold text-white">Browse Luxury Villas</p>
-                        <p className="text-xs text-slate-400 mt-1">Book directly on Airbnb, Vrbo, Booking.com, or Direct Site.</p>
+                        <p className="text-[10px] font-extrabold text-purple-400 uppercase mb-1 tracking-widest font-mono font-bold">Collection Catalog</p>
+                        <p className="text-sm font-bold text-white">Browse Turnkey Villas</p>
+                        <p className="text-xs text-slate-400 mt-1">Explore verified luxury properties ready to operate & stay.</p>
                       </div>
                       <ArrowRight className="w-4 h-4 text-purple-500/50 group-hover:text-purple-400 group-hover:translate-x-1 transition-all" />
+                    </div>
+                  </div>
+
+                  <div 
+                    onClick={() => setActiveTab('how-it-works')}
+                    className={`p-4 rounded-xl border cursor-pointer group transition-all duration-300 ${
+                      activeTab === 'how-it-works' 
+                        ? 'bg-purple-950/60 border-purple-500/60 shadow-lg shadow-purple-950/50 ring-1 ring-purple-500/40' 
+                        : 'bg-[#121122]/60 border-purple-900/30 hover:border-purple-500/40 hover:bg-[#18162e]'
+                    }`}
+                  >
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="text-[10px] font-extrabold text-pink-400 uppercase mb-1 tracking-widest font-mono font-bold">Turnkey Process</p>
+                        <p className="text-sm font-bold text-white">How It Works</p>
+                        <p className="text-xs text-slate-400 mt-1">4-step guide to locking, verifying, and operating properties.</p>
+                      </div>
+                      <ArrowRight className="w-4 h-4 text-pink-500/50 group-hover:text-pink-400 group-hover:translate-x-1 transition-all" />
                     </div>
                   </div>
 
@@ -906,8 +1428,8 @@ export default function App() {
                   >
                     <div className="flex items-center justify-between">
                       <div>
-                        <p className="text-[10px] font-extrabold text-indigo-400 uppercase mb-1 tracking-widest font-mono">Our Experience</p>
-                        <p className="text-sm font-bold text-white">Learn Guest Experience</p>
+                        <p className="text-[10px] font-extrabold text-indigo-400 uppercase mb-1 tracking-widest font-mono font-bold">Our Experience</p>
+                        <p className="text-sm font-bold text-white">Guest Experience</p>
                         <p className="text-xs text-slate-400 mt-1">Private infinity pools, gourmet chefs, and custom catering.</p>
                       </div>
                       <ArrowRight className="w-4 h-4 text-indigo-500/50 group-hover:text-indigo-400 group-hover:translate-x-1 transition-all" />
@@ -936,6 +1458,14 @@ export default function App() {
                   }`}
                 >
                   Properties
+                </button>
+                <button 
+                  onClick={() => setActiveTab('how-it-works')}
+                  className={`px-4 py-2 rounded-lg text-xs font-bold flex-shrink-0 whitespace-nowrap transition-colors ${
+                    activeTab === 'how-it-works' ? 'bg-purple-600 text-white shadow-md' : 'bg-[#121122] text-slate-300 border border-purple-900/30'
+                  }`}
+                >
+                  How It Works
                 </button>
                 <button 
                   onClick={() => setActiveTab('blogs')}
@@ -1184,6 +1714,11 @@ export default function App() {
                 </div>
               )}
 
+              {/* VIEW: HOW IT WORKS */}
+              {activeTab === 'how-it-works' && (
+                <HowItWorks onBrowseProperties={() => setActiveTab('properties')} />
+              )}
+
               {/* VIEW B: BLOGS */}
               {activeTab === 'blogs' && (
                 <div className="space-y-8 animate-fade-in">
@@ -1391,10 +1926,6 @@ export default function App() {
             <button onClick={() => { setActiveTab('properties'); window.location.hash = ''; }} className="hover:text-purple-300 transition-colors">Properties</button>
             <button onClick={() => { setActiveTab('experiences'); window.location.hash = ''; }} className="hover:text-purple-300 transition-colors">Experience</button>
             <button onClick={() => { setActiveTab('about'); window.location.hash = ''; }} className="hover:text-purple-300 transition-colors">About Us</button>
-            <button onClick={() => { setActiveTab('admin'); window.location.hash = 'admin'; }} className="hover:text-purple-300 text-purple-300 border border-purple-800/40 bg-[#141226] px-3 py-1 rounded-full transition-colors flex items-center gap-1">
-              <Lock className="w-3 h-3 text-purple-400" />
-              Admin Portal
-            </button>
           </div>
 
           <p className="text-[10px] text-slate-400 font-mono text-center md:text-right">
@@ -1576,14 +2107,26 @@ export default function App() {
             </div>
 
             {/* Bottom bar */}
-            <div className="bg-[#0B0A12] p-5 border-t border-purple-900/40 flex items-center justify-between">
+            <div className="bg-[#0B0A12] p-5 border-t border-purple-900/40 flex flex-wrap items-center justify-between gap-3">
               <span className="text-[10px] text-slate-400 font-mono">Kaizen Luxury Estates • Verified Property</span>
-              <button 
-                onClick={() => setSelectedDeal(null)}
-                className="px-5 py-2 bg-purple-600 hover:bg-purple-500 text-white rounded-lg text-xs font-bold transition-all font-mono shadow-md"
-              >
-                Close Window
-              </button>
+              <div className="flex items-center gap-3">
+                <button
+                  type="button"
+                  onClick={() => {
+                    requireAuth(() => setShowLockPurchaseModal(true));
+                  }}
+                  className="px-5 py-2.5 bg-gradient-to-r from-fuchsia-600 via-pink-600 to-rose-600 hover:from-fuchsia-500 hover:to-rose-500 text-white rounded-xl text-xs font-bold transition-all shadow-lg shadow-pink-600/30 flex items-center gap-2 cursor-pointer font-sans"
+                >
+                  <Lock className="w-3.5 h-3.5" />
+                  <span>Lock & Secure Property (15-Min Hold)</span>
+                </button>
+                <button 
+                  onClick={() => setSelectedDeal(null)}
+                  className="px-4 py-2.5 bg-purple-950/80 hover:bg-purple-900 text-purple-200 border border-purple-800 rounded-xl text-xs font-bold transition-all font-mono"
+                >
+                  Close
+                </button>
+              </div>
             </div>
 
           </div>
@@ -1988,6 +2531,58 @@ export default function App() {
           </div>
         </div>
       )}
+
+      {/* Global Auth Modal */}
+      <AuthModal
+        isOpen={showAuthModal}
+        onClose={() => {
+          setShowAuthModal(false);
+          setPendingAction(null);
+          setPendingTab(null);
+        }}
+        onSuccess={(loggedInUser) => {
+          setShowAuthModal(false);
+          const currentUser = loggedInUser || user;
+          const userIsAdmin = Boolean(
+            currentUser?.is_staff ||
+            currentUser?.is_superuser ||
+            currentUser?.role === 'ADMIN' ||
+            currentUser?.role === 'admin'
+          );
+
+          if (userIsAdmin) {
+            setActiveTab('admin');
+            window.location.hash = 'admin';
+            triggerNotification('Authenticated as Admin! Redirected to Admin Workspace.', 'success');
+            setPendingAction(null);
+            setPendingTab(null);
+          } else {
+            if (pendingAction) {
+              pendingAction();
+              setPendingAction(null);
+            } else if (pendingTab) {
+              setActiveTab(pendingTab as any);
+              setPendingTab(null);
+            } else {
+              setActiveTab('dashboard');
+            }
+            window.location.hash = '';
+            triggerNotification(`Welcome back, ${currentUser?.name || 'Customer'}!`, 'success');
+          }
+        }}
+      />
+
+      {/* Global Lock & Purchase Modal */}
+      <LockPurchaseModal
+        isOpen={showLockPurchaseModal}
+        deal={selectedDeal}
+        onClose={() => setShowLockPurchaseModal(false)}
+        onSuccess={() => {
+          setShowLockPurchaseModal(false);
+          setSelectedDeal(null);
+          setActiveTab('bookings');
+        }}
+      />
 
     </div>
   );
