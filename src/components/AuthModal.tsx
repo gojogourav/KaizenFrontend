@@ -24,16 +24,27 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onSuccess
 
   const extractErrorMessage = (err: any, fallback: string): string => {
     if (!err) return fallback;
-    
-    if (typeof err === 'string' && err !== '[object Object]') return err;
-    if (err instanceof Error && err.message !== '[object Object]') return err.message;
-    
-    if (err?.response?.data?.message) return String(err.response.data.message);
-    if (err?.data?.message) return String(err.data.message);
-    if (err?.message && typeof err.message === 'string' && err.message !== '[object Object]') return err.message;
-    if (err?.error && typeof err.error === 'string') return err.error;
-    if (err?.detail && typeof err.detail === 'string') return err.detail;
-    
+    if (typeof err === 'string') {
+      return err.includes('[object Object]') ? fallback : err;
+    }
+    if (typeof err.message === 'string' && err.message && !err.message.includes('[object Object]')) {
+      return err.message;
+    }
+    if (typeof err.error === 'string' && err.error && !err.error.includes('[object Object]')) {
+      return err.error;
+    }
+    if (err.error && typeof err.error.message === 'string' && !err.error.message.includes('[object Object]')) {
+      return err.error.message;
+    }
+    if (typeof err.detail === 'string' && err.detail && !err.detail.includes('[object Object]')) {
+      return err.detail;
+    }
+    if (err.data) {
+      if (typeof err.data === 'string' && !err.data.includes('[object Object]')) return err.data;
+      if (typeof err.data.message === 'string' && !err.data.message.includes('[object Object]')) return err.data.message;
+      if (typeof err.data.detail === 'string' && !err.data.detail.includes('[object Object]')) return err.data.detail;
+      if (typeof err.data.error === 'string' && !err.data.error.includes('[object Object]')) return err.data.error;
+    }
     return fallback;
   };
 

@@ -138,3 +138,6 @@ export const api = {
   updateSettings: (data: any) =>
     requestApi('/api/settings/', { method: 'POST', body: JSON.stringify(data) }),
 };
+
+export default api;
+
