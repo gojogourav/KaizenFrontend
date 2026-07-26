@@ -65,11 +65,11 @@ export const LeadsBookingsManager: React.FC = () => {
     <div className="space-y-6 text-slate-100 font-sans">
       
       {/* Header Bar */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-purple-900/60">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-white/10">
         <div>
           <h2 className="text-2xl font-black text-white flex items-center gap-2">
-            <Users className="w-6 h-6 text-fuchsia-400" />
-            Leads & <span className="text-transparent bg-clip-text bg-gradient-to-r from-fuchsia-400 to-indigo-400">Transaction Bookings</span>
+            <Users className="w-6 h-6 text-[#E04F33]" />
+            Leads & <span className="text-[#E04F33]">Transaction Bookings</span>
           </h2>
           <p className="text-xs text-slate-400 mt-1">
             Track user inquiries, master lease applications, and 15-minute lease lock bookings across the platform.
@@ -78,21 +78,21 @@ export const LeadsBookingsManager: React.FC = () => {
 
         <button
           onClick={loadData}
-          className="px-4 py-2 bg-[#120524] hover:bg-purple-900/50 border border-purple-700/60 text-purple-300 rounded-xl text-xs font-bold transition-all flex items-center gap-2 cursor-pointer font-mono shrink-0"
+          className="px-4 py-2 bg-white/5 hover:bg-white/10 border border-white/10 text-slate-200 rounded-xl text-xs font-bold transition-all flex items-center gap-2 cursor-pointer font-mono shrink-0"
         >
-          <RefreshCw className="w-3.5 h-3.5" />
+          <RefreshCw className="w-3.5 h-3.5 text-[#E04F33]" />
           <span>Refresh Data</span>
         </button>
       </div>
 
       {/* Sub Tab Buttons */}
-      <div className="flex items-center gap-3">
+      <div className="flex items-center gap-3 font-mono">
         <button
           onClick={() => setActiveSubTab('leads')}
-          className={`px-4 py-2.5 rounded-xl text-xs font-bold transition-all flex items-center gap-2 ${
+          className={`px-4 py-2.5 rounded-xl text-xs font-bold transition-all flex items-center gap-2 cursor-pointer ${
             activeSubTab === 'leads'
-              ? 'bg-fuchsia-600 text-white shadow-lg shadow-fuchsia-600/30'
-              : 'bg-[#18082e] text-slate-400 hover:text-white border border-purple-900/60'
+              ? 'bg-[#E04F33] text-white shadow-lg shadow-[#E04F33]/25 border border-white/20'
+              : 'bg-white/5 text-slate-400 hover:text-white border border-white/10'
           }`}
         >
           <Users className="w-4 h-4" />
@@ -101,26 +101,26 @@ export const LeadsBookingsManager: React.FC = () => {
 
         <button
           onClick={() => setActiveSubTab('bookings')}
-          className={`px-4 py-2.5 rounded-xl text-xs font-bold transition-all flex items-center gap-2 ${
+          className={`px-4 py-2.5 rounded-xl text-xs font-bold transition-all flex items-center gap-2 cursor-pointer ${
             activeSubTab === 'bookings'
-              ? 'bg-purple-600 text-white shadow-lg shadow-purple-600/30'
-              : 'bg-[#18082e] text-slate-400 hover:text-white border border-purple-900/60'
+              ? 'bg-[#E04F33] text-white shadow-lg shadow-[#E04F33]/25 border border-white/20'
+              : 'bg-white/5 text-slate-400 hover:text-white border border-white/10'
           }`}
         >
-          <Lock className="w-4 h-4 text-pink-400" />
+          <Lock className="w-4 h-4 text-[#FF8A73]" />
           <span>Lease Holds & Bookings ({bookings.length})</span>
         </button>
       </div>
 
       {/* Search Input */}
       <div className="relative max-w-md">
-        <Search className="w-4 h-4 text-purple-400 absolute left-3 top-1/2 -translate-y-1/2" />
+        <Search className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
         <input
           type="text"
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
           placeholder={`Search ${activeSubTab}...`}
-          className="w-full pl-9 pr-4 py-2 bg-[#18082e] border border-purple-800/60 rounded-xl text-xs text-slate-100 placeholder:text-slate-500 focus:outline-none focus:border-fuchsia-500"
+          className="w-full pl-9 pr-4 py-2 bg-white/5 border border-white/10 rounded-xl text-xs text-slate-100 placeholder:text-slate-500 focus:outline-none focus:border-[#E04F33]"
         />
       </div>
 
@@ -128,34 +128,34 @@ export const LeadsBookingsManager: React.FC = () => {
       {loading ? (
         <div className="space-y-3 animate-pulse">
           {[1, 2, 3].map((n) => (
-            <div key={n} className="h-16 bg-purple-950/40 rounded-2xl" />
+            <div key={n} className="h-16 bg-white/5 rounded-2xl border border-white/5" />
           ))}
         </div>
       ) : activeSubTab === 'leads' ? (
         /* LEADS TABLE */
         filteredLeads.length === 0 ? (
-          <div className="bg-[#18082e] rounded-3xl border border-purple-800/60 p-12 text-center space-y-2">
-            <Users className="w-10 h-10 text-purple-400/40 mx-auto" />
+          <div className="bg-white/5 backdrop-blur-2xl rounded-3xl border border-white/10 p-12 text-center space-y-2">
+            <Users className="w-10 h-10 text-slate-500 mx-auto" />
             <p className="text-sm font-bold text-white">No incoming leads found</p>
           </div>
         ) : (
-          <div className="bg-[#18082e] rounded-3xl border border-purple-800/60 overflow-hidden shadow-xl">
+          <div className="bg-white/5 backdrop-blur-2xl rounded-3xl border border-white/10 overflow-hidden shadow-xl">
             <div className="overflow-x-auto">
               <table className="w-full text-left text-xs">
                 <thead>
-                  <tr className="border-b border-purple-900/80 bg-[#130723] text-purple-300 font-mono uppercase tracking-wider">
+                  <tr className="border-b border-white/10 bg-white/10 text-slate-300 font-mono uppercase tracking-wider">
                     <th className="py-3.5 px-4">Contact</th>
                     <th className="py-3.5 px-4">Message</th>
                     <th className="py-3.5 px-4">Submitted</th>
                     <th className="py-3.5 px-4 text-right">Actions</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-purple-950">
+                <tbody className="divide-y divide-white/5">
                   {filteredLeads.map((lead) => (
-                    <tr key={lead.id} className="hover:bg-purple-950/40 transition-colors">
+                    <tr key={lead.id} className="hover:bg-white/5 transition-colors">
                       <td className="py-3.5 px-4">
                         <p className="font-bold text-white text-sm">{lead.name}</p>
-                        <p className="text-[10px] font-mono text-purple-300">{lead.email} • {lead.phone || lead.phone_number || 'No phone'}</p>
+                        <p className="text-[10px] font-mono text-slate-300">{lead.email} • {lead.phone || lead.phone_number || 'No phone'}</p>
                       </td>
                       <td className="py-3.5 px-4 text-slate-300 max-w-xs leading-relaxed">
                         {lead.message || 'General inquiry'}
@@ -182,22 +182,22 @@ export const LeadsBookingsManager: React.FC = () => {
       ) : (
         /* BOOKINGS TABLE */
         filteredBookings.length === 0 ? (
-          <div className="bg-[#18082e] rounded-3xl border border-purple-800/60 p-12 text-center space-y-2">
-            <Lock className="w-10 h-10 text-purple-400/40 mx-auto" />
+          <div className="bg-white/5 backdrop-blur-2xl rounded-3xl border border-white/10 p-12 text-center space-y-2">
+            <Lock className="w-10 h-10 text-slate-500 mx-auto" />
             <p className="text-sm font-bold text-white">No active lease locks recorded</p>
           </div>
         ) : (
-          <div className="bg-[#18082e] rounded-3xl border border-purple-800/60 overflow-hidden shadow-xl">
+          <div className="bg-white/5 backdrop-blur-2xl rounded-3xl border border-white/10 overflow-hidden shadow-xl">
             <div className="overflow-x-auto">
               <table className="w-full text-left text-xs">
                 <thead>
-                  <tr className="border-b border-purple-900/80 bg-[#130723] text-purple-300 font-mono uppercase tracking-wider">
+                  <tr className="border-b border-white/10 bg-white/10 text-slate-300 font-mono uppercase tracking-wider">
                     <th className="py-3.5 px-4">Booking Ref</th>
                     <th className="py-3.5 px-4">Property</th>
                     <th className="py-3.5 px-4">Hold Status</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-purple-950">
+                <tbody className="divide-y divide-white/5">
                   {filteredBookings.map((b) => {
                     const id = b.id || b.bookingId;
                     const status = b.booking_state || b.status || 'Locked';
@@ -205,13 +205,13 @@ export const LeadsBookingsManager: React.FC = () => {
                     const propLoc = b.property?.city ? `${b.property.city}, ${b.property.state}` : (b.location || '');
 
                     return (
-                      <tr key={id} className="hover:bg-purple-950/40 transition-colors">
-                        <td className="py-3.5 px-4 font-mono font-bold text-fuchsia-300">
+                      <tr key={id} className="hover:bg-white/5 transition-colors">
+                        <td className="py-3.5 px-4 font-mono font-bold text-[#FF8A73]">
                           #{id}
                         </td>
                         <td className="py-3.5 px-4">
                           <p className="font-bold text-white text-sm">{propTitle}</p>
-                          <p className="text-[10px] font-mono text-purple-300/80">{propLoc}</p>
+                          <p className="text-[10px] font-mono text-slate-300">{propLoc}</p>
                         </td>
                         <td className="py-3.5 px-4">
                           <span className={`px-2.5 py-1 rounded-full text-[10px] font-bold font-mono uppercase ${

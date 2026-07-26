@@ -56,67 +56,67 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onSuccess
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-fade-in font-sans">
-      <div className="relative w-full max-w-md bg-[#130723] border border-purple-800/80 rounded-3xl p-8 shadow-2xl shadow-purple-950/80 text-slate-100">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-md animate-fade-in font-sans">
+      <div className="relative w-full max-w-md bg-[#0F1014]/90 border border-white/15 rounded-3xl p-8 shadow-2xl shadow-black/80 text-slate-100 backdrop-blur-3xl apple-specular">
         
         {/* Close Button */}
         <button
           onClick={onClose}
-          className="absolute top-5 right-5 p-2 text-slate-400 hover:text-white rounded-full hover:bg-purple-900/40 transition-colors cursor-pointer"
+          className="absolute top-5 right-5 p-2 text-slate-400 hover:text-white rounded-full hover:bg-white/10 transition-colors cursor-pointer border border-transparent hover:border-white/10"
         >
           <X className="w-5 h-5" />
         </button>
 
         {/* Header */}
         <div className="text-center mb-6">
-          <div className="inline-flex p-3 rounded-2xl bg-purple-900/40 border border-purple-500/30 text-fuchsia-400 mb-3">
+          <div className="inline-flex p-3 rounded-2xl bg-white/10 border border-white/15 text-[#FF8A73] mb-3">
             <Lock className="w-6 h-6" />
           </div>
-          <h2 className="text-2xl font-black text-white font-sans tracking-tight">
-            Sign In to <span className="text-transparent bg-clip-text bg-gradient-to-r from-fuchsia-400 to-pink-500">Kaizen</span>
+          <h2 className="text-2xl font-black text-white font-heading tracking-tight">
+            Sign In to <span className="text-[#E04F33]">Kaizen</span>
           </h2>
-          <p className="text-xs text-slate-400 mt-1">
+          <p className="text-xs text-slate-300 mt-1">
             Sign in to access your dashboard, saved properties, and live locks.
           </p>
         </div>
 
         {error && (
-          <div className="mb-4 p-3 bg-rose-950/80 border border-rose-500/50 rounded-xl text-xs text-rose-200 font-medium text-center">
+          <div className="mb-4 p-3 bg-red-500/20 border border-red-500/40 rounded-xl text-xs text-red-200 font-medium text-center">
             {error}
           </div>
         )}
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <label className="block text-xs font-bold text-purple-300 uppercase tracking-wider mb-1.5 font-mono">
+            <label className="block text-xs font-bold text-slate-300 uppercase tracking-wider mb-1.5 font-mono">
               Username or Email
             </label>
             <div className="relative">
-              <Mail className="w-4 h-4 text-purple-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
+              <Mail className="w-4 h-4 text-[#E04F33] absolute left-3.5 top-1/2 -translate-y-1/2" />
               <input
                 type="text"
                 required
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="Username or email"
-                className="w-full pl-10 pr-4 py-3 bg-[#1e0a35] border border-purple-900/80 rounded-xl text-sm font-medium text-slate-100 placeholder:text-slate-500 focus:outline-none focus:border-fuchsia-500 transition-colors"
+                className="w-full pl-10 pr-4 py-3 bg-white/5 border border-white/10 rounded-xl text-sm font-medium text-slate-100 placeholder:text-slate-500 focus:outline-none focus:border-[#E04F33] focus:bg-white/10 transition-all"
               />
             </div>
           </div>
 
           <div>
-            <label className="block text-xs font-bold text-purple-300 uppercase tracking-wider mb-1.5 font-mono">
+            <label className="block text-xs font-bold text-slate-300 uppercase tracking-wider mb-1.5 font-mono">
               Password
             </label>
             <div className="relative">
-              <Lock className="w-4 h-4 text-purple-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
+              <Lock className="w-4 h-4 text-[#E04F33] absolute left-3.5 top-1/2 -translate-y-1/2" />
               <input
                 type="password"
                 required
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="••••••••"
-                className="w-full pl-10 pr-4 py-3 bg-[#1e0a35] border border-purple-900/80 rounded-xl text-sm font-medium text-slate-100 placeholder:text-slate-500 focus:outline-none focus:border-fuchsia-500 transition-colors"
+                className="w-full pl-10 pr-4 py-3 bg-white/5 border border-white/10 rounded-xl text-sm font-medium text-slate-100 placeholder:text-slate-500 focus:outline-none focus:border-[#E04F33] focus:bg-white/10 transition-all"
               />
             </div>
           </div>
@@ -124,7 +124,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onSuccess
           <button
             type="submit"
             disabled={loading}
-            className="w-full py-3.5 bg-gradient-to-r from-fuchsia-600 via-pink-600 to-rose-600 hover:from-fuchsia-500 hover:to-rose-500 text-white font-bold rounded-xl shadow-lg shadow-pink-600/30 transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50 mt-2"
+            className="w-full py-3.5 bg-[#E04F33] hover:bg-[#ED5B3F] text-white font-bold rounded-xl shadow-lg shadow-[#E04F33]/25 border border-white/20 transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50 mt-2"
           >
             {loading ? 'Authenticating...' : 'Sign In'}
           </button>

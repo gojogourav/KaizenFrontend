@@ -4,7 +4,7 @@
  */
 
 import React, { useState, useRef, useEffect } from 'react';
-import { Search, X, ChevronLeft, ChevronRight, MapPin } from 'lucide-react';
+import { Search, X, ChevronLeft, ChevronRight, MapPin, Calendar, Users } from 'lucide-react';
 
 export interface GuestCount {
   adults: number;
@@ -35,9 +35,9 @@ interface AirbnbSearchBarProps {
 }
 
 const POPULAR_DESTINATIONS = [
-  { name: 'Puri, Odisha', label: 'Coastal Beach & Temple Hub', query: 'Puri' },
-  { name: 'Pensacola, FL', label: 'Emerald Coast Luxury Beachfront', query: 'Pensacola' },
   { name: 'Scottsdale, AZ', label: 'Desert Oasis & Heated Pools', query: 'Scottsdale' },
+  { name: 'Pensacola, FL', label: 'Emerald Coast Luxury Beachfront', query: 'Pensacola' },
+  { name: 'Puri, Odisha', label: 'Coastal Beach & Temple Hub', query: 'Puri' },
   { name: 'Blue Ridge, GA', label: 'Alpine Mountain Retreats', query: 'Blue Ridge' },
 ];
 
@@ -78,7 +78,7 @@ export const AirbnbSearchBar: React.FC<AirbnbSearchBarProps> = ({
   // Total Guests Count Calculation
   const totalGuests = guestCount.adults + guestCount.children;
   const getGuestLabel = () => {
-    if (totalGuests === 0) return 'Guests';
+    if (totalGuests === 0) return 'Add guests';
     let label = `${totalGuests} guest${totalGuests > 1 ? 's' : ''}`;
     if (guestCount.infants > 0) {
       label += `, ${guestCount.infants} infant${guestCount.infants > 1 ? 's' : ''}`;
@@ -104,11 +104,10 @@ export const AirbnbSearchBar: React.FC<AirbnbSearchBarProps> = ({
     }
   };
 
-  // STEP 1 AUTO-ADVANCE: On location selection or pressing Enter
+  // Location Submit Auto-Advance
   const handleLocationSubmit = (selectedLocation?: string) => {
     const finalLoc = selectedLocation !== undefined ? selectedLocation : where;
     setWhere(finalLoc);
-    // Auto-advance to Step 2 (DATE)
     setActivePopover('when');
   };
 
@@ -128,7 +127,7 @@ export const AirbnbSearchBar: React.FC<AirbnbSearchBarProps> = ({
   const month1 = getMonthData(currentMonthIndex);
   const month2 = getMonthData(currentMonthIndex + 1);
 
-  // STEP 2 AUTO-ADVANCE: Handle Date Selection on Calendar
+  // Date Selection Handler
   const handleDateClick = (year: number, month: number, day: number) => {
     const selected = new Date(year, month, day);
     if (!startDate || (startDate && endDate)) {
@@ -146,7 +145,6 @@ export const AirbnbSearchBar: React.FC<AirbnbSearchBarProps> = ({
         const endStr = selected.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
         setWhenDisplay(`${startStr} – ${endStr}`);
         
-        // Auto-advance to Step 3 (GUESTS) when both check-in & check-out dates are selected!
         setTimeout(() => {
           setActivePopover('who');
         }, 150);
@@ -167,7 +165,6 @@ export const AirbnbSearchBar: React.FC<AirbnbSearchBarProps> = ({
       const current = prev[category];
       const updated = Math.max(0, current + delta);
 
-      // Rule: If children or infants added, ensure at least 1 adult
       let newAdults = prev.adults;
       if (category !== 'adults' && updated > 0 && newAdults === 0) {
         newAdults = 1;
@@ -190,16 +187,16 @@ export const AirbnbSearchBar: React.FC<AirbnbSearchBarProps> = ({
       const isPast = dateObj < new Date(today.getFullYear(), today.getMonth(), today.getDate());
       const status = isDateSelected(monthInfo.year, monthInfo.month, d);
 
-      let dayClasses = "h-9 w-9 flex items-center justify-center text-xs font-semibold rounded-full transition-all cursor-pointer font-sans ";
+      let dayClasses = "h-9 w-9 flex items-center justify-center text-xs font-medium rounded-full transition-all cursor-pointer font-sans ";
 
       if (isPast) {
         dayClasses += "text-slate-600 cursor-not-allowed pointer-events-none line-through ";
       } else if (status === 'start' || status === 'end') {
-        dayClasses += "bg-gradient-to-r from-fuchsia-600 to-pink-600 text-white font-bold shadow-lg shadow-pink-600/40 scale-105 ";
+        dayClasses += "bg-[#E04F33] text-white font-bold shadow-md scale-105 ";
       } else if (status === 'range') {
-        dayClasses += "bg-purple-900/60 text-purple-200 rounded-none font-medium ";
+        dayClasses += "bg-[#E04F33]/25 text-[#FF9E8B] rounded-none font-medium ";
       } else {
-        dayClasses += "hover:bg-purple-900/40 text-slate-200 hover:border hover:border-purple-500/30 ";
+        dayClasses += "hover:bg-white/10 text-slate-200 ";
       }
 
       days.push(
@@ -229,30 +226,30 @@ export const AirbnbSearchBar: React.FC<AirbnbSearchBarProps> = ({
   };
 
   return (
-    <div ref={containerRef} className="relative w-full max-w-4xl mx-auto my-4 font-sans select-none z-30">
+    <div ref={containerRef} className="relative w-full max-w-4xl mx-auto my-4 font-sans select-none z-30 px-1 sm:px-0">
       
-      {/* MAIN SEARCH CONTAINER PILL - EXACT MATCH FOR DARK PURPLE IMAGE DESIGN */}
+      {/* DESKTOP ENHANCED APPLE VISION GLASS SEARCH BAR PILL */}
       <div 
-        className={`w-full bg-[#160826]/90 hover:bg-[#1a092c] backdrop-blur-xl transition-all duration-200 rounded-full shadow-2xl shadow-purple-950/80 border border-purple-900/60 p-1.5 flex items-center justify-between relative ${
-          activePopover !== 'none' ? 'ring-2 ring-purple-500/50 bg-[#1e0a32] border-purple-500/50' : ''
+        className={`hidden md:flex w-full bg-white/80 dark:bg-white/5 hover:bg-white/90 dark:hover:bg-white/10 backdrop-blur-2xl transition-all duration-300 rounded-full shadow-xl shadow-slate-200/60 dark:shadow-2xl dark:shadow-black/40 border border-slate-200/80 dark:border-white/10 p-2 items-center justify-between relative apple-specular ${
+          activePopover !== 'none' ? 'ring-1 ring-slate-300 dark:ring-white/20 bg-white/90 dark:bg-white/10 border-slate-300 dark:border-white/20' : ''
         }`}
       >
 
         {/* SECTION 1: LOCATION */}
         <div 
           onClick={() => setActivePopover('where')}
-          className={`flex-1 px-6 py-2 rounded-full cursor-pointer transition-all duration-200 flex flex-col justify-center relative group ${
-            activePopover === 'where' ? 'bg-[#250d3e] shadow-md border border-purple-500/40' : 'hover:bg-[#200b36]'
+          className={`flex-1 px-7 py-3 rounded-full cursor-pointer transition-all duration-200 flex flex-col justify-center relative group ${
+            activePopover === 'where' ? 'bg-slate-100 dark:bg-white/15 shadow-md border border-slate-200 dark:border-white/10' : 'hover:bg-slate-100/60 dark:hover:bg-white/5'
           }`}
         >
-          <span className="text-[10px] font-extrabold tracking-wider text-[#a78bfa] uppercase font-sans mb-0.5">
+          <span className="text-[10px] font-bold tracking-widest text-slate-500 dark:text-slate-300 uppercase font-mono mb-0.5">
             LOCATION
           </span>
-          <div className="flex items-center gap-1.5">
+          <div className="flex items-center gap-2">
             <input 
               ref={locationInputRef}
               type="text" 
-              placeholder="Location" 
+              placeholder="Search by city or landmark" 
               value={where}
               onChange={(e) => {
                 setWhere(e.target.value);
@@ -265,13 +262,13 @@ export const AirbnbSearchBar: React.FC<AirbnbSearchBarProps> = ({
                 }
               }}
               onFocus={() => setActivePopover('where')}
-              className="bg-transparent border-none outline-none text-sm font-semibold text-slate-100 placeholder:text-slate-400 placeholder:font-normal w-full font-sans cursor-text"
+              className="bg-transparent border-none outline-none text-sm font-semibold text-slate-900 dark:text-white placeholder:text-slate-400 placeholder:font-normal w-full font-sans cursor-text"
             />
             {where && (
               <button 
                 type="button"
                 onClick={handleClearLocation}
-                className="text-slate-400 hover:text-slate-100 p-0.5 rounded-full hover:bg-purple-900/50 transition-colors shrink-0"
+                className="text-slate-400 dark:text-slate-300 hover:text-slate-700 dark:hover:text-white p-1 rounded-full hover:bg-slate-200 dark:hover:bg-white/10 transition-colors shrink-0 cursor-pointer"
               >
                 <X className="w-3.5 h-3.5" />
               </button>
@@ -279,89 +276,179 @@ export const AirbnbSearchBar: React.FC<AirbnbSearchBarProps> = ({
           </div>
         </div>
 
-        {/* SUBTLE VERTICAL DIVIDER LINE */}
-        <div className={`h-7 w-[1px] bg-purple-900/60 transition-opacity ${activePopover === 'where' || activePopover === 'when' ? 'opacity-0' : 'opacity-100'}`} />
+        {/* SUBTLE GLASS DIVIDER */}
+        <div className={`h-8 border-r border-slate-200 dark:border-white/10 transition-opacity ${activePopover === 'where' || activePopover === 'when' ? 'opacity-0' : 'opacity-100'}`} />
 
-        {/* SECTION 2: DATE */}
+        {/* SECTION 2: DATES */}
         <div 
           onClick={() => setActivePopover('when')}
-          className={`flex-1 px-6 py-2 rounded-full cursor-pointer transition-all duration-200 flex flex-col justify-center relative group ${
-            activePopover === 'when' ? 'bg-[#250d3e] shadow-md border border-purple-500/40' : 'hover:bg-[#200b36]'
+          className={`flex-1 px-7 py-3 rounded-full cursor-pointer transition-all duration-200 flex flex-col justify-center relative group ${
+            activePopover === 'when' ? 'bg-slate-100 dark:bg-white/15 shadow-md border border-slate-200 dark:border-white/10' : 'hover:bg-slate-100/60 dark:hover:bg-white/5'
           }`}
         >
-          <span className="text-[10px] font-extrabold tracking-wider text-[#a78bfa] uppercase font-sans mb-0.5">
-            DATE
+          <span className="text-[10px] font-bold tracking-widest text-slate-500 dark:text-slate-300 uppercase font-mono mb-0.5">
+            DATES
           </span>
-          <span className={`text-sm font-sans truncate ${whenDisplay ? 'text-slate-100 font-semibold' : 'text-slate-400 font-normal'}`}>
-            {whenDisplay || 'Date'}
+          <span className={`text-sm font-sans truncate ${whenDisplay ? 'text-slate-900 dark:text-white font-semibold' : 'text-slate-400'}`}>
+            {whenDisplay || 'Check-in – Check-out'}
           </span>
         </div>
 
-        {/* SECTION 3: GUESTS - DISTINCT INNER PILL CONTAINER */}
+        {/* SUBTLE GLASS DIVIDER */}
+        <div className={`h-8 border-r border-slate-200 dark:border-white/10 transition-opacity ${activePopover === 'when' || activePopover === 'who' ? 'opacity-0' : 'opacity-100'}`} />
+
+        {/* SECTION 3: GUESTS */}
         <div 
           onClick={() => setActivePopover('who')}
-          className={`bg-[#200a33] hover:bg-[#280d40] rounded-full border border-purple-800/70 shadow-inner transition-all duration-200 flex items-center pl-5 pr-1.5 py-1.5 cursor-pointer ml-1 relative ${
-            activePopover === 'who' ? 'ring-2 ring-purple-500/60 bg-[#2d0f48] shadow-xl border-purple-400/80' : ''
+          className={`flex-1 px-7 py-3 rounded-full cursor-pointer transition-all duration-200 flex items-center justify-between relative group ${
+            activePopover === 'who' ? 'bg-slate-100 dark:bg-white/15 shadow-md border border-slate-200 dark:border-white/10' : 'hover:bg-slate-100/60 dark:hover:bg-white/5'
           }`}
         >
-          {/* Single Label + Value Text */}
-          <div className="flex flex-col justify-center mr-4">
-            <span className="text-[10px] font-extrabold tracking-wider text-[#a78bfa] uppercase font-sans mb-0.5">
+          <div className="flex flex-col justify-center min-w-0 pr-2">
+            <span className="text-[10px] font-bold tracking-widest text-slate-500 dark:text-slate-300 uppercase font-mono mb-0.5">
               GUESTS
             </span>
-            <span className={`text-sm font-sans whitespace-nowrap ${totalGuests > 0 ? 'text-slate-100 font-semibold' : 'text-slate-400 font-normal'}`}>
+            <span className={`text-sm font-sans truncate ${totalGuests > 0 ? 'text-slate-900 dark:text-white font-semibold' : 'text-slate-400'}`}>
               {getGuestLabel()}
             </span>
           </div>
 
-          {/* X Clear Icon button when guests exist */}
-          {totalGuests > 0 && (
+          <div className="flex items-center gap-2 shrink-0">
+            {totalGuests > 0 && (
+              <button 
+                type="button"
+                onClick={handleClearGuests}
+                className="p-1 text-slate-300 hover:text-white hover:bg-white/10 rounded-full transition-colors text-xs cursor-pointer"
+                title="Reset guests"
+              >
+                <X className="w-3.5 h-3.5" />
+              </button>
+            )}
+
+            {/* ACTION SEARCH BUTTON IN STRATEGIC KAIZEN CAPITAL BURNT ORANGE */}
             <button 
               type="button"
-              onClick={handleClearGuests}
-              className="p-1 text-slate-400 hover:text-slate-100 hover:bg-purple-900/50 rounded-full transition-colors mr-2 text-xs font-bold"
-              title="Reset guests"
+              onClick={(e) => {
+                e.stopPropagation();
+                handleTriggerSearch();
+              }}
+              className="bg-[#E04F33] hover:bg-[#ED5B3F] active:bg-[#C73E24] text-white font-bold rounded-full px-5 py-2.5 flex items-center gap-2 shadow-lg shadow-[#E04F33]/25 border border-white/20 transition-all duration-200 shrink-0 font-heading cursor-pointer ml-1 hover:scale-[1.02] active:scale-[0.98]"
             >
-              <X className="w-3.5 h-3.5" />
+              <Search className="w-4 h-4 stroke-[2.5]" />
+              <span className="text-xs font-bold tracking-wider uppercase">Search</span>
             </button>
-          )}
-
-          {/* VIBRANT GLOW/GRADIENT ACTION SEARCH BUTTON */}
-          <button 
-            type="button"
-            onClick={(e) => {
-              e.stopPropagation();
-              handleTriggerSearch();
-            }}
-            className="bg-gradient-to-r from-fuchsia-600 via-pink-600 to-rose-600 hover:from-fuchsia-500 hover:to-rose-500 active:scale-95 text-white font-bold rounded-full px-5 py-2.5 flex items-center gap-2 shadow-lg shadow-pink-600/40 hover:shadow-pink-500/60 transition-all duration-200 shrink-0 font-sans cursor-pointer"
-          >
-            <Search className="w-4 h-4 stroke-[2.5]" />
-            <span className="text-sm font-bold tracking-wide">Search</span>
-          </button>
+          </div>
         </div>
 
       </div>
 
+      {/* MOBILE GLASS SEARCH BAR */}
+      <div 
+        className={`flex md:hidden flex-col gap-2 p-3 bg-white/5 backdrop-blur-2xl rounded-2xl border border-white/10 shadow-2xl w-full max-w-full overflow-hidden relative ${
+          activePopover !== 'none' ? 'ring-1 ring-white/20' : ''
+        }`}
+      >
+        {/* ROW 1: LOCATION */}
+        <div 
+          onClick={() => setActivePopover('where')}
+          className={`p-3 rounded-xl cursor-pointer transition-all border flex items-center justify-between ${
+            activePopover === 'where' ? 'bg-white/15 border-white/20' : 'bg-white/5 border-white/10'
+          }`}
+        >
+          <div className="flex flex-col flex-1 min-w-0 pr-2">
+            <span className="text-[10px] font-bold tracking-widest text-slate-300 uppercase font-mono">
+              LOCATION
+            </span>
+            <input 
+              type="text" 
+              placeholder="Search location..." 
+              value={where}
+              onChange={(e) => {
+                setWhere(e.target.value);
+                setActivePopover('where');
+              }}
+              onFocus={() => setActivePopover('where')}
+              className="bg-transparent border-none outline-none text-xs font-semibold text-white placeholder:text-slate-400 w-full font-sans cursor-text"
+            />
+          </div>
+          {where ? (
+            <button 
+              type="button"
+              onClick={handleClearLocation}
+              className="text-slate-300 p-1 hover:text-white rounded-full"
+            >
+              <X className="w-4 h-4" />
+            </button>
+          ) : (
+            <MapPin className="w-4 h-4 text-[#E04F33] shrink-0" />
+          )}
+        </div>
+
+        {/* ROW 2: DATE & GUESTS */}
+        <div className="grid grid-cols-2 gap-2">
+          <div 
+            onClick={() => setActivePopover('when')}
+            className={`p-2.5 rounded-xl cursor-pointer transition-all border flex flex-col justify-center ${
+              activePopover === 'when' ? 'bg-white/15 border-white/20' : 'bg-white/5 border-white/10'
+            }`}
+          >
+            <span className="text-[10px] font-bold tracking-widest text-slate-300 uppercase font-mono">
+              DATES
+            </span>
+            <span className={`text-xs font-sans truncate ${whenDisplay ? 'text-white font-semibold' : 'text-slate-400'}`}>
+              {whenDisplay || 'Check-in'}
+            </span>
+          </div>
+
+          <div 
+            onClick={() => setActivePopover('who')}
+            className={`p-2.5 rounded-xl cursor-pointer transition-all border flex flex-col justify-center ${
+              activePopover === 'who' ? 'bg-white/15 border-white/20' : 'bg-white/5 border-white/10'
+            }`}
+          >
+            <span className="text-[10px] font-bold tracking-widest text-slate-300 uppercase font-mono">
+              GUESTS
+            </span>
+            <span className={`text-xs font-sans truncate ${totalGuests > 0 ? 'text-white font-semibold' : 'text-slate-400'}`}>
+              {getGuestLabel()}
+            </span>
+          </div>
+        </div>
+
+        {/* ROW 3: SEARCH BUTTON */}
+        <button 
+          type="button"
+          onClick={(e) => {
+            e.stopPropagation();
+            handleTriggerSearch();
+          }}
+          className="w-full bg-[#E04F33] hover:bg-[#ED5B3F] text-white font-bold rounded-xl py-3 flex items-center justify-center gap-2 shadow-lg shadow-[#E04F33]/25 border border-white/20 transition-all font-heading cursor-pointer mt-1"
+        >
+          <Search className="w-4 h-4 stroke-[2.5]" />
+          <span className="text-xs font-bold uppercase tracking-wider">Search Properties</span>
+        </button>
+      </div>
+
       {/* POPOVER 1: LOCATION SUGGESTIONS */}
       {activePopover === 'where' && (
-        <div className="absolute top-full left-0 mt-3 w-80 bg-[#170728] rounded-3xl shadow-2xl shadow-black/90 border border-purple-800/80 p-5 text-slate-100 animate-slide-in z-50 backdrop-blur-2xl">
-          <p className="text-[11px] font-extrabold uppercase tracking-wider text-purple-400 mb-3 font-mono">
+        <div className="absolute top-full left-0 right-0 md:right-auto mt-3 w-full md:w-80 bg-[#0F1014]/95 rounded-2xl shadow-2xl shadow-black/60 border border-white/15 p-4 text-white z-50 backdrop-blur-2xl apple-specular">
+          <p className="text-[10px] font-bold uppercase tracking-widest text-slate-300 mb-3 font-mono">
             Popular Destinations
           </p>
-          <div className="space-y-1.5">
+          <div className="space-y-1">
             {POPULAR_DESTINATIONS.map((dest) => (
               <button
                 key={dest.name}
                 type="button"
                 onClick={() => handleLocationSubmit(dest.query)}
-                className="w-full text-left p-3 rounded-2xl hover:bg-[#280d44] transition-colors flex items-center gap-3.5 group border border-transparent hover:border-purple-700/50 cursor-pointer"
+                className="w-full text-left p-3 rounded-xl hover:bg-white/10 transition-colors flex items-center gap-3 group cursor-pointer"
               >
-                <div className="w-10 h-10 rounded-xl bg-purple-950/90 text-purple-400 flex items-center justify-center group-hover:bg-purple-600 group-hover:text-white transition-colors border border-purple-800/60 shrink-0">
-                  <MapPin className="w-5 h-5" />
+                <div className="w-8 h-8 rounded-lg bg-white/5 text-[#E04F33] flex items-center justify-center group-hover:bg-[#E04F33] group-hover:text-white transition-colors border border-white/10 shrink-0">
+                  <MapPin className="w-4 h-4" />
                 </div>
                 <div>
-                  <p className="text-sm font-bold text-slate-100 font-sans">{dest.name}</p>
-                  <p className="text-xs text-slate-400 font-sans">{dest.label}</p>
+                  <p className="text-xs font-bold text-white font-sans">{dest.name}</p>
+                  <p className="text-[10px] text-slate-300 font-sans">{dest.label}</p>
                 </div>
               </button>
             ))}
@@ -371,16 +458,15 @@ export const AirbnbSearchBar: React.FC<AirbnbSearchBarProps> = ({
 
       {/* POPOVER 2: DATE CALENDAR PICKER */}
       {activePopover === 'when' && (
-        <div className="absolute top-full left-1/2 -translate-x-1/2 mt-3 w-full max-w-2xl bg-[#170728] rounded-3xl shadow-2xl shadow-black/90 border border-purple-800/80 p-6 text-slate-100 animate-slide-in z-50 backdrop-blur-2xl">
+        <div className="absolute top-full left-0 right-0 md:left-1/2 md:-translate-x-1/2 mt-3 w-full max-w-full md:max-w-2xl bg-[#0F1014]/95 rounded-2xl shadow-2xl shadow-black/60 border border-white/15 p-5 sm:p-6 text-white z-50 backdrop-blur-2xl apple-specular">
           
-          {/* Calendar Header Tabs */}
-          <div className="flex justify-center mb-6">
-            <div className="bg-[#0f041c] p-1 rounded-full border border-purple-900/60 inline-flex gap-1 text-xs font-bold">
+          <div className="flex justify-center mb-4">
+            <div className="bg-white/5 p-1 rounded-full border border-white/10 inline-flex gap-1 text-xs font-bold">
               <button 
                 type="button"
                 onClick={() => setDateTab('dates')}
-                className={`px-5 py-2 rounded-full transition-all cursor-pointer ${
-                  dateTab === 'dates' ? 'bg-[#2d0f48] text-white shadow-sm border border-purple-500/40' : 'text-slate-400 hover:text-slate-200'
+                className={`px-4 py-1.5 rounded-full transition-all cursor-pointer text-xs ${
+                  dateTab === 'dates' ? 'bg-white/20 text-white shadow-sm border border-white/15' : 'text-slate-300 hover:text-white'
                 }`}
               >
                 Specific Dates
@@ -388,8 +474,8 @@ export const AirbnbSearchBar: React.FC<AirbnbSearchBarProps> = ({
               <button 
                 type="button"
                 onClick={() => setDateTab('flexible')}
-                className={`px-5 py-2 rounded-full transition-all cursor-pointer ${
-                  dateTab === 'flexible' ? 'bg-[#2d0f48] text-white shadow-sm border border-purple-500/40' : 'text-slate-400 hover:text-slate-200'
+                className={`px-4 py-1.5 rounded-full transition-all cursor-pointer text-xs ${
+                  dateTab === 'flexible' ? 'bg-white/20 text-white shadow-sm border border-white/15' : 'text-slate-300 hover:text-white'
                 }`}
               >
                 Flexible Presets
@@ -398,9 +484,9 @@ export const AirbnbSearchBar: React.FC<AirbnbSearchBarProps> = ({
           </div>
 
           {dateTab === 'flexible' ? (
-            <div className="space-y-6">
-              <p className="text-center font-bold text-sm text-slate-300">Choose staying duration</p>
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+            <div className="space-y-4">
+              <p className="text-center font-bold text-xs text-slate-200">Choose staying duration</p>
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
                 {[
                   { label: 'Any weekend', desc: 'Fri – Sun' },
                   { label: 'Any week', desc: '7 days' },
@@ -414,52 +500,47 @@ export const AirbnbSearchBar: React.FC<AirbnbSearchBarProps> = ({
                       setWhenDisplay(item.label);
                       setStartDate(null);
                       setEndDate(null);
-                      // Auto-advance to Step 3 (GUESTS)
                       setActivePopover('who');
                     }}
-                    className={`p-4 rounded-2xl border text-center transition-all cursor-pointer ${
+                    className={`p-3 rounded-xl border text-center transition-all cursor-pointer ${
                       whenDisplay === item.label
-                        ? 'border-purple-500 bg-purple-950/90 ring-2 ring-purple-500/40 text-purple-200 font-bold'
-                        : 'border-purple-900/60 hover:border-purple-500/50 bg-[#200a33] text-slate-200'
+                        ? 'border-[#E04F33] bg-[#E04F33]/20 text-[#FF9E8B] font-bold'
+                        : 'border-white/10 hover:border-white/20 bg-white/5 text-slate-200'
                     }`}
                   >
-                    <p className="text-sm font-bold font-sans">{item.label}</p>
-                    <p className="text-xs text-slate-400 font-sans mt-0.5">{item.desc}</p>
+                    <p className="text-xs font-bold font-sans">{item.label}</p>
+                    <p className="text-[10px] text-slate-400 font-sans mt-0.5">{item.desc}</p>
                   </button>
                 ))}
               </div>
             </div>
           ) : (
             <div>
-              {/* Month Navigation Header */}
-              <div className="flex items-center justify-between mb-4 px-2">
+              <div className="flex items-center justify-between mb-3 px-1">
                 <button 
                   type="button"
                   disabled={currentMonthIndex <= 0}
                   onClick={() => setCurrentMonthIndex((prev) => Math.max(0, prev - 1))}
-                  className="p-2 rounded-full hover:bg-purple-900/50 disabled:opacity-20 disabled:pointer-events-none text-slate-300 transition-colors cursor-pointer"
+                  className="p-1.5 rounded-full hover:bg-white/10 disabled:opacity-20 text-slate-300 transition-colors cursor-pointer"
                 >
-                  <ChevronLeft className="w-5 h-5" />
+                  <ChevronLeft className="w-4 h-4" />
                 </button>
-                <div className="flex gap-12 font-bold text-sm text-slate-100">
+                <div className="flex gap-8 font-bold text-xs text-white">
                   <span>{month1.monthName}</span>
                   <span className="hidden sm:inline">{month2.monthName}</span>
                 </div>
                 <button 
                   type="button"
                   onClick={() => setCurrentMonthIndex((prev) => prev + 1)}
-                  className="p-2 rounded-full hover:bg-purple-900/50 text-slate-300 transition-colors cursor-pointer"
+                  className="p-1.5 rounded-full hover:bg-white/10 text-slate-300 transition-colors cursor-pointer"
                 >
-                  <ChevronRight className="w-5 h-5" />
+                  <ChevronRight className="w-4 h-4" />
                 </button>
               </div>
 
-              {/* Dual Month Calendar Grid */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-8">
-                
-                {/* Month 1 */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                 <div>
-                  <div className="grid grid-cols-7 gap-1 text-center text-[11px] font-bold text-purple-400/80 mb-2">
+                  <div className="grid grid-cols-7 gap-1 text-center text-[10px] font-bold text-slate-400 mb-2">
                     <span>Su</span><span>Mo</span><span>Tu</span><span>We</span><span>Th</span><span>Fr</span><span>Sa</span>
                   </div>
                   <div className="grid grid-cols-7 gap-1 justify-items-center">
@@ -467,20 +548,17 @@ export const AirbnbSearchBar: React.FC<AirbnbSearchBarProps> = ({
                   </div>
                 </div>
 
-                {/* Month 2 */}
                 <div className="hidden sm:block">
-                  <div className="grid grid-cols-7 gap-1 text-center text-[11px] font-bold text-purple-400/80 mb-2">
+                  <div className="grid grid-cols-7 gap-1 text-center text-[10px] font-bold text-slate-400 mb-2">
                     <span>Su</span><span>Mo</span><span>Tu</span><span>We</span><span>Th</span><span>Fr</span><span>Sa</span>
                   </div>
                   <div className="grid grid-cols-7 gap-1 justify-items-center">
                     {renderCalendarDays(month2)}
                   </div>
                 </div>
-
               </div>
 
-              {/* Calendar Footer Actions */}
-              <div className="mt-6 pt-4 border-t border-purple-900/60 flex items-center justify-between">
+              <div className="mt-5 pt-3 border-t border-white/10 flex items-center justify-between">
                 <button 
                   type="button"
                   onClick={() => {
@@ -488,14 +566,14 @@ export const AirbnbSearchBar: React.FC<AirbnbSearchBarProps> = ({
                     setEndDate(null);
                     setWhenDisplay('');
                   }}
-                  className="text-xs font-bold text-slate-400 hover:text-slate-100 underline transition-colors cursor-pointer"
+                  className="text-xs font-bold text-slate-400 hover:text-white underline transition-colors cursor-pointer"
                 >
                   Clear dates
                 </button>
                 <button 
                   type="button"
                   onClick={() => setActivePopover('who')}
-                  className="px-5 py-2 bg-gradient-to-r from-fuchsia-600 to-pink-600 hover:from-fuchsia-500 hover:to-pink-500 text-white text-xs font-bold rounded-full shadow-md shadow-pink-600/30 cursor-pointer"
+                  className="px-4 py-2 bg-[#E04F33] hover:bg-[#ED5B3F] text-white text-xs font-bold rounded-full shadow-md cursor-pointer font-heading"
                 >
                   Next: Guests →
                 </button>
@@ -508,108 +586,107 @@ export const AirbnbSearchBar: React.FC<AirbnbSearchBarProps> = ({
 
       {/* POPOVER 3: GUESTS COUNTER DROPDOWN */}
       {activePopover === 'who' && (
-        <div className="absolute top-full right-0 mt-3 w-80 bg-[#170728] rounded-3xl shadow-2xl shadow-black/90 border border-purple-800/80 p-6 text-slate-100 animate-slide-in z-50 backdrop-blur-2xl">
-          
-          <div className="space-y-6">
+        <div className="absolute top-full right-0 left-0 md:left-auto mt-3 w-full md:w-80 bg-[#141A26]/95 rounded-2xl shadow-apple-glass border border-white/10 p-5 text-white z-50 backdrop-blur-2xl apple-specular">
+          <div className="space-y-4">
             
-            {/* Adult Counter */}
+            {/* Adults */}
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-bold text-slate-100 font-sans">Adults</p>
-                <p className="text-xs text-slate-400 font-sans">Ages 13 or above</p>
+                <p className="text-xs font-bold text-white font-sans">Adults</p>
+                <p className="text-[10px] text-slate-400 font-sans">Ages 13 or above</p>
               </div>
-              <div className="flex items-center gap-3">
+              <div className="flex items-center gap-2">
                 <button 
                   type="button"
                   disabled={guestCount.adults <= 0 || (guestCount.adults <= 1 && (guestCount.children > 0 || guestCount.infants > 0))}
                   onClick={() => updateGuestCategory('adults', -1)}
-                  className="w-8 h-8 rounded-full border border-purple-800 flex items-center justify-center text-purple-300 hover:border-purple-400 hover:text-white hover:bg-purple-900/50 disabled:opacity-20 disabled:pointer-events-none font-bold text-sm transition-colors cursor-pointer"
+                  className="w-7 h-7 rounded-full border border-white/20 flex items-center justify-center text-slate-300 hover:border-white/40 hover:text-white disabled:opacity-20 font-bold text-xs transition-colors cursor-pointer"
                 >
                   –
                 </button>
-                <span className="w-5 text-center font-bold text-sm text-slate-100">{guestCount.adults}</span>
+                <span className="w-4 text-center font-bold text-xs text-white">{guestCount.adults}</span>
                 <button 
                   type="button"
                   onClick={() => updateGuestCategory('adults', 1)}
-                  className="w-8 h-8 rounded-full border border-purple-800 flex items-center justify-center text-purple-300 hover:border-purple-400 hover:text-white hover:bg-purple-900/50 font-bold text-sm transition-colors cursor-pointer"
+                  className="w-7 h-7 rounded-full border border-white/20 flex items-center justify-center text-slate-300 hover:border-white/40 hover:text-white font-bold text-xs transition-colors cursor-pointer"
                 >
                   +
                 </button>
               </div>
             </div>
 
-            {/* Children Counter */}
-            <div className="flex items-center justify-between pt-4 border-t border-purple-900/60">
+            {/* Children */}
+            <div className="flex items-center justify-between pt-3 border-t border-white/10">
               <div>
-                <p className="text-sm font-bold text-slate-100 font-sans">Children</p>
-                <p className="text-xs text-slate-400 font-sans">Ages 2–12</p>
+                <p className="text-xs font-bold text-white font-sans">Children</p>
+                <p className="text-[10px] text-slate-400 font-sans">Ages 2–12</p>
               </div>
-              <div className="flex items-center gap-3">
+              <div className="flex items-center gap-2">
                 <button 
                   type="button"
                   disabled={guestCount.children <= 0}
                   onClick={() => updateGuestCategory('children', -1)}
-                  className="w-8 h-8 rounded-full border border-purple-800 flex items-center justify-center text-purple-300 hover:border-purple-400 hover:text-white hover:bg-purple-900/50 disabled:opacity-20 disabled:pointer-events-none font-bold text-sm transition-colors cursor-pointer"
+                  className="w-7 h-7 rounded-full border border-white/20 flex items-center justify-center text-slate-300 hover:border-white/40 hover:text-white disabled:opacity-20 font-bold text-xs transition-colors cursor-pointer"
                 >
                   –
                 </button>
-                <span className="w-5 text-center font-bold text-sm text-slate-100">{guestCount.children}</span>
+                <span className="w-4 text-center font-bold text-xs text-white">{guestCount.children}</span>
                 <button 
                   type="button"
                   onClick={() => updateGuestCategory('children', 1)}
-                  className="w-8 h-8 rounded-full border border-purple-800 flex items-center justify-center text-purple-300 hover:border-purple-400 hover:text-white hover:bg-purple-900/50 font-bold text-sm transition-colors cursor-pointer"
+                  className="w-7 h-7 rounded-full border border-white/20 flex items-center justify-center text-slate-300 hover:border-white/40 hover:text-white font-bold text-xs transition-colors cursor-pointer"
                 >
                   +
                 </button>
               </div>
             </div>
 
-            {/* Infants Counter */}
-            <div className="flex items-center justify-between pt-4 border-t border-purple-900/60">
+            {/* Infants */}
+            <div className="flex items-center justify-between pt-3 border-t border-white/10">
               <div>
-                <p className="text-sm font-bold text-slate-100 font-sans">Infants</p>
-                <p className="text-xs text-slate-400 font-sans">Under 2</p>
+                <p className="text-xs font-bold text-white font-sans">Infants</p>
+                <p className="text-[10px] text-slate-400 font-sans">Under 2</p>
               </div>
-              <div className="flex items-center gap-3">
+              <div className="flex items-center gap-2">
                 <button 
                   type="button"
                   disabled={guestCount.infants <= 0}
                   onClick={() => updateGuestCategory('infants', -1)}
-                  className="w-8 h-8 rounded-full border border-purple-800 flex items-center justify-center text-purple-300 hover:border-purple-400 hover:text-white hover:bg-purple-900/50 disabled:opacity-20 disabled:pointer-events-none font-bold text-sm transition-colors cursor-pointer"
+                  className="w-7 h-7 rounded-full border border-white/20 flex items-center justify-center text-slate-300 hover:border-white/40 hover:text-white disabled:opacity-20 font-bold text-xs transition-colors cursor-pointer"
                 >
                   –
                 </button>
-                <span className="w-5 text-center font-bold text-sm text-slate-100">{guestCount.infants}</span>
+                <span className="w-4 text-center font-bold text-xs text-white">{guestCount.infants}</span>
                 <button 
                   type="button"
                   onClick={() => updateGuestCategory('infants', 1)}
-                  className="w-8 h-8 rounded-full border border-purple-800 flex items-center justify-center text-purple-300 hover:border-purple-400 hover:text-white hover:bg-purple-900/50 font-bold text-sm transition-colors cursor-pointer"
+                  className="w-7 h-7 rounded-full border border-white/20 flex items-center justify-center text-slate-300 hover:border-white/40 hover:text-white font-bold text-xs transition-colors cursor-pointer"
                 >
                   +
                 </button>
               </div>
             </div>
 
-            {/* Pets Counter */}
-            <div className="flex items-center justify-between pt-4 border-t border-purple-900/60">
+            {/* Pets */}
+            <div className="flex items-center justify-between pt-3 border-t border-white/10">
               <div>
-                <p className="text-sm font-bold text-slate-100 font-sans">Pets</p>
-                <p className="text-xs text-slate-400 font-sans">Service animals welcome</p>
+                <p className="text-xs font-bold text-white font-sans">Pets</p>
+                <p className="text-[10px] text-slate-400 font-sans">Service animals welcome</p>
               </div>
-              <div className="flex items-center gap-3">
+              <div className="flex items-center gap-2">
                 <button 
                   type="button"
                   disabled={guestCount.pets <= 0}
                   onClick={() => updateGuestCategory('pets', -1)}
-                  className="w-8 h-8 rounded-full border border-purple-800 flex items-center justify-center text-purple-300 hover:border-purple-400 hover:text-white hover:bg-purple-900/50 disabled:opacity-20 disabled:pointer-events-none font-bold text-sm transition-colors cursor-pointer"
+                  className="w-7 h-7 rounded-full border border-white/20 flex items-center justify-center text-slate-300 hover:border-white/40 hover:text-white disabled:opacity-20 font-bold text-xs transition-colors cursor-pointer"
                 >
                   –
                 </button>
-                <span className="w-5 text-center font-bold text-sm text-slate-100">{guestCount.pets}</span>
+                <span className="w-4 text-center font-bold text-xs text-white">{guestCount.pets}</span>
                 <button 
                   type="button"
                   onClick={() => updateGuestCategory('pets', 1)}
-                  className="w-8 h-8 rounded-full border border-purple-800 flex items-center justify-center text-purple-300 hover:border-purple-400 hover:text-white hover:bg-purple-900/50 font-bold text-sm transition-colors cursor-pointer"
+                  className="w-7 h-7 rounded-full border border-white/20 flex items-center justify-center text-slate-300 hover:border-white/40 hover:text-white font-bold text-xs transition-colors cursor-pointer"
                 >
                   +
                 </button>
@@ -618,20 +695,20 @@ export const AirbnbSearchBar: React.FC<AirbnbSearchBarProps> = ({
 
           </div>
 
-          <div className="mt-6 pt-4 border-t border-purple-900/60 flex items-center justify-between">
+          <div className="mt-5 pt-3 border-t border-white/10 flex items-center justify-between">
             <button 
               type="button"
               onClick={() => setGuestCount({ adults: 0, children: 0, infants: 0, pets: 0 })}
-              className="text-xs font-bold text-slate-400 hover:text-slate-100 underline transition-colors cursor-pointer"
+              className="text-xs font-bold text-slate-400 hover:text-white underline transition-colors cursor-pointer"
             >
               Reset
             </button>
             <button 
               type="button"
               onClick={() => handleTriggerSearch()}
-              className="px-6 py-2 bg-gradient-to-r from-fuchsia-600 to-pink-600 hover:from-fuchsia-500 hover:to-pink-500 text-white text-xs font-bold rounded-full shadow-md shadow-pink-600/30 cursor-pointer"
+              className="px-5 py-2 bg-[#E04F33] hover:bg-[#ED5B3F] text-white text-xs font-bold rounded-full shadow-md cursor-pointer font-heading"
             >
-              Search Villas
+              Search Properties
             </button>
           </div>
 

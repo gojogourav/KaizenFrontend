@@ -4,6 +4,7 @@
  */
 
 import React, { useState, useEffect, useMemo } from 'react';
+import { m } from 'motion/react';
 import { 
   getStoredDeals, 
   saveDeals, 
@@ -68,43 +69,44 @@ import { BookingsView } from './components/BookingsView';
 import { LockPurchaseModal } from './components/LockPurchaseModal';
 import { AdminLayout } from './components/admin/AdminLayout';
 import { HowItWorks } from './components/HowItWorks';
+import { PropertyCard } from './components/PropertyCard';
 
 // Platform Colors & Icons map
 const PLATFORM_CONFIG: Record<string, { bg: string; text: string; border: string; iconLabel: string }> = {
   'Airbnb': {
-    bg: 'bg-rose-950/80 hover:bg-rose-900/90',
-    text: 'text-rose-200',
-    border: 'border-rose-500/40',
+    bg: 'bg-white/5 hover:bg-white/15',
+    text: 'text-white',
+    border: 'border-white/15',
     iconLabel: '🏠 Airbnb'
   },
   'Vrbo': {
-    bg: 'bg-blue-950/80 hover:bg-blue-900/90',
-    text: 'text-blue-200',
-    border: 'border-blue-500/40',
+    bg: 'bg-white/5 hover:bg-white/15',
+    text: 'text-white',
+    border: 'border-white/15',
     iconLabel: '🏖️ Vrbo'
   },
   'Booking.com': {
-    bg: 'bg-indigo-950/80 hover:bg-indigo-900/90',
-    text: 'text-indigo-200',
-    border: 'border-indigo-500/40',
+    bg: 'bg-white/5 hover:bg-white/15',
+    text: 'text-white',
+    border: 'border-white/15',
     iconLabel: '🏨 Booking.com'
   },
   'Zillow': {
-    bg: 'bg-emerald-950/80 hover:bg-emerald-900/90',
-    text: 'text-emerald-200',
-    border: 'border-emerald-500/40',
+    bg: 'bg-white/5 hover:bg-white/15',
+    text: 'text-white',
+    border: 'border-white/15',
     iconLabel: '🏡 Zillow'
   },
   'Direct Website': {
-    bg: 'bg-purple-950/80 hover:bg-purple-900/90',
-    text: 'text-purple-200',
-    border: 'border-purple-500/40',
+    bg: 'bg-white/5 hover:bg-white/15',
+    text: 'text-white',
+    border: 'border-white/15',
     iconLabel: '🌐 Direct Website'
   },
   'Custom': {
-    bg: 'bg-slate-900/80 hover:bg-slate-800/90',
-    text: 'text-slate-200',
-    border: 'border-slate-600/40',
+    bg: 'bg-white/5 hover:bg-white/15',
+    text: 'text-white',
+    border: 'border-white/15',
     iconLabel: '🔗 Platform'
   }
 };
@@ -115,6 +117,21 @@ import { AirbnbSearchBar, GuestCount, SearchPayload } from './components/AirbnbS
 
 export default function App() {
   const { user, isAuthenticated, logout, favorites, toggleFavorite } = useAuth();
+
+  // Zero-JS First Paint Hybrid Splash State
+  const [showSplash, setShowSplash] = useState(true);
+  const [splashFading, setSplashFading] = useState(false);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setSplashFading(true);
+      const removeTimer = setTimeout(() => {
+        setShowSplash(false);
+      }, 450);
+      return () => clearTimeout(removeTimer);
+    }, 750);
+    return () => clearTimeout(timer);
+  }, []);
 
   // Navigation & View States
   const [activeTab, setActiveTab] = useState<'properties' | 'how-it-works' | 'blogs' | 'stories' | 'experiences' | 'about' | 'admin' | 'dashboard' | 'favorites' | 'bookings'>('properties');
@@ -512,18 +529,18 @@ export default function App() {
   // Render Isolated Admin Layout if activeTab === 'admin'
   if (activeTab === 'admin') {
     return (
-      <div className="min-h-screen bg-[#080312] text-slate-100 font-sans selection:bg-purple-600 selection:text-white">
+      <div className="min-h-screen bg-[#0F1014] text-slate-100 font-sans selection:bg-[#E04F33] selection:text-white">
         
         {/* Toast Notification Banner */}
         {notification && (
           <div className={`fixed top-4 right-4 z-50 px-5 py-4 rounded-xl shadow-2xl flex items-center gap-3 border backdrop-blur-xl transition-all duration-300 animate-slide-in ${
-            notification.type === 'success' ? 'bg-[#121124]/90 border-emerald-500/40 text-emerald-300 shadow-emerald-950/50' :
-            notification.type === 'error' ? 'bg-[#121124]/90 border-red-500/40 text-red-300 shadow-red-950/50' :
-            'bg-[#121124]/90 border-purple-500/40 text-purple-200 shadow-purple-950/50'
+            notification.type === 'success' ? 'bg-black/90 border-emerald-500/40 text-emerald-300 shadow-emerald-950/50' :
+            notification.type === 'error' ? 'bg-black/90 border-red-500/40 text-red-300 shadow-red-950/50' :
+            'bg-black/90 border-[#E04F33]/40 text-[#FF8A73] shadow-black/50'
           }`}>
             <div className={`w-2 h-2 rounded-full ${
               notification.type === 'success' ? 'bg-emerald-400 shadow-[0_0_8px_#34d399]' :
-              notification.type === 'error' ? 'bg-red-400 shadow-[0_0_8px_#f87171]' : 'bg-purple-400 shadow-[0_0_8px_#c084fc]'
+              notification.type === 'error' ? 'bg-red-400 shadow-[0_0_8px_#f87171]' : 'bg-[#E04F33] shadow-[0_0_8px_#E04F33]'
             }`} />
             <p className="text-xs font-bold tracking-wide uppercase font-mono">
               {notification.message}
@@ -541,12 +558,12 @@ export default function App() {
             <div className="space-y-8 animate-fade-in">
               
               {/* Admin Header & Stats Banner */}
-              <div className="glass-card rounded-3xl border border-purple-500/30 p-8 shadow-2xl relative overflow-hidden">
+              <div className="bg-white/5 backdrop-blur-2xl rounded-3xl border border-white/10 p-8 shadow-2xl relative overflow-hidden">
                 <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-6 relative z-10">
                   <div>
-                    <div className="inline-flex items-center gap-2 px-3 py-1 bg-purple-950/80 rounded-full mb-3 border border-purple-500/30">
-                      <Lock className="w-3.5 h-3.5 text-purple-400" />
-                      <span className="text-[10px] font-bold text-purple-300 tracking-wider uppercase font-mono">Kaizen Property Portal</span>
+                    <div className="inline-flex items-center gap-2 px-3 py-1 bg-white/5 rounded-full mb-3 border border-white/10">
+                      <Lock className="w-3.5 h-3.5 text-[#E04F33]" />
+                      <span className="text-[10px] font-bold text-[#FF8A73] tracking-wider uppercase font-mono">Kaizen Property Portal</span>
                     </div>
                     <h1 className="text-3xl font-extrabold text-white font-serif tracking-tight">
                       Property Management Workspace
@@ -559,21 +576,21 @@ export default function App() {
                   <div className="flex flex-wrap items-center gap-3">
                     <button 
                       onClick={handleDownloadDealsJson}
-                      className="px-4 py-2.5 bg-[#141226] hover:bg-purple-950 border border-purple-900/40 text-purple-300 rounded-xl text-xs font-bold transition-all flex items-center gap-2 font-mono"
+                      className="px-4 py-2.5 bg-white/5 hover:bg-white/10 border border-white/10 text-slate-200 rounded-xl text-xs font-bold transition-all flex items-center gap-2 font-mono"
                     >
-                      <Download className="w-4 h-4 text-purple-400" />
+                      <Download className="w-4 h-4 text-[#E04F33]" />
                       Export Schema
                     </button>
                     <button 
                       onClick={handleResetToDefault}
-                      className="px-4 py-2.5 bg-[#141226] hover:bg-red-950/60 border border-red-900/40 text-red-400 rounded-xl text-xs font-bold transition-all flex items-center gap-2 font-mono"
+                      className="px-4 py-2.5 bg-white/5 hover:bg-red-950/60 border border-red-900/40 text-red-400 rounded-xl text-xs font-bold transition-all flex items-center gap-2 font-mono"
                     >
                       <RefreshCw className="w-4 h-4" />
                       Reset Defaults
                     </button>
                     <button 
                       onClick={handleOpenCreateModal}
-                      className="px-6 py-2.5 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white rounded-xl text-xs font-black uppercase tracking-widest transition-all shadow-lg shadow-purple-600/30 flex items-center gap-2 font-mono border border-purple-400/30 cursor-pointer"
+                      className="px-6 py-2.5 bg-[#E04F33] hover:bg-[#ED5B3F] text-white rounded-xl text-xs font-black uppercase tracking-widest transition-all shadow-lg shadow-[#E04F33]/25 flex items-center gap-2 font-mono border border-white/20 cursor-pointer"
                     >
                       <Plus className="w-4 h-4" />
                       + Add New Property
@@ -582,24 +599,24 @@ export default function App() {
                 </div>
 
                 {/* Quick High-Level Metrics Row */}
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-8 pt-6 border-t border-purple-900/30">
-                  <div className="bg-[#0B0A12]/80 p-4 rounded-xl border border-purple-900/40">
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-8 pt-6 border-t border-white/10">
+                  <div className="bg-white/5 p-4 rounded-xl border border-white/10">
                     <span className="text-[10px] text-slate-400 uppercase font-mono font-bold block">Total Properties</span>
                     <span className="text-2xl font-black text-white font-mono mt-0.5 block">{deals.length} Units</span>
                   </div>
-                  <div className="bg-[#0B0A12]/80 p-4 rounded-xl border border-purple-900/40">
+                  <div className="bg-white/5 p-4 rounded-xl border border-white/10">
                     <span className="text-[10px] text-slate-400 uppercase font-mono font-bold block">Active Listings</span>
                     <span className="text-2xl font-black text-emerald-400 font-mono mt-0.5 block">
                       {deals.filter(d => d.status === 'AVAILABLE').length} Available
                     </span>
                   </div>
-                  <div className="bg-[#0B0A12]/80 p-4 rounded-xl border border-purple-900/40">
+                  <div className="bg-white/5 p-4 rounded-xl border border-white/10">
                     <span className="text-[10px] text-slate-400 uppercase font-mono font-bold block">Active Platform Links</span>
-                    <span className="text-2xl font-black text-purple-300 font-mono mt-0.5 block">
+                    <span className="text-2xl font-black text-[#FF8A73] font-mono mt-0.5 block">
                       {deals.reduce((acc, d) => acc + d.listings.filter(l => l.isActive).length, 0)} Active
                     </span>
                   </div>
-                  <div className="bg-[#0B0A12]/80 p-4 rounded-xl border border-purple-900/40">
+                  <div className="bg-white/5 p-4 rounded-xl border border-white/10">
                     <span className="text-[10px] text-slate-400 uppercase font-mono font-bold block">Total Net Monthly Yield</span>
                     <span className="text-2xl font-black text-emerald-400 font-mono mt-0.5 block">
                       ~${deals.reduce((acc, d) => acc + (parseInt(d.estNetMonthlyProfit.replace(/[^0-9]/g, '')) || 0), 0).toLocaleString()}/mo
@@ -609,12 +626,12 @@ export default function App() {
               </div>
 
               {/* Property Overview Management Table */}
-              <div className="glass-card rounded-3xl border border-purple-500/20 p-6 shadow-2xl space-y-6">
+              <div className="bg-white/5 backdrop-blur-2xl rounded-3xl border border-white/10 p-6 shadow-2xl space-y-6">
                 
                 <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                   <div>
                     <h3 className="font-extrabold text-xl text-white font-serif flex items-center gap-2">
-                      <Building className="w-5 h-5 text-purple-400" />
+                      <Building className="w-5 h-5 text-[#E04F33]" />
                       Property Management Table
                     </h3>
                     <p className="text-xs text-slate-400 mt-0.5">Toggle platform links, edit financial specs, or add new luxury listings.</p>
@@ -622,7 +639,7 @@ export default function App() {
 
                   <button 
                     onClick={handleOpenCreateModal}
-                    className="px-4 py-2 bg-purple-600 hover:bg-purple-500 text-white rounded-lg text-xs font-bold uppercase tracking-wider transition-all flex items-center gap-1.5 font-mono shadow-md cursor-pointer"
+                    className="px-4 py-2 bg-[#E04F33] hover:bg-[#ED5B3F] text-white rounded-lg text-xs font-bold uppercase tracking-wider transition-all flex items-center gap-1.5 font-mono shadow-md cursor-pointer border border-white/10"
                   >
                     <Plus className="w-4 h-4" />
                     Add Property
@@ -630,53 +647,55 @@ export default function App() {
                 </div>
 
                 {/* Table */}
-                <div className="overflow-x-auto rounded-2xl border border-purple-900/30 bg-[#0B0A12]/90">
-                  <table className="w-full text-left text-xs text-slate-300 border-collapse">
+                <div className="overflow-x-auto rounded-2xl border border-white/10 bg-black/40">
+                  <table className="w-full text-left text-xs text-slate-300 border-collapse min-w-[720px]">
                     <thead>
-                      <tr className="border-b border-purple-900/40 bg-[#121122] font-mono text-[11px] text-purple-300">
-                        <th className="py-3.5 px-4 font-bold">Property & Address</th>
-                        <th className="py-3.5 px-4 font-bold">Status / Occupancy</th>
-                        <th className="py-3.5 px-4 font-bold">Monthly Rent</th>
-                        <th className="py-3.5 px-4 font-bold">Net Monthly Profit</th>
-                        <th className="py-3.5 px-4 font-bold">Active Platforms</th>
-                        <th className="py-3.5 px-4 text-right font-bold">Actions</th>
+                      <tr className="border-b border-white/10 bg-white/10 font-mono text-[11px] text-slate-300">
+                        <th className="py-3.5 px-4 font-bold min-w-[220px]">Property & Address</th>
+                        <th className="py-3.5 px-4 font-bold min-w-[140px]">Status / Occupancy</th>
+                        <th className="py-3.5 px-4 font-bold min-w-[110px]">Monthly Rent</th>
+                        <th className="py-3.5 px-4 font-bold min-w-[130px]">Net Monthly Profit</th>
+                        <th className="py-3.5 px-4 font-bold min-w-[160px]">Active Platforms</th>
+                        <th className="py-3.5 px-4 text-right font-bold min-w-[110px]">Actions</th>
                       </tr>
                     </thead>
-                    <tbody className="divide-y divide-purple-900/20">
+                    <tbody className="divide-y divide-white/5">
                       {deals.map(deal => {
                         const activeCount = deal.listings.filter(l => l.isActive).length;
                         return (
-                          <tr key={deal.id} className="hover:bg-purple-900/10 transition-colors">
-                            <td className="py-3.5 px-4">
-                              <div className="flex items-center gap-3">
+                          <tr key={deal.id} className="hover:bg-white/5 transition-colors">
+                            <td className="py-3.5 px-4 min-w-[220px]">
+                              <div className="flex items-center gap-4 min-w-0">
                                 <img 
                                   src={deal.imageUrl} 
                                   alt={deal.title}
-                                  className="w-12 h-12 rounded-lg object-cover border border-purple-900/40 shrink-0"
+                                  className="w-12 h-12 rounded-lg object-cover border border-white/10 shrink-0"
                                   onError={(e) => {
                                     (e.target as HTMLImageElement).src = 'https://images.unsplash.com/photo-1512917774080-9991f1c4c750?auto=format&fit=crop&w=800&q=80';
                                   }}
                                 />
-                                <div>
-                                  <p className="font-extrabold text-white text-sm font-serif">{deal.title}</p>
-                                  <p className="text-[10px] text-purple-300/80 font-mono">{deal.location} • {deal.bedsBaths}</p>
+                                <div className="min-w-0 flex-1">
+                                  <p className="font-extrabold text-white text-sm font-serif truncate">{deal.title}</p>
+                                  <p className="text-[10px] text-slate-400 font-mono break-words leading-tight mt-0.5">{deal.location} • {deal.bedsBaths}</p>
                                 </div>
                               </div>
                             </td>
 
-                            <td className="py-3.5 px-4">
-                              <button
-                                onClick={() => handleToggleStatus(deal.id)}
-                                className={`px-2.5 py-1 rounded-full text-[10px] font-black font-mono border transition-all cursor-pointer ${
-                                  deal.status === 'AVAILABLE' ? 'bg-emerald-950/90 text-emerald-300 border-emerald-500/40 hover:bg-emerald-900' :
-                                  deal.status === 'OCCUPIED' ? 'bg-slate-900/90 text-slate-300 border-slate-700/40 hover:bg-slate-800' :
-                                  'bg-amber-950/90 text-amber-300 border-amber-500/40 hover:bg-amber-900'
-                                }`}
-                                title="Click to cycle status"
-                              >
-                                {deal.status}
-                              </button>
-                              <span className="block text-[10px] text-slate-400 font-mono mt-1">Est. Occ: {deal.estOccupancy}</span>
+                            <td className="py-3.5 px-4 min-w-[140px]">
+                              <div className="flex flex-col gap-1 min-w-0">
+                                <button
+                                  onClick={() => handleToggleStatus(deal.id)}
+                                  className={`px-2.5 py-1 rounded-full text-[10px] font-black font-mono border transition-all cursor-pointer w-max ${
+                                    deal.status === 'AVAILABLE' ? 'bg-emerald-950/90 text-emerald-300 border-emerald-500/40 hover:bg-emerald-900' :
+                                    deal.status === 'OCCUPIED' ? 'bg-slate-900/90 text-slate-300 border-slate-700/40 hover:bg-slate-800' :
+                                    'bg-amber-950/90 text-amber-300 border-amber-500/40 hover:bg-amber-900'
+                                  }`}
+                                  title="Click to cycle status"
+                                >
+                                  {deal.status}
+                                </button>
+                                <span className="block text-[10px] text-slate-400 font-mono">Est. Occ: {deal.estOccupancy}</span>
+                              </div>
                             </td>
 
                             <td className="py-3.5 px-4 font-mono font-bold text-slate-200">
@@ -695,8 +714,8 @@ export default function App() {
                                     onClick={() => handleToggleListingActive(deal.id, idx)}
                                     className={`px-2 py-0.5 rounded text-[9px] font-bold font-mono transition-all border cursor-pointer ${
                                       item.isActive 
-                                        ? 'bg-purple-950 text-purple-200 border-purple-500/40' 
-                                        : 'bg-slate-900/50 text-slate-500 border-slate-800 line-through'
+                                        ? 'bg-[#E04F33]/20 text-[#FF8A73] border-[#E04F33]/40' 
+                                        : 'bg-white/5 text-slate-500 border-white/10 line-through'
                                     }`}
                                     title={`Toggle ${item.platform} ON/OFF`}
                                   >
@@ -716,14 +735,14 @@ export default function App() {
                               <div className="flex items-center justify-end gap-2">
                                 <button 
                                   onClick={() => handleOpenEditModal(deal)}
-                                  className="px-2.5 py-1.5 bg-[#141226] hover:bg-purple-900/60 text-purple-300 rounded-lg border border-purple-900/40 transition-colors flex items-center gap-1 font-mono text-[10px] cursor-pointer"
+                                  className="px-2.5 py-1.5 bg-white/5 hover:bg-white/10 text-slate-200 rounded-lg border border-white/10 transition-colors flex items-center gap-1 font-mono text-[10px] cursor-pointer"
                                 >
                                   <Edit className="w-3.5 h-3.5" />
                                   Edit
                                 </button>
                                 <button 
                                   onClick={() => handleDeleteProperty(deal.id)}
-                                  className="p-1.5 bg-[#141226] hover:bg-red-950/60 text-red-400 rounded-lg border border-red-900/40 transition-colors cursor-pointer"
+                                  className="p-1.5 bg-white/5 hover:bg-red-950/60 text-red-400 rounded-lg border border-white/10 transition-colors cursor-pointer"
                                   title="Delete Property"
                                 >
                                   <Trash2 className="w-3.5 h-3.5" />
@@ -746,76 +765,76 @@ export default function App() {
         {/* Global Property Editor Modal if triggered in Admin */}
         {showPropertyEditorModal && (
           <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md font-sans">
-            <div className="relative w-full max-w-3xl bg-[#0D0B18] border border-purple-500/40 rounded-3xl p-6 sm:p-8 shadow-2xl max-h-[90vh] overflow-y-auto">
+            <div className="relative w-full max-w-3xl bg-[#0F1014] border border-white/15 rounded-3xl p-6 sm:p-8 shadow-2xl max-h-[90vh] overflow-y-auto text-slate-100 apple-specular">
               <button 
                 onClick={() => setShowPropertyEditorModal(false)}
-                className="absolute top-6 right-6 p-2 text-slate-400 hover:text-white rounded-full hover:bg-purple-900/40"
+                className="absolute top-6 right-6 p-2 text-slate-400 hover:text-white rounded-full hover:bg-white/10"
               >
                 <X className="w-5 h-5" />
               </button>
 
-              <h2 className="text-xl font-bold text-white mb-4">
+              <h2 className="text-xl font-bold text-white mb-4 font-serif">
                 {editingDealId ? 'Edit Property Specs' : 'Create New Luxury Property'}
               </h2>
 
               <form onSubmit={handleSaveProperty} className="space-y-4 text-xs">
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-xs font-bold text-slate-400 uppercase mb-1 font-mono">Title</label>
+                    <label className="block text-xs font-bold text-[#FF8A73] uppercase mb-1 font-mono">Title</label>
                     <input 
                       type="text" 
                       required
                       value={adminForm.title}
                       onChange={(e) => setAdminForm({...adminForm, title: e.target.value})}
-                      className="w-full px-3.5 py-2.5 bg-[#141226] border border-purple-900/40 rounded-xl text-white text-xs focus:outline-none focus:border-purple-500"
+                      className="w-full px-3.5 py-2.5 bg-white/5 border border-white/10 rounded-xl text-white text-xs focus:outline-none focus:border-[#E04F33]"
                     />
                   </div>
                   <div>
-                    <label className="block text-xs font-bold text-slate-400 uppercase mb-1 font-mono">Location</label>
+                    <label className="block text-xs font-bold text-[#FF8A73] uppercase mb-1 font-mono">Location</label>
                     <input 
                       type="text" 
                       required
                       value={adminForm.location}
                       onChange={(e) => setAdminForm({...adminForm, location: e.target.value})}
-                      className="w-full px-3.5 py-2.5 bg-[#141226] border border-purple-900/40 rounded-xl text-white text-xs focus:outline-none focus:border-purple-500"
+                      className="w-full px-3.5 py-2.5 bg-white/5 border border-white/10 rounded-xl text-white text-xs focus:outline-none focus:border-[#E04F33]"
                     />
                   </div>
                 </div>
 
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
                   <div>
-                    <label className="block text-xs font-bold text-slate-400 uppercase mb-1 font-mono">Beds/Baths</label>
+                    <label className="block text-xs font-bold text-[#FF8A73] uppercase mb-1 font-mono">Beds/Baths</label>
                     <input 
                       type="text" 
                       value={adminForm.bedsBaths}
                       onChange={(e) => setAdminForm({...adminForm, bedsBaths: e.target.value})}
-                      className="w-full px-3.5 py-2.5 bg-[#141226] border border-purple-900/40 rounded-xl text-white text-xs focus:outline-none focus:border-purple-500 font-mono"
+                      className="w-full px-3.5 py-2.5 bg-white/5 border border-white/10 rounded-xl text-white text-xs focus:outline-none focus:border-[#E04F33] font-mono"
                     />
                   </div>
                   <div>
-                    <label className="block text-xs font-bold text-slate-400 uppercase mb-1 font-mono">Monthly Rent</label>
+                    <label className="block text-xs font-bold text-[#FF8A73] uppercase mb-1 font-mono">Monthly Rent</label>
                     <input 
                       type="text" 
                       value={adminForm.monthlyRent}
                       onChange={(e) => setAdminForm({...adminForm, monthlyRent: e.target.value})}
-                      className="w-full px-3.5 py-2.5 bg-[#141226] border border-purple-900/40 rounded-xl text-white text-xs focus:outline-none focus:border-purple-500 font-mono"
+                      className="w-full px-3.5 py-2.5 bg-white/5 border border-white/10 rounded-xl text-white text-xs focus:outline-none focus:border-[#E04F33] font-mono"
                     />
                   </div>
                   <div>
-                    <label className="block text-xs font-bold text-slate-400 uppercase mb-1 font-mono">Net Profit</label>
+                    <label className="block text-xs font-bold text-[#FF8A73] uppercase mb-1 font-mono">Net Profit</label>
                     <input 
                       type="text" 
                       value={adminForm.estNetMonthlyProfit}
                       onChange={(e) => setAdminForm({...adminForm, estNetMonthlyProfit: e.target.value})}
-                      className="w-full px-3.5 py-2.5 bg-[#141226] border border-purple-900/40 rounded-xl text-white text-xs focus:outline-none focus:border-purple-500 font-mono"
+                      className="w-full px-3.5 py-2.5 bg-white/5 border border-white/10 rounded-xl text-white text-xs focus:outline-none focus:border-[#E04F33] font-mono"
                     />
                   </div>
                   <div>
-                    <label className="block text-xs font-bold text-slate-400 uppercase mb-1 font-mono">Status</label>
+                    <label className="block text-xs font-bold text-[#FF8A73] uppercase mb-1 font-mono">Status</label>
                     <select
                       value={adminForm.status}
                       onChange={(e) => setAdminForm({...adminForm, status: e.target.value as any})}
-                      className="w-full px-3.5 py-2.5 bg-[#141226] border border-purple-900/40 rounded-xl text-white text-xs focus:outline-none focus:border-purple-500 font-mono"
+                      className="w-full px-3.5 py-2.5 bg-[#0F1014] border border-white/10 rounded-xl text-white text-xs focus:outline-none focus:border-[#E04F33] font-mono"
                     >
                       <option value="AVAILABLE">AVAILABLE</option>
                       <option value="UNDER CONTRACT">UNDER CONTRACT</option>
@@ -827,37 +846,37 @@ export default function App() {
                 </div>
 
                 <div>
-                  <label className="block text-xs font-bold text-slate-400 uppercase mb-1 font-mono">Cover Image URL</label>
+                  <label className="block text-xs font-bold text-[#FF8A73] uppercase mb-1 font-mono">Cover Image URL</label>
                   <input 
                     type="text" 
                     required
                     value={adminForm.imageUrl}
                     onChange={(e) => setAdminForm({...adminForm, imageUrl: e.target.value})}
-                    className="w-full px-3.5 py-2.5 bg-[#141226] border border-purple-900/40 rounded-xl text-white text-xs focus:outline-none focus:border-purple-500 font-mono"
+                    className="w-full px-3.5 py-2.5 bg-white/5 border border-white/10 rounded-xl text-white text-xs focus:outline-none focus:border-[#E04F33] font-mono"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-xs font-bold text-slate-400 uppercase mb-1 font-mono">Description</label>
+                  <label className="block text-xs font-bold text-[#FF8A73] uppercase mb-1 font-mono">Description</label>
                   <textarea 
                     rows={3}
                     value={adminForm.description}
                     onChange={(e) => setAdminForm({...adminForm, description: e.target.value})}
-                    className="w-full px-3.5 py-2.5 bg-[#141226] border border-purple-900/40 rounded-xl text-white text-xs focus:outline-none focus:border-purple-500 font-mono"
+                    className="w-full px-3.5 py-2.5 bg-white/5 border border-white/10 rounded-xl text-white text-xs focus:outline-none focus:border-[#E04F33] font-mono"
                   />
                 </div>
 
-                <div className="pt-4 border-t border-purple-900/40 flex justify-end gap-3 font-mono">
+                <div className="pt-4 border-t border-white/10 flex justify-end gap-3 font-mono">
                   <button 
                     type="button"
                     onClick={() => setShowPropertyEditorModal(false)}
-                    className="px-5 py-2.5 bg-[#141226] text-slate-300 rounded-xl text-xs font-bold"
+                    className="px-5 py-2.5 bg-white/5 hover:bg-white/10 border border-white/10 text-slate-300 rounded-xl text-xs font-bold"
                   >
                     Cancel
                   </button>
                   <button 
                     type="submit"
-                    className="px-6 py-2.5 bg-gradient-to-r from-purple-600 to-indigo-600 text-white rounded-xl text-xs font-black uppercase tracking-widest"
+                    className="px-6 py-2.5 bg-[#E04F33] hover:bg-[#ED5B3F] text-white rounded-xl text-xs font-black uppercase tracking-widest border border-white/20 shadow-lg shadow-[#E04F33]/25 cursor-pointer"
                   >
                     {editingDealId ? 'Save Changes' : 'Create Property'}
                   </button>
@@ -871,259 +890,65 @@ export default function App() {
     );
   }
 
-  const renderAdminView = () => {
-    if (!isAuthenticated || !isAdmin) {
-      return (
-        <div className="glass-card rounded-3xl border border-rose-500/40 p-10 shadow-2xl text-center max-w-lg mx-auto my-12 animate-fade-in space-y-4">
-          <div className="w-16 h-16 bg-rose-950/80 rounded-2xl border border-rose-500/50 text-rose-400 flex items-center justify-center mx-auto shadow-lg shadow-rose-950/50">
-            <Lock className="w-8 h-8" />
-          </div>
-          <span className="px-3 py-1 bg-rose-950 text-rose-300 font-mono text-[10px] font-bold uppercase rounded-full border border-rose-800/50 inline-block">
-            403 Access Denied
-          </span>
-          <h2 className="text-2xl font-extrabold text-white font-serif">Admin Portal Restricted</h2>
-          <p className="text-xs text-slate-300 leading-relaxed">
-            {!isAuthenticated 
-              ? "You must be signed in with an administrative account to access the Property Management Workspace."
-              : "Your account does not have administrator privileges to access this area."}
-          </p>
-          <div className="pt-3 flex flex-col sm:flex-row gap-3 justify-center">
-            <button
-              onClick={() => { setActiveTab('properties'); window.location.hash = ''; }}
-              className="px-5 py-2.5 bg-purple-950 hover:bg-purple-900 text-purple-200 border border-purple-800 rounded-xl text-xs font-bold font-mono transition-colors cursor-pointer"
-            >
-              Return to Properties
-            </button>
-            <button
-              onClick={() => setShowAuthModal(true)}
-              className="px-5 py-2.5 bg-gradient-to-r from-fuchsia-600 to-rose-600 hover:from-fuchsia-500 hover:to-rose-500 text-white rounded-xl text-xs font-bold font-mono transition-colors shadow-lg shadow-pink-600/30 cursor-pointer"
-            >
-              Sign In as Admin
-            </button>
-          </div>
-        </div>
-      );
-    }
 
-    return (
-      <div className="space-y-8 animate-fade-in">
+
+  return (
+    <div className="min-h-screen bg-slate-50 text-slate-900 dark:bg-[#0F1014] dark:text-slate-100 font-sans flex flex-col transition-colors duration-300 relative selection:bg-[#E04F33] selection:text-white">
+      
+      {/* 1. Pure Tailwind Ambient Mesh Gradient Background Spanning Viewport */}
+      <div className="fixed inset-0 overflow-hidden pointer-events-none z-0 select-none">
+        {/* Base Layer */}
+        <div className="absolute inset-0 bg-slate-50 dark:bg-[#0F1014] transition-colors duration-500" />
         
-        {/* Admin Header & Stats Banner */}
-        <div className="glass-card rounded-3xl border border-purple-500/30 p-8 shadow-2xl relative overflow-hidden">
-          <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-6 relative z-10">
-            <div>
-              <div className="inline-flex items-center gap-2 px-3 py-1 bg-purple-950/80 rounded-full mb-3 border border-purple-500/30">
-                <Lock className="w-3.5 h-3.5 text-purple-400" />
-                <span className="text-[10px] font-bold text-purple-300 tracking-wider uppercase font-mono">Kaizen Property Portal</span>
-              </div>
-              <h1 className="text-3xl font-extrabold text-white font-serif tracking-tight">
-                Property Management Workspace
-              </h1>
-              <p className="text-slate-400 text-xs mt-1 max-w-xl leading-relaxed">
-                Manage luxury villa listings, specs, photo galleries, and platform booking links (Airbnb, Vrbo, Booking.com, Zillow, Direct Site). Changes update the customer portal instantly.
+        {/* Top-Left / Corner Burnt Orange Orb */}
+        <div className="absolute -top-[12%] -left-[12%] w-[55vw] h-[55vw] max-w-[650px] max-h-[650px] rounded-full bg-[#E04F33]/10 dark:bg-[#E04F33]/15 blur-[120px] pointer-events-none" />
+        
+        {/* Opposing Bottom-Right Slate / Pearl Orb */}
+        <div className="absolute -bottom-[12%] -right-[12%] w-[60vw] h-[60vw] max-w-[700px] max-h-[700px] rounded-full bg-slate-200/60 dark:bg-slate-800/30 blur-[140px] pointer-events-none" />
+
+        {/* Luminous Center Accent Orb */}
+        <div className="absolute top-[35%] right-[10%] w-[45vw] h-[45vw] max-w-[550px] max-h-[550px] rounded-full bg-amber-100/40 dark:bg-slate-700/20 blur-[130px] pointer-events-none" />
+      </div>
+
+      {/* Zero-JS First Paint Hybrid Splash Overlay (GPU keyframes) */}
+      {showSplash && (
+        <div 
+          className={`fixed inset-0 z-[9999] bg-slate-50 dark:bg-[#0F1014] flex flex-col items-center justify-center p-6 ${
+            splashFading ? 'animate-splash-fade-out' : 'opacity-100'
+          }`}
+        >
+          <div className="relative flex flex-col items-center gap-6">
+            <div className="w-16 h-16 rounded-2xl bg-[#E04F33] p-0.5 shadow-2xl shadow-[#E04F33]/30 border border-white/20 animate-kaizen-logo flex items-center justify-center">
+              <span className="text-white font-extrabold text-2xl font-sans">改</span>
+            </div>
+
+            <div className="text-center space-y-1">
+              <h2 className="text-xl font-heading font-extrabold tracking-[0.25em] text-slate-900 dark:text-white uppercase">
+                KAIZEN ESTATES
+              </h2>
+              <p className="text-[10px] font-mono text-[#E04F33] uppercase tracking-[0.3em] font-bold">
+                Bespoke Luxury Stays
               </p>
             </div>
 
-            <div className="flex flex-wrap items-center gap-3">
-              <button 
-                onClick={handleDownloadDealsJson}
-                className="px-4 py-2.5 bg-[#141226] hover:bg-purple-950 border border-purple-900/40 text-purple-300 rounded-xl text-xs font-bold transition-all flex items-center gap-2 font-mono"
-              >
-                <Download className="w-4 h-4 text-purple-400" />
-                Export Schema
-              </button>
-              <button 
-                onClick={handleResetToDefault}
-                className="px-4 py-2.5 bg-[#141226] hover:bg-red-950/60 border border-red-900/40 text-red-400 rounded-xl text-xs font-bold transition-all flex items-center gap-2 font-mono"
-              >
-                <RefreshCw className="w-4 h-4" />
-                Reset Defaults
-              </button>
-              <button 
-                onClick={handleOpenCreateModal}
-                className="px-6 py-2.5 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white rounded-xl text-xs font-black uppercase tracking-widest transition-all shadow-lg shadow-purple-600/30 flex items-center gap-2 font-mono border border-purple-400/30"
-              >
-                <Plus className="w-4 h-4" />
-                + Add New Property
-              </button>
-            </div>
-          </div>
-
-          {/* Quick High-Level Metrics Row */}
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-8 pt-6 border-t border-purple-900/30">
-            <div className="bg-[#0B0A12]/80 p-4 rounded-xl border border-purple-900/40">
-              <span className="text-[10px] text-slate-400 uppercase font-mono font-bold block">Total Properties</span>
-              <span className="text-2xl font-black text-white font-mono mt-0.5 block">{deals.length} Units</span>
-            </div>
-            <div className="bg-[#0B0A12]/80 p-4 rounded-xl border border-purple-900/40">
-              <span className="text-[10px] text-slate-400 uppercase font-mono font-bold block">Active Listings</span>
-              <span className="text-2xl font-black text-emerald-400 font-mono mt-0.5 block">
-                {deals.filter(d => d.status === 'AVAILABLE').length} Available
-              </span>
-            </div>
-            <div className="bg-[#0B0A12]/80 p-4 rounded-xl border border-purple-900/40">
-              <span className="text-[10px] text-slate-400 uppercase font-mono font-bold block">Active Platform Links</span>
-              <span className="text-2xl font-black text-purple-300 font-mono mt-0.5 block">
-                {deals.reduce((acc, d) => acc + d.listings.filter(l => l.isActive).length, 0)} Active
-              </span>
-            </div>
-            <div className="bg-[#0B0A12]/80 p-4 rounded-xl border border-purple-900/40">
-              <span className="text-[10px] text-slate-400 uppercase font-mono font-bold block">Total Net Monthly Yield</span>
-              <span className="text-2xl font-black text-emerald-400 font-mono mt-0.5 block">
-                ~${deals.reduce((acc, d) => acc + (parseInt(d.estNetMonthlyProfit.replace(/[^0-9]/g, '')) || 0), 0).toLocaleString()}/mo
-              </span>
+            {/* Zero-JS Pure CSS Keyframe Progress Bar */}
+            <div className="w-48 h-1 bg-slate-200 dark:bg-white/10 rounded-full overflow-hidden mt-2">
+              <div className="h-full bg-[#E04F33] rounded-full animate-kaizen-bar" />
             </div>
           </div>
         </div>
+      )}
 
-        {/* Property Overview Management Table */}
-        <div className="glass-card rounded-3xl border border-purple-500/20 p-6 shadow-2xl space-y-6">
-          
-          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-            <div>
-              <h3 className="font-extrabold text-xl text-white font-serif flex items-center gap-2">
-                <Building className="w-5 h-5 text-purple-400" />
-                Property Management Table
-              </h3>
-              <p className="text-xs text-slate-400 mt-0.5">Toggle platform links, edit financial specs, or add new luxury listings.</p>
-            </div>
-
-            <button 
-              onClick={handleOpenCreateModal}
-              className="px-4 py-2 bg-purple-600 hover:bg-purple-500 text-white rounded-lg text-xs font-bold uppercase tracking-wider transition-all flex items-center gap-1.5 font-mono shadow-md"
-            >
-              <Plus className="w-4 h-4" />
-              Add Property
-            </button>
-          </div>
-
-          {/* Table */}
-          <div className="overflow-x-auto rounded-2xl border border-purple-900/30 bg-[#0B0A12]/90">
-            <table className="w-full text-left text-xs text-slate-300 border-collapse">
-              <thead>
-                <tr className="border-b border-purple-900/40 bg-[#121122] font-mono text-[11px] text-purple-300">
-                  <th className="py-3.5 px-4 font-bold">Property & Address</th>
-                  <th className="py-3.5 px-4 font-bold">Status / Occupancy</th>
-                  <th className="py-3.5 px-4 font-bold">Monthly Rent</th>
-                  <th className="py-3.5 px-4 font-bold">Net Monthly Profit</th>
-                  <th className="py-3.5 px-4 font-bold">Active Platforms</th>
-                  <th className="py-3.5 px-4 text-right font-bold">Actions</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-purple-900/20">
-                {deals.map(deal => {
-                  const activeCount = deal.listings.filter(l => l.isActive).length;
-                  return (
-                    <tr key={deal.id} className="hover:bg-purple-900/10 transition-colors">
-                      <td className="py-3.5 px-4">
-                        <div className="flex items-center gap-3">
-                          <img 
-                            src={deal.imageUrl} 
-                            alt={deal.title}
-                            className="w-12 h-12 rounded-lg object-cover border border-purple-900/40 shrink-0"
-                            onError={(e) => {
-                              (e.target as HTMLImageElement).src = 'https://images.unsplash.com/photo-1512917774080-9991f1c4c750?auto=format&fit=crop&w=800&q=80';
-                            }}
-                          />
-                          <div>
-                            <p className="font-extrabold text-white text-sm font-serif">{deal.title}</p>
-                            <p className="text-[10px] text-purple-300/80 font-mono">{deal.location} • {deal.bedsBaths}</p>
-                          </div>
-                        </div>
-                      </td>
-
-                      <td className="py-3.5 px-4">
-                        <button
-                          onClick={() => handleToggleStatus(deal.id)}
-                          className={`px-2.5 py-1 rounded-full text-[10px] font-black font-mono border transition-all ${
-                            deal.status === 'AVAILABLE' ? 'bg-emerald-950/90 text-emerald-300 border-emerald-500/40 hover:bg-emerald-900' :
-                            deal.status === 'OCCUPIED' ? 'bg-slate-900/90 text-slate-300 border-slate-700/40 hover:bg-slate-800' :
-                            'bg-amber-950/90 text-amber-300 border-amber-500/40 hover:bg-amber-900'
-                          }`}
-                          title="Click to cycle status"
-                        >
-                          {deal.status}
-                        </button>
-                        <span className="block text-[10px] text-slate-400 font-mono mt-1">Est. Occ: {deal.estOccupancy}</span>
-                      </td>
-
-                      <td className="py-3.5 px-4 font-mono font-bold text-slate-200">
-                        {deal.monthlyRent}
-                      </td>
-
-                      <td className="py-3.5 px-4 font-mono font-extrabold text-emerald-400">
-                        {deal.estNetMonthlyProfit}
-                      </td>
-
-                      <td className="py-3.5 px-4">
-                        <div className="flex flex-wrap items-center gap-1.5 max-w-[200px]">
-                          {deal.listings.map((item, idx) => (
-                            <button
-                              key={idx}
-                              onClick={() => handleToggleListingActive(deal.id, idx)}
-                              className={`px-2 py-0.5 rounded text-[9px] font-bold font-mono transition-all border ${
-                                item.isActive 
-                                  ? 'bg-purple-950 text-purple-200 border-purple-500/40' 
-                                  : 'bg-slate-900/50 text-slate-500 border-slate-800 line-through'
-                              }`}
-                              title={`Toggle ${item.platform} ON/OFF`}
-                            >
-                              {item.platform}
-                            </button>
-                          ))}
-                          {deal.listings.length === 0 && (
-                            <span className="text-[10px] text-slate-500 italic font-mono">No platforms</span>
-                          )}
-                        </div>
-                        <span className="text-[9px] text-slate-400 font-mono block mt-1">
-                          {activeCount} of {deal.listings.length} Active
-                        </span>
-                      </td>
-
-                      <td className="py-3.5 px-4 text-right">
-                        <div className="flex items-center justify-end gap-2">
-                          <button 
-                            onClick={() => handleOpenEditModal(deal)}
-                            className="px-2.5 py-1.5 bg-[#141226] hover:bg-purple-900/60 text-purple-300 rounded-lg border border-purple-900/40 transition-colors flex items-center gap-1 font-mono text-[10px]"
-                          >
-                            <Edit className="w-3.5 h-3.5" />
-                            Edit
-                          </button>
-                          <button 
-                            onClick={() => handleDeleteProperty(deal.id)}
-                            className="p-1.5 bg-[#141226] hover:bg-red-950/60 text-red-400 rounded-lg border border-red-900/40 transition-colors"
-                            title="Delete Property"
-                          >
-                            <Trash2 className="w-3.5 h-3.5" />
-                          </button>
-                        </div>
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          </div>
-
-        </div>
-
-      </div>
-    );
-  };
-
-  return (
-    <div className="min-h-screen bg-[#08090E] text-slate-100 font-sans flex flex-col selection:bg-purple-600 selection:text-white">
-      
       {/* Toast Notification Banner */}
       {notification && (
         <div className={`fixed top-4 right-4 z-50 px-5 py-4 rounded-xl shadow-2xl flex items-center gap-3 border backdrop-blur-xl transition-all duration-300 animate-slide-in ${
-          notification.type === 'success' ? 'bg-[#121124]/90 border-emerald-500/40 text-emerald-300 shadow-emerald-950/50' :
-          notification.type === 'error' ? 'bg-[#121124]/90 border-red-500/40 text-red-300 shadow-red-950/50' :
-          'bg-[#121124]/90 border-purple-500/40 text-purple-200 shadow-purple-950/50'
+          notification.type === 'success' ? 'bg-white/90 dark:bg-[#121124]/90 border-emerald-500/40 text-emerald-700 dark:text-emerald-300 shadow-emerald-950/20' :
+          notification.type === 'error' ? 'bg-white/90 dark:bg-[#121124]/90 border-red-500/40 text-red-700 dark:text-red-300 shadow-red-950/20' :
+          'bg-white/90 dark:bg-[#121124]/90 border-[#E04F33]/40 text-slate-900 dark:text-slate-200 shadow-slate-300/50 dark:shadow-black/50'
         }`}>
           <div className={`w-2 h-2 rounded-full ${
             notification.type === 'success' ? 'bg-emerald-400 shadow-[0_0_8px_#34d399]' :
-            notification.type === 'error' ? 'bg-red-400 shadow-[0_0_8px_#f87171]' : 'bg-purple-400 shadow-[0_0_8px_#c084fc]'
+            notification.type === 'error' ? 'bg-red-400 shadow-[0_0_8px_#f87171]' : 'bg-[#E04F33] shadow-[0_0_8px_#E04F33]'
           }`} />
           <p className="text-xs font-bold tracking-wide uppercase font-mono">
             {notification.message}
@@ -1132,20 +957,20 @@ export default function App() {
       )}
 
       {/* Main Header Navbar */}
-      <header className="sticky top-0 z-40 bg-[#0A0B12]/85 backdrop-blur-xl border-b border-purple-900/25 shadow-2xl shadow-purple-950/20">
+      <header className="sticky top-0 z-40 bg-white/70 dark:bg-[#0E121B]/80 backdrop-blur-2xl border-b border-slate-200/60 dark:border-white/10 shadow-xl shadow-slate-200/50 dark:shadow-apple-glass apple-specular transition-colors duration-300">
         <div className="max-w-7xl mx-auto px-6 h-20 flex items-center justify-between">
           
           {/* Kaizen Logo & Emblem */}
           <div 
-            className="flex items-center gap-3.5 cursor-pointer group" 
+            className="flex items-center gap-3 cursor-pointer group" 
             onClick={() => { setActiveTab('properties'); setShowFavoritesOnly(false); window.location.hash = ''; }}
           >
-            <div className="w-11 h-11 bg-gradient-to-br from-purple-600 to-indigo-900 rounded-full flex items-center justify-center shadow-lg shadow-purple-900/30 border border-purple-400/30 group-hover:scale-105 transition-all duration-300">
-              <span className="text-white font-black text-sm tracking-widest pl-0.5">K</span>
+            <div className="w-10 h-10 bg-[#E04F33] rounded-lg flex items-center justify-center shadow-lg shadow-[#E04F33]/25 border border-white/20 group-hover:scale-105 transition-all duration-300">
+              <span className="text-white font-extrabold text-base tracking-normal font-sans">改</span>
             </div>
             <div>
-              <span className="font-extrabold text-lg tracking-[0.06em] text-white leading-none block font-serif">KAIZEN</span>
-              <span className="text-[9px] text-purple-400 font-mono tracking-widest block uppercase mt-0.5">LUXURY STAYS</span>
+              <span className="font-extrabold text-lg tracking-[0.08em] text-slate-900 dark:text-white leading-none block font-heading">KAIZEN</span>
+              <span className="text-[9px] text-[#E04F33] dark:text-[#FF8A73] font-mono font-bold tracking-widest block uppercase mt-0.5">REAL ESTATE</span>
             </div>
           </div>
 
@@ -1153,14 +978,14 @@ export default function App() {
           <nav className="hidden lg:flex items-center gap-6 text-xs font-bold uppercase tracking-widest">
             <button 
               onClick={() => { setActiveTab('properties'); setShowFavoritesOnly(false); setSearchQuery(''); window.location.hash = ''; }}
-              className={`pb-1 border-b-2 transition-colors ${activeTab === 'properties' && !showFavoritesOnly ? 'border-purple-500 text-purple-300' : 'border-transparent text-slate-400 hover:text-slate-200'}`}
+              className={`pb-1 border-b-2 transition-colors ${activeTab === 'properties' && !showFavoritesOnly ? 'border-[#E04F33] text-slate-900 dark:text-white' : 'border-transparent text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'}`}
             >
               Properties
             </button>
 
             <button 
               onClick={() => { setActiveTab('how-it-works'); window.location.hash = ''; }}
-              className={`pb-1 border-b-2 transition-colors ${activeTab === 'how-it-works' ? 'border-purple-500 text-purple-300' : 'border-transparent text-slate-400 hover:text-slate-200'}`}
+              className={`pb-1 border-b-2 transition-colors ${activeTab === 'how-it-works' ? 'border-[#E04F33] text-slate-900 dark:text-white' : 'border-transparent text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'}`}
             >
               How It Works
             </button>
@@ -1169,23 +994,23 @@ export default function App() {
               <>
                 <button 
                   onClick={() => { setActiveTab('dashboard'); window.location.hash = ''; }}
-                  className={`pb-1 border-b-2 transition-colors flex items-center gap-1.5 ${activeTab === 'dashboard' ? 'border-fuchsia-500 text-fuchsia-300' : 'border-transparent text-slate-400 hover:text-slate-200'}`}
+                  className={`pb-1 border-b-2 transition-colors flex items-center gap-1.5 ${activeTab === 'dashboard' ? 'border-[#E04F33] text-slate-900 dark:text-white' : 'border-transparent text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'}`}
                 >
-                  <LayoutDashboard className="w-3.5 h-3.5" />
+                  <LayoutDashboard className="w-3.5 h-3.5 text-[#E04F33]" />
                   Dashboard
                 </button>
                 <button 
                   onClick={() => { setActiveTab('favorites'); window.location.hash = ''; }}
-                  className={`pb-1 border-b-2 transition-colors flex items-center gap-1.5 ${activeTab === 'favorites' ? 'border-pink-500 text-pink-300' : 'border-transparent text-slate-400 hover:text-slate-200'}`}
+                  className={`pb-1 border-b-2 transition-colors flex items-center gap-1.5 ${activeTab === 'favorites' ? 'border-[#E04F33] text-slate-900 dark:text-white' : 'border-transparent text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'}`}
                 >
-                  <Heart className="w-3.5 h-3.5 text-pink-400" />
+                  <Heart className="w-3.5 h-3.5 text-rose-500" />
                   Favorites
                 </button>
                 <button 
                   onClick={() => { setActiveTab('bookings'); window.location.hash = ''; }}
-                  className={`pb-1 border-b-2 transition-colors flex items-center gap-1.5 ${activeTab === 'bookings' ? 'border-fuchsia-500 text-fuchsia-300' : 'border-transparent text-slate-400 hover:text-slate-200'}`}
+                  className={`pb-1 border-b-2 transition-colors flex items-center gap-1.5 ${activeTab === 'bookings' ? 'border-[#E04F33] text-slate-900 dark:text-white' : 'border-transparent text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'}`}
                 >
-                  <Lock className="w-3.5 h-3.5 text-purple-400" />
+                  <Lock className="w-3.5 h-3.5 text-[#E04F33]" />
                   My Bookings
                 </button>
               </>
@@ -1193,13 +1018,13 @@ export default function App() {
 
             <button 
               onClick={() => { setActiveTab('experiences'); window.location.hash = ''; }}
-              className={`pb-1 border-b-2 transition-colors ${activeTab === 'experiences' ? 'border-purple-500 text-purple-300' : 'border-transparent text-slate-400 hover:text-slate-200'}`}
+              className={`pb-1 border-b-2 transition-colors ${activeTab === 'experiences' ? 'border-[#E04F33] text-slate-900 dark:text-white' : 'border-transparent text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'}`}
             >
               Experience
             </button>
             <button 
               onClick={() => { setActiveTab('about'); window.location.hash = ''; }}
-              className={`pb-1 border-b-2 transition-colors ${activeTab === 'about' ? 'border-purple-500 text-purple-300' : 'border-transparent text-slate-400 hover:text-slate-200'}`}
+              className={`pb-1 border-b-2 transition-colors ${activeTab === 'about' ? 'border-[#E04F33] text-slate-900 dark:text-white' : 'border-transparent text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'}`}
             >
               About
             </button>
@@ -1220,14 +1045,14 @@ export default function App() {
               }}
               className={`p-2.5 rounded-full transition-all duration-300 relative border ${
                 activeTab === 'favorites' || showFavoritesOnly 
-                  ? 'text-pink-400 bg-pink-950/50 border-pink-500/40' 
-                  : 'text-slate-400 hover:text-pink-400 hover:bg-purple-950/40 border-transparent hover:border-purple-500/30'
+                  ? 'text-rose-400 bg-rose-950/50 border-rose-500/40' 
+                  : 'text-slate-300 hover:text-rose-400 hover:bg-white/5 border-white/10 hover:border-white/20'
               }`}
               title="Saved Favorites"
             >
-              <Heart className={`w-5 h-5 ${favorites.length > 0 ? 'fill-pink-500 text-pink-500' : ''}`} />
+              <Heart className={`w-5 h-5 ${favorites.length > 0 ? 'fill-rose-500 text-rose-500' : ''}`} />
               {favorites.length > 0 && (
-                <span className="absolute -top-0.5 -right-0.5 bg-fuchsia-600 text-white font-mono text-[9px] font-bold w-4 h-4 rounded-full flex items-center justify-center border border-[#08090E]">
+                <span className="absolute -top-0.5 -right-0.5 bg-[#E04F33] text-white font-mono text-[9px] font-bold w-4 h-4 rounded-full flex items-center justify-center border border-[#0E121B]">
                   {favorites.length}
                 </span>
               )}
@@ -1238,58 +1063,58 @@ export default function App() {
               <div className="relative">
                 <button
                   onClick={() => setUserDropdownOpen(!userDropdownOpen)}
-                  className="flex items-center gap-2.5 p-1.5 pr-3 bg-[#16082b] hover:bg-[#200c3e] border border-purple-700/60 rounded-full transition-colors cursor-pointer"
+                  className="flex items-center gap-2.5 p-1.5 pr-3 bg-[#1A2130]/90 hover:bg-[#222C3E] border border-white/15 rounded-full transition-colors cursor-pointer"
                 >
                   {user?.avatarUrl ? (
-                    <img src={user.avatarUrl} alt={user.name} className="w-8 h-8 rounded-full border border-fuchsia-400 object-cover" />
+                    <img src={user.avatarUrl} alt={user.name} className="w-8 h-8 rounded-full border border-[#E04F33] object-cover" />
                   ) : (
-                    <div className="w-8 h-8 rounded-full bg-purple-800 text-white flex items-center justify-center text-xs font-bold font-mono">
+                    <div className="w-8 h-8 rounded-full bg-[#E04F33] text-white flex items-center justify-center text-xs font-bold font-mono">
                       {user?.name?.[0] || 'U'}
                     </div>
                   )}
-                  <span className="text-xs font-bold text-slate-100 hidden sm:inline">{user?.name}</span>
+                  <span className="text-xs font-bold text-white hidden sm:inline">{user?.name}</span>
                 </button>
 
                 {/* Dropdown Menu */}
                 {userDropdownOpen && (
-                  <div className="absolute right-0 mt-2 w-56 bg-[#130723] border border-purple-800/80 rounded-2xl p-2 shadow-2xl z-50 text-slate-100 font-sans space-y-1">
-                    <div className="px-3 py-2 border-b border-purple-900/60">
+                  <div className="absolute right-0 mt-2 w-56 bg-[#141A26]/95 border border-white/15 rounded-2xl p-2 shadow-apple-glass z-50 text-white font-sans space-y-1 backdrop-blur-2xl">
+                    <div className="px-3 py-2 border-b border-white/10">
                       <p className="text-xs font-bold text-white">{user?.name}</p>
-                      <p className="text-[10px] text-purple-300 font-mono truncate">{user?.email}</p>
+                      <p className="text-[10px] text-slate-300 font-mono truncate">{user?.email}</p>
                     </div>
 
                     {isAdmin && (
                       <button
                         onClick={() => { setActiveTab('admin'); window.location.hash = 'admin'; setUserDropdownOpen(false); }}
-                        className="w-full text-left px-3 py-2 text-xs font-bold text-fuchsia-300 hover:bg-fuchsia-950/60 rounded-xl flex items-center gap-2 transition-colors border border-fuchsia-500/30 my-1"
+                        className="w-full text-left px-3 py-2 text-xs font-bold text-[#FF8A73] hover:bg-[#E04F33]/20 rounded-xl flex items-center gap-2 transition-colors border border-[#E04F33]/30 my-1"
                       >
-                        <ShieldCheck className="w-4 h-4 text-fuchsia-400" />
+                        <ShieldCheck className="w-4 h-4 text-[#E04F33]" />
                         <span>Admin Workspace</span>
                       </button>
                     )}
 
                     <button
                       onClick={() => { setActiveTab('dashboard'); setUserDropdownOpen(false); }}
-                      className="w-full text-left px-3 py-2 text-xs font-medium hover:bg-purple-900/50 rounded-xl flex items-center gap-2 transition-colors"
+                      className="w-full text-left px-3 py-2 text-xs font-medium hover:bg-white/10 rounded-xl flex items-center gap-2 transition-colors"
                     >
-                      <LayoutDashboard className="w-4 h-4 text-fuchsia-400" />
+                      <LayoutDashboard className="w-4 h-4 text-[#E04F33]" />
                       Buyer Dashboard
                     </button>
                     <button
                       onClick={() => { setActiveTab('favorites'); setUserDropdownOpen(false); }}
-                      className="w-full text-left px-3 py-2 text-xs font-medium hover:bg-purple-900/50 rounded-xl flex items-center gap-2 transition-colors"
+                      className="w-full text-left px-3 py-2 text-xs font-medium hover:bg-white/10 rounded-xl flex items-center gap-2 transition-colors"
                     >
-                      <Heart className="w-4 h-4 text-pink-400" />
+                      <Heart className="w-4 h-4 text-rose-400" />
                       Saved Favorites
                     </button>
                     <button
                       onClick={() => { setActiveTab('bookings'); setUserDropdownOpen(false); }}
-                      className="w-full text-left px-3 py-2 text-xs font-medium hover:bg-purple-900/50 rounded-xl flex items-center gap-2 transition-colors"
+                      className="w-full text-left px-3 py-2 text-xs font-medium hover:bg-white/10 rounded-xl flex items-center gap-2 transition-colors"
                     >
-                      <Lock className="w-4 h-4 text-purple-400" />
+                      <Lock className="w-4 h-4 text-[#E04F33]" />
                       My Bookings & Holds
                     </button>
-                    <div className="border-t border-purple-900/60 pt-1">
+                    <div className="border-t border-white/10 pt-1">
                       <button
                         onClick={() => { logout(); setUserDropdownOpen(false); }}
                         className="w-full text-left px-3 py-2 text-xs font-medium text-rose-300 hover:bg-rose-950/60 rounded-xl flex items-center gap-2 transition-colors"
@@ -1304,7 +1129,7 @@ export default function App() {
             ) : (
               <button
                 onClick={() => setShowAuthModal(true)}
-                className="px-5 py-2.5 bg-gradient-to-r from-fuchsia-600 via-pink-600 to-rose-600 hover:from-fuchsia-500 hover:to-rose-500 text-white rounded-full text-xs font-bold tracking-wider uppercase transition-all shadow-lg shadow-pink-600/30 flex items-center gap-1.5 cursor-pointer font-sans"
+                className="px-5 py-2.5 bg-[#E04F33] hover:bg-[#ED5B3F] text-white rounded-full text-xs font-bold tracking-wider uppercase transition-all shadow-md shadow-[#E04F33]/20 flex items-center gap-1.5 cursor-pointer font-sans"
               >
                 <UserIcon className="w-3.5 h-3.5" />
                 <span>Sign In</span>
@@ -1317,27 +1142,37 @@ export default function App() {
       </header>
 
       {/* Amenities Ticker */}
-      <div className="bg-[#0B0A14] py-3 border-b border-purple-900/30 relative overflow-hidden select-none flex items-center">
-        <div className="flex whitespace-nowrap text-[9px] md:text-xs font-bold uppercase tracking-[0.14em] text-purple-300">
-          <div className="inline-flex items-center shrink-0 gap-8 px-4 animate-marquee-reverse">
+      <div className="bg-[#12141C] py-3 border-b border-white/10 relative overflow-hidden select-none flex items-center">
+        <div className="flex whitespace-nowrap text-[9px] md:text-xs font-bold uppercase tracking-[0.14em] text-slate-300">
+          <div className="inline-flex items-center shrink-0 gap-8 px-4 animate-marquee-ltr">
             <span>HEATED PRIVATE INFINITY POOLS</span>
-            <span className="text-purple-600/60">✦</span>
+            <span className="text-[#E04F33]">✦</span>
             <span>24/7 PERSONAL CONCIERGE SERVICES</span>
-            <span className="text-purple-600/60">✦</span>
+            <span className="text-[#E04F33]">✦</span>
             <span>DIRECT PLATFORM BOOKINGS (AIRBNB, VRBO, BOOKING.COM)</span>
-            <span className="text-purple-600/60">✦</span>
+            <span className="text-[#E04F33]">✦</span>
             <span>SCOTTSDALE & PENSACOLA LUXURY ESTATES</span>
-            <span className="text-purple-600/60">✦</span>
+            <span className="text-[#E04F33]">✦</span>
           </div>
-          <div className="inline-flex items-center shrink-0 gap-8 px-4 animate-marquee-reverse" aria-hidden="true">
+          <div className="inline-flex items-center shrink-0 gap-8 px-4 animate-marquee-ltr" aria-hidden="true">
             <span>HEATED PRIVATE INFINITY POOLS</span>
-            <span className="text-purple-600/60">✦</span>
+            <span className="text-[#E04F33]">✦</span>
             <span>24/7 PERSONAL CONCIERGE SERVICES</span>
-            <span className="text-purple-600/60">✦</span>
+            <span className="text-[#E04F33]">✦</span>
             <span>DIRECT PLATFORM BOOKINGS (AIRBNB, VRBO, BOOKING.COM)</span>
-            <span className="text-purple-600/60">✦</span>
+            <span className="text-[#E04F33]">✦</span>
             <span>SCOTTSDALE & PENSACOLA LUXURY ESTATES</span>
-            <span className="text-purple-600/60">✦</span>
+            <span className="text-[#E04F33]">✦</span>
+          </div>
+          <div className="inline-flex items-center shrink-0 gap-8 px-4 animate-marquee-ltr" aria-hidden="true">
+            <span>HEATED PRIVATE INFINITY POOLS</span>
+            <span className="text-[#E04F33]">✦</span>
+            <span>24/7 PERSONAL CONCIERGE SERVICES</span>
+            <span className="text-[#E04F33]">✦</span>
+            <span>DIRECT PLATFORM BOOKINGS (AIRBNB, VRBO, BOOKING.COM)</span>
+            <span className="text-[#E04F33]">✦</span>
+            <span>SCOTTSDALE & PENSACOLA LUXURY ESTATES</span>
+            <span className="text-[#E04F33]">✦</span>
           </div>
         </div>
       </div>
@@ -1357,82 +1192,113 @@ export default function App() {
           />
         ) : activeTab === 'bookings' ? (
           <BookingsView />
-        ) : activeTab === 'admin' ? (
-          renderAdminView()
         ) : (
 
           /* CUSTOMER PUBLIC VIEW */
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start w-full max-w-full overflow-hidden">
             
-            {/* Left Brand Sidebar */}
-            <section className="lg:col-span-4 glass-card rounded-3xl p-8 border border-purple-500/20 shadow-2xl flex flex-col justify-between min-h-[520px]">
+            {/* Left Brand Sidebar (Hidden on mobile, visible on lg screens side-by-side) */}
+            <m.section 
+              initial={{ opacity: 0, x: -20 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ type: 'spring', stiffness: 100, damping: 18, delay: 0.15 }}
+              className="hidden lg:flex lg:col-span-4 bg-white/5 backdrop-blur-2xl rounded-2xl p-6 sm:p-8 border border-white/10 shadow-2xl shadow-black/40 flex-col justify-between min-h-0 lg:min-h-[520px] relative overflow-hidden apple-specular"
+            >
+              <div className="absolute inset-0 ring-1 ring-inset ring-white/10 rounded-2xl pointer-events-none" />
               <div>
-                <div className="inline-flex items-center gap-2 px-3 py-1 bg-purple-950/80 rounded-full mb-6 border border-purple-500/30">
-                  <Sparkles className="w-3.5 h-3.5 text-purple-400 animate-pulse" />
-                  <span className="text-[10px] font-bold text-purple-300 tracking-wider uppercase font-mono">Kaizen Luxury Collection</span>
+                <div className="inline-flex items-center gap-2 px-3 py-1 bg-white/10 backdrop-blur-xl rounded-full mb-6 border border-white/10">
+                  <Sparkles className="w-3.5 h-3.5 text-[#E04F33] animate-pulse" />
+                  <span className="text-[9px] font-bold text-[#FF8A73] tracking-[0.2em] uppercase font-mono">Kaizen Luxury Collection</span>
                 </div>
                 
-                <h1 className="text-3xl sm:text-4xl font-extrabold leading-tight tracking-tight mb-4 text-white font-serif">
-                  Luxury stays, <span className="text-purple-400 italic">unforgettable</span> memories.
-                </h1>
-                <p className="text-slate-400 text-sm leading-relaxed mb-8">
+                {/* Headline with Staggered Word / Character Reveal */}
+                <m.h1 
+                  initial="hidden"
+                  animate="visible"
+                  variants={{
+                    hidden: { opacity: 0 },
+                    visible: {
+                      opacity: 1,
+                      transition: {
+                        staggerChildren: 0.1,
+                        delayChildren: 0.2,
+                      }
+                    }
+                  }}
+                  className="text-2xl sm:text-4xl font-display font-extrabold leading-tight tracking-tight mb-4 text-white flex flex-wrap gap-x-2"
+                >
+                  <m.span variants={{ hidden: { y: 20, opacity: 0 }, visible: { y: 0, opacity: 1, transition: { type: 'spring', stiffness: 120, damping: 14 } } }} className="inline-block">
+                    Luxury
+                  </m.span>
+                  <m.span variants={{ hidden: { y: 20, opacity: 0 }, visible: { y: 0, opacity: 1, transition: { type: 'spring', stiffness: 120, damping: 14 } } }} className="inline-block">
+                    stays,
+                  </m.span>
+                  <m.span variants={{ hidden: { y: 20, opacity: 0 }, visible: { y: 0, opacity: 1, transition: { type: 'spring', stiffness: 120, damping: 14 } } }} className="inline-block text-[#FF8A73] italic font-serif">
+                    unforgettable
+                  </m.span>
+                  <m.span variants={{ hidden: { y: 20, opacity: 0 }, visible: { y: 0, opacity: 1, transition: { type: 'spring', stiffness: 120, damping: 14 } } }} className="inline-block">
+                    memories.
+                  </m.span>
+                </m.h1>
+
+                <p className="text-slate-300 text-xs sm:text-sm leading-relaxed mb-6 sm:mb-8 font-sans">
                   Indulge in our collection of meticulously curated luxury villas. Heated pools, private chefs, 24/7 concierge, and bespoke hospitality crafted to perfection.
                 </p>
                 
-                {/* Navigation Doors */}
+                {/* Navigation Doors in Sleek Frosted Glass */}
                 <div className="space-y-3.5">
                   
                   <div 
                     onClick={() => { setActiveTab('properties'); setShowFavoritesOnly(false); }}
-                    className={`p-4 rounded-xl border cursor-pointer group transition-all duration-300 ${
+                    className={`p-4 rounded-xl border cursor-pointer group transition-all duration-300 backdrop-blur-2xl ${
                       activeTab === 'properties' && !showFavoritesOnly
-                        ? 'bg-purple-950/60 border-purple-500/60 shadow-lg shadow-purple-950/50 ring-1 ring-purple-500/40' 
-                        : 'bg-[#121122]/60 border-purple-900/30 hover:border-purple-500/40 hover:bg-[#18162e]'
+                        ? 'bg-white/15 border-white/20 shadow-2xl shadow-black/40 ring-1 ring-white/20' 
+                        : 'bg-white/5 border-white/10 hover:border-white/20 hover:bg-white/10'
                     }`}
                   >
                     <div className="flex items-center justify-between">
                       <div>
-                        <p className="text-[10px] font-extrabold text-purple-400 uppercase mb-1 tracking-widest font-mono font-bold">Collection Catalog</p>
-                        <p className="text-sm font-bold text-white">Browse Turnkey Villas</p>
-                        <p className="text-xs text-slate-400 mt-1">Explore verified luxury properties ready to operate & stay.</p>
+                        <p className="text-[9px] font-extrabold text-[#FF8A73] uppercase mb-1 tracking-[0.2em] font-mono">Collection Catalog</p>
+                        <p className="text-sm font-heading font-bold text-white">Browse Turnkey Villas</p>
+                        <p className="text-xs text-slate-300 mt-1 font-sans">Explore verified luxury properties ready to operate & stay.</p>
                       </div>
-                      <ArrowRight className="w-4 h-4 text-purple-500/50 group-hover:text-purple-400 group-hover:translate-x-1 transition-all" />
+                      <ArrowRight className="w-4 h-4 text-[#E04F33] group-hover:text-white group-hover:translate-x-1 transition-all" />
                     </div>
                   </div>
 
                   <div 
                     onClick={() => setActiveTab('how-it-works')}
-                    className={`p-4 rounded-xl border cursor-pointer group transition-all duration-300 ${
+                    className={`p-4 rounded-xl border cursor-pointer group transition-all duration-300 backdrop-blur-2xl ${
                       activeTab === 'how-it-works' 
-                        ? 'bg-purple-950/60 border-purple-500/60 shadow-lg shadow-purple-950/50 ring-1 ring-purple-500/40' 
-                        : 'bg-[#121122]/60 border-purple-900/30 hover:border-purple-500/40 hover:bg-[#18162e]'
+                        ? 'bg-white/15 border-white/20 shadow-2xl shadow-black/40 ring-1 ring-white/20' 
+                        : 'bg-white/5 border-white/10 hover:border-white/20 hover:bg-white/10'
                     }`}
                   >
                     <div className="flex items-center justify-between">
                       <div>
-                        <p className="text-[10px] font-extrabold text-pink-400 uppercase mb-1 tracking-widest font-mono font-bold">Turnkey Process</p>
-                        <p className="text-sm font-bold text-white">How It Works</p>
-                        <p className="text-xs text-slate-400 mt-1">4-step guide to locking, verifying, and operating properties.</p>
+                        <p className="text-[9px] font-extrabold text-[#FF8A73] uppercase mb-1 tracking-[0.2em] font-mono">Turnkey Process</p>
+                        <p className="text-sm font-heading font-bold text-white">How It Works</p>
+                        <p className="text-xs text-slate-300 mt-1 font-sans">4-step guide to locking, verifying, and operating properties.</p>
                       </div>
-                      <ArrowRight className="w-4 h-4 text-pink-500/50 group-hover:text-pink-400 group-hover:translate-x-1 transition-all" />
+                      <ArrowRight className="w-4 h-4 text-[#E04F33] group-hover:text-white group-hover:translate-x-1 transition-all" />
                     </div>
                   </div>
 
                   <div 
                     onClick={() => setActiveTab('experiences')}
-                    className={`p-4 rounded-xl border cursor-pointer group transition-all duration-300 ${
+                    className={`p-4 rounded-xl border cursor-pointer group transition-all duration-300 backdrop-blur-2xl ${
                       activeTab === 'experiences' 
-                        ? 'bg-purple-950/60 border-purple-500/60 shadow-lg shadow-purple-950/50 ring-1 ring-purple-500/40' 
-                        : 'bg-[#121122]/60 border-purple-900/30 hover:border-purple-500/40 hover:bg-[#18162e]'
+                        ? 'bg-white/15 border-white/20 shadow-2xl shadow-black/40 ring-1 ring-white/20' 
+                        : 'bg-white/5 border-white/10 hover:border-white/20 hover:bg-white/10'
                     }`}
                   >
                     <div className="flex items-center justify-between">
                       <div>
-                        <p className="text-[10px] font-extrabold text-indigo-400 uppercase mb-1 tracking-widest font-mono font-bold">Our Experience</p>
-                        <p className="text-sm font-bold text-white">Guest Experience</p>
-                        <p className="text-xs text-slate-400 mt-1">Private infinity pools, gourmet chefs, and custom catering.</p>
+                        <p className="text-[9px] font-extrabold text-[#FF8A73] uppercase mb-1 tracking-[0.2em] font-mono">Our Experience</p>
+                        <p className="text-sm font-heading font-bold text-white">Guest Experience</p>
+                        <p className="text-xs text-slate-300 mt-1 font-sans">Private infinity pools, gourmet chefs, and custom catering.</p>
                       </div>
-                      <ArrowRight className="w-4 h-4 text-indigo-500/50 group-hover:text-indigo-400 group-hover:translate-x-1 transition-all" />
+                      <ArrowRight className="w-4 h-4 text-[#E04F33] group-hover:text-white group-hover:translate-x-1 transition-all" />
                     </div>
                   </div>
 
@@ -1440,100 +1306,83 @@ export default function App() {
               </div>
 
               {/* Trust Badge */}
-              <div className="pt-8 mt-8 border-t border-purple-900/30 flex items-center justify-between text-xs text-slate-400">
-                <span className="font-mono text-[11px] text-purple-300">Airbtics Analytics Verified</span>
-                <span className="font-extrabold text-white font-serif">KAIZEN ESTATES</span>
+              <div className="pt-6 sm:pt-8 mt-6 sm:mt-8 border-t border-white/10 flex items-center justify-between text-xs text-slate-300">
+                <span className="font-mono text-[10px] text-[#FF8A73] uppercase tracking-widest">Airbtics Verified</span>
+                <span className="font-bold text-white font-heading tracking-wider">KAIZEN REAL ESTATE</span>
               </div>
-            </section>
+            </m.section>
 
             {/* Right Main Content Panel */}
-            <section className="lg:col-span-8 space-y-6">
+            <section className="lg:col-span-8 space-y-6 min-w-0 max-w-full">
 
-              {/* Mobile Filter Pill Tabs */}
-              <div className="flex md:hidden overflow-x-auto pb-2 gap-2">
-                <button 
-                  onClick={() => { setActiveTab('properties'); setShowFavoritesOnly(false); setSearchQuery(''); }}
-                  className={`px-4 py-2 rounded-lg text-xs font-bold flex-shrink-0 whitespace-nowrap transition-colors ${
-                    activeTab === 'properties' && !showFavoritesOnly ? 'bg-purple-600 text-white shadow-md' : 'bg-[#121122] text-slate-300 border border-purple-900/30'
-                  }`}
-                >
-                  Properties
-                </button>
-                <button 
-                  onClick={() => setActiveTab('how-it-works')}
-                  className={`px-4 py-2 rounded-lg text-xs font-bold flex-shrink-0 whitespace-nowrap transition-colors ${
-                    activeTab === 'how-it-works' ? 'bg-purple-600 text-white shadow-md' : 'bg-[#121122] text-slate-300 border border-purple-900/30'
-                  }`}
-                >
-                  How It Works
-                </button>
-                <button 
-                  onClick={() => setActiveTab('blogs')}
-                  className={`px-4 py-2 rounded-lg text-xs font-bold flex-shrink-0 whitespace-nowrap transition-colors ${
-                    activeTab === 'blogs' ? 'bg-purple-600 text-white shadow-md' : 'bg-[#121122] text-slate-300 border border-purple-900/30'
-                  }`}
-                >
-                  Blogs
-                </button>
-                <button 
-                  onClick={() => setActiveTab('stories')}
-                  className={`px-4 py-2 rounded-lg text-xs font-bold flex-shrink-0 whitespace-nowrap transition-colors ${
-                    activeTab === 'stories' ? 'bg-purple-600 text-white shadow-md' : 'bg-[#121122] text-slate-300 border border-purple-900/30'
-                  }`}
-                >
-                  Stories
-                </button>
-                <button 
-                  onClick={() => setActiveTab('experiences')}
-                  className={`px-4 py-2 rounded-lg text-xs font-bold flex-shrink-0 whitespace-nowrap transition-colors ${
-                    activeTab === 'experiences' ? 'bg-purple-600 text-white shadow-md' : 'bg-[#121122] text-slate-300 border border-purple-900/30'
-                  }`}
-                >
-                  Experience
-                </button>
-                <button 
-                  onClick={() => setActiveTab('about')}
-                  className={`px-4 py-2 rounded-lg text-xs font-bold flex-shrink-0 whitespace-nowrap transition-colors ${
-                    activeTab === 'about' ? 'bg-purple-600 text-white shadow-md' : 'bg-[#121122] text-slate-300 border border-purple-900/30'
-                  }`}
-                >
-                  About
-                </button>
+              {/* Mobile Filter Pill Tabs in Frosted Glass */}
+              <div className="flex md:hidden overflow-x-auto pb-2 gap-2 max-w-full no-scrollbar">
+                {[
+                  { id: 'properties', label: 'Properties' },
+                  { id: 'how-it-works', label: 'How It Works' },
+                  { id: 'blogs', label: 'Blogs' },
+                  { id: 'stories', label: 'Stories' },
+                  { id: 'experiences', label: 'Experience' },
+                  { id: 'about', label: 'About' },
+                ].map((item) => (
+                  <button 
+                    key={item.id}
+                    onClick={() => { setActiveTab(item.id as any); setShowFavoritesOnly(false); setSearchQuery(''); }}
+                    className={`px-4 py-2 rounded-xl text-xs font-bold shrink-0 whitespace-nowrap transition-all backdrop-blur-xl ${
+                      activeTab === item.id && !showFavoritesOnly 
+                        ? 'bg-white/20 text-white border border-white/25 shadow-md' 
+                        : 'bg-white/5 text-slate-300 border border-white/10 hover:bg-white/10 hover:text-white'
+                    }`}
+                  >
+                    {item.label}
+                  </button>
+                ))}
               </div>
 
               {/* VIEW A: ACTIVE PROPERTIES CATALOG */}
               {activeTab === 'properties' && (
-                <div className="space-y-6 animate-fade-in">
+                <div className="space-y-6 animate-fade-in w-full max-w-full overflow-hidden">
                   
                   {/* Airbnb-style Interactive Search Bar */}
-                  <AirbnbSearchBar 
-                    where={searchWhere}
-                    setWhere={setSearchWhere}
-                    whenDisplay={searchWhenDisplay}
-                    setWhenDisplay={setSearchWhenDisplay}
-                    startDate={searchStartDate}
-                    setStartDate={setSearchStartDate}
-                    endDate={searchEndDate}
-                    setEndDate={setSearchEndDate}
-                    guestCount={searchGuestCount}
-                    setGuestCount={setSearchGuestCount}
-                    onSearch={handleExecuteSearch}
-                  />
+                  <m.div
+                    initial={{ scale: 0.95, opacity: 0 }}
+                    animate={{ scale: 1, opacity: 1 }}
+                    transition={{
+                      type: 'spring',
+                      stiffness: 110,
+                      damping: 18,
+                      delay: 0.25,
+                    }}
+                  >
+                    <AirbnbSearchBar 
+                      where={searchWhere}
+                      setWhere={setSearchWhere}
+                      whenDisplay={searchWhenDisplay}
+                      setWhenDisplay={setSearchWhenDisplay}
+                      startDate={searchStartDate}
+                      setStartDate={setSearchStartDate}
+                      endDate={searchEndDate}
+                      setEndDate={setSearchEndDate}
+                      guestCount={searchGuestCount}
+                      setGuestCount={setSearchGuestCount}
+                      onSearch={handleExecuteSearch}
+                    />
+                  </m.div>
 
-                  {/* Status Filters Bar */}
-                  <div className="flex items-center justify-between pt-2">
-                    <span className="text-xs font-mono text-slate-400">
+                  {/* Status Filters Bar in Sleek Frosted Glass */}
+                  <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 pt-2 w-full max-w-full overflow-hidden">
+                    <span className="text-xs font-mono text-slate-300 shrink-0">
                       Showing {filteredDeals.length} luxury {filteredDeals.length === 1 ? 'property' : 'properties'}
                     </span>
-                    <div className="flex bg-[#121122] p-1 rounded-xl border border-purple-900/40">
+                    <div className="flex bg-white/5 backdrop-blur-2xl p-1 rounded-xl border border-white/10 overflow-x-auto max-w-full w-full sm:w-auto no-scrollbar">
                       {(['ALL', 'AVAILABLE', 'UNDER CONTRACT', 'UNDER REVIEW'] as const).map((filter) => (
                         <button
                           key={filter}
                           onClick={() => setStatusFilter(filter)}
-                          className={`px-3 py-1.5 rounded-lg text-xs font-bold whitespace-nowrap transition-all ${
+                          className={`px-3.5 py-1.5 rounded-lg text-xs font-bold whitespace-nowrap transition-all shrink-0 ${
                             statusFilter === filter 
-                              ? 'bg-purple-600 text-white shadow-md shadow-purple-600/30' 
-                              : 'text-slate-400 hover:text-slate-200'
+                              ? 'bg-white/20 text-white border border-white/25 shadow-md' 
+                              : 'text-slate-300 hover:text-white hover:bg-white/5'
                           }`}
                         >
                           {filter === 'ALL' ? 'All Listings' : filter}
@@ -1546,168 +1395,60 @@ export default function App() {
                   {isSearching ? (
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6 animate-pulse">
                       {[1, 2].map((n) => (
-                        <div key={n} className="glass-card rounded-2xl border border-purple-900/40 p-5 space-y-4">
-                          <div className="h-48 bg-purple-950/50 rounded-xl flex items-center justify-center">
-                            <Sparkles className="w-8 h-8 text-purple-500/40 animate-spin" />
+                        <div key={n} className="bg-white/5 backdrop-blur-2xl rounded-2xl border border-white/10 p-5 space-y-4">
+                          <div className="h-48 bg-white/10 rounded-xl flex items-center justify-center">
+                            <Sparkles className="w-8 h-8 text-[#E04F33]/60 animate-spin" />
                           </div>
-                          <div className="h-5 bg-purple-900/40 rounded w-2/3" />
-                          <div className="h-4 bg-purple-900/30 rounded w-1/3" />
+                          <div className="h-5 bg-white/10 rounded w-2/3" />
+                          <div className="h-4 bg-white/5 rounded w-1/3" />
                           <div className="grid grid-cols-3 gap-2 pt-2">
-                            <div className="h-12 bg-purple-950/40 rounded-lg" />
-                            <div className="h-12 bg-purple-950/40 rounded-lg" />
-                            <div className="h-12 bg-purple-950/40 rounded-lg" />
+                            <div className="h-12 bg-white/5 rounded-lg" />
+                            <div className="h-12 bg-white/5 rounded-lg" />
+                            <div className="h-12 bg-white/5 rounded-lg" />
                           </div>
                         </div>
                       ))}
                     </div>
                   ) : filteredDeals.length === 0 ? (
-                    <div className="glass-card rounded-2xl border border-purple-500/20 p-12 text-center shadow-xl">
-                      <Building className="w-12 h-12 text-purple-400/50 mx-auto mb-4" />
-                      <p className="font-bold text-slate-200">No matching luxury villas found</p>
-                      <p className="text-xs text-slate-400 mt-1">Try resetting the status filter or clearing your search term.</p>
+                    <div className="bg-white/5 backdrop-blur-2xl rounded-2xl border border-white/10 p-12 text-center shadow-2xl">
+                      <Building className="w-12 h-12 text-slate-400 mx-auto mb-4" />
+                      <p className="font-bold text-white">No matching luxury villas found</p>
+                      <p className="text-xs text-slate-300 mt-1">Try resetting the status filter or clearing your search term.</p>
                       <button 
                         onClick={() => { setSearchQuery(''); setStatusFilter('ALL'); setShowFavoritesOnly(false); }}
-                        className="mt-4 px-4 py-2 bg-purple-600 text-white rounded-lg text-xs font-bold hover:bg-purple-500 transition-colors shadow-lg shadow-purple-600/20"
+                        className="mt-4 px-4 py-2 bg-[#E04F33] hover:bg-[#ED5B3F] text-white rounded-xl text-xs font-bold transition-colors shadow-lg shadow-[#E04F33]/20"
                       >
                         Reset Filters
                       </button>
                     </div>
                   ) : (
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                      {filteredDeals.map((deal) => {
-                        const activeListings = deal.listings.filter(l => l.isActive && l.url);
-
-                        return (
-                          <div 
-                            key={deal.id}
-                            className="glass-card glass-card-hover rounded-2xl border border-purple-900/30 overflow-hidden flex flex-col transition-all duration-300 group"
-                          >
-                            {/* Thumbnail Header */}
-                            <div className="h-48 bg-[#0A0914] relative overflow-hidden cursor-pointer" onClick={() => handleOpenProspectus(deal)}>
-                              <img 
-                                src={deal.imageUrl} 
-                                alt={deal.title}
-                                className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                                onError={(e) => {
-                                  (e.target as HTMLImageElement).src = 'https://images.unsplash.com/photo-1512917774080-9991f1c4c750?auto=format&fit=crop&w=800&q=80';
-                                }}
-                              />
-                              
-                              <div className="absolute top-3 left-3 px-3 py-1 bg-[#090A10]/90 backdrop-blur rounded-full text-[10px] font-bold uppercase tracking-wider text-slate-200 shadow-md border border-purple-500/20 flex items-center gap-1.5 font-mono">
-                                <MapPin className="w-3 h-3 text-purple-400" />
-                                {deal.location}
-                              </div>
-
-                              <div className="absolute top-3 right-3 flex items-center gap-2">
-                                <button 
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    toggleFavorite(deal.id);
-                                  }}
-                                  className="p-2 bg-[#090A10]/90 backdrop-blur rounded-full text-slate-300 hover:text-red-400 hover:scale-110 shadow-md transition-all duration-300 border border-purple-500/20"
-                                  title={favorites.includes(deal.id) ? "Remove from Saved" : "Save Property"}
-                                >
-                                  <Heart className={`w-3.5 h-3.5 ${favorites.includes(deal.id) ? 'fill-current text-red-400' : 'text-slate-400'}`} />
-                                </button>
-                                
-                                <span className={`text-[10px] font-extrabold px-3 py-1 rounded-full shadow-md text-white font-mono ${
-                                  deal.status === 'AVAILABLE' ? 'bg-emerald-600/90 border border-emerald-400/30' :
-                                  deal.status === 'OCCUPIED' ? 'bg-slate-700/90 border border-slate-500/30' :
-                                  'bg-purple-600/90 border border-purple-400/30'
-                                }`}>
-                                  {deal.status}
-                                </span>
-                              </div>
-                              
-                              <div className="absolute bottom-3 left-3 bg-[#090A10]/90 backdrop-blur border border-purple-500/20 px-2.5 py-1 rounded text-[10px] font-bold text-purple-200 uppercase tracking-wider font-mono">
-                                {deal.bedsBaths} • {deal.squareFeet} SQFT
-                              </div>
-                            </div>
-
-                            {/* Card Body */}
-                            <div className="p-6 flex-1 flex flex-col justify-between">
-                              <div>
-                                <div 
-                                  className="flex justify-between items-start gap-4 mb-3 cursor-pointer"
-                                  onClick={() => handleOpenProspectus(deal)}
-                                >
-                                  <div>
-                                    <h3 className="font-extrabold text-lg leading-tight text-white group-hover:text-purple-300 transition-colors">
-                                      {deal.title}
-                                    </h3>
-                                    <p className="text-xs text-slate-400 mt-1">Furnished: {deal.furnished}</p>
-                                  </div>
-                                  <div className="text-right">
-                                    <span className="text-[10px] font-extrabold text-slate-400 block uppercase tracking-wider font-mono">Rate</span>
-                                    <span className="font-bold text-purple-300 text-base leading-none block font-mono">{deal.adr}/night</span>
-                                  </div>
-                                </div>
-
-                                <p className="text-xs text-slate-300 leading-relaxed line-clamp-2 mb-4">
-                                  {deal.description}
-                                </p>
-                              </div>
-
-                              {/* Book / View on Platforms Section */}
-                              <div className="pt-4 border-t border-purple-900/30">
-                                <span className="text-[10px] font-extrabold uppercase tracking-widest text-slate-400 block mb-2 font-mono">
-                                  Book / View on Platforms:
-                                </span>
-
-                                {activeListings.length > 0 ? (
-                                  <div className="flex flex-wrap gap-2">
-                                    {activeListings.map((listing, idx) => {
-                                      const cfg = PLATFORM_CONFIG[listing.platform] || PLATFORM_CONFIG['Custom'];
-                                      return (
-                                        <a
-                                          key={idx}
-                                          href={listing.url}
-                                          target="_blank"
-                                          rel="noopener noreferrer"
-                                          className={`px-3 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1.5 border transition-all duration-200 shadow-sm ${cfg.bg} ${cfg.text} ${cfg.border}`}
-                                        >
-                                          <span>{cfg.iconLabel}</span>
-                                          <ExternalLink className="w-3 h-3 opacity-80" />
-                                        </a>
-                                      );
-                                    })}
-                                  </div>
-                                ) : (
-                                  <span className="inline-block px-3 py-1 rounded-full bg-slate-900/80 border border-slate-800 text-slate-400 text-xs font-mono font-medium">
-                                    Currently Unavailable / Fully Booked
-                                  </span>
-                                )}
-
-                                <button
-                                  onClick={() => handleOpenProspectus(deal)}
-                                  className="mt-4 w-full py-2 bg-purple-950/40 hover:bg-purple-900/40 border border-purple-500/30 text-purple-200 rounded-lg text-xs font-bold transition-all flex items-center justify-center gap-1.5 font-mono"
-                                >
-                                  <Eye className="w-3.5 h-3.5 text-purple-400" />
-                                  View Full Details & Specs
-                                </button>
-                              </div>
-
-                            </div>
-                          </div>
-                        );
-                      })}
+                      {filteredDeals.map((deal) => (
+                        <PropertyCard
+                          key={deal.id}
+                          deal={deal}
+                          isFavorite={favorites.includes(deal.id)}
+                          onToggleFavorite={(id) => toggleFavorite(id)}
+                          onOpenProspectus={handleOpenProspectus}
+                        />
+                      ))}
                     </div>
                   )}
 
                   {/* Reassurance Footer */}
-                  <div className="glass-card p-6 rounded-2xl border border-purple-500/20 shadow-xl flex flex-col sm:flex-row items-center justify-between gap-4">
+                  <div className="bg-white/5 backdrop-blur-2xl p-6 rounded-2xl border border-white/10 shadow-2xl flex flex-col sm:flex-row items-center justify-between gap-4">
                     <div className="flex items-center gap-3">
-                      <div className="flex -space-x-2.5 overflow-hidden">
-                        <div className="inline-block h-8 w-8 rounded-full ring-2 ring-[#08090E] bg-purple-950 text-purple-300 border border-purple-500/30 flex items-center justify-center text-[10px] font-bold">SM</div>
-                        <div className="inline-block h-8 w-8 rounded-full ring-2 ring-[#08090E] bg-indigo-950 text-indigo-300 border border-indigo-500/30 flex items-center justify-center text-[10px] font-bold">JD</div>
-                        <div className="inline-block h-8 w-8 rounded-full ring-2 ring-[#08090E] bg-emerald-950 text-emerald-300 border border-emerald-500/30 flex items-center justify-center text-[10px] font-bold">LH</div>
+                      <div className="flex -space-x-3 overflow-hidden shrink-0">
+                        <div className="w-8 h-8 rounded-full flex items-center justify-center shrink-0 border-2 border-[#0F1014] bg-white/10 backdrop-blur-md text-white text-xs font-medium tracking-wide shadow-sm">SM</div>
+                        <div className="w-8 h-8 rounded-full flex items-center justify-center shrink-0 border-2 border-[#0F1014] bg-white/10 backdrop-blur-md text-white text-xs font-medium tracking-wide shadow-sm">JD</div>
+                        <div className="w-8 h-8 rounded-full flex items-center justify-center shrink-0 border-2 border-[#0F1014] bg-white/10 backdrop-blur-md text-white text-xs font-medium tracking-wide shadow-sm">LH</div>
                       </div>
-                      <p className="text-xs text-slate-400 font-medium">
+                      <p className="text-xs text-slate-300 font-medium">
                         Guiding <span className="font-bold text-white">100% verified guest stays</span> across Arizona and Florida.
                       </p>
                     </div>
-                    <div className="text-[10px] font-bold text-purple-400 font-mono tracking-widest uppercase">
-                      KAIZEN ESTATES • LUXURY REDEFINED
+                    <div className="text-[10px] font-bold text-[#FF8A73] font-mono tracking-widest uppercase">
+                      KAIZEN REAL ESTATE • LUXURY REDEFINED
                     </div>
                   </div>
 
@@ -1721,21 +1462,21 @@ export default function App() {
 
               {/* VIEW B: BLOGS */}
               {activeTab === 'blogs' && (
-                <div className="space-y-8 animate-fade-in">
-                  <div className="glass-card rounded-3xl border border-purple-500/20 p-8 shadow-xl">
-                    <span className="text-[10px] font-extrabold text-purple-300 bg-purple-950/80 px-3 py-1 rounded-full uppercase tracking-widest border border-purple-500/30 font-mono">
+                <div className="space-y-8 animate-fade-in text-slate-900 dark:text-slate-100">
+                  <div className="glass-card bg-white/80 dark:bg-white/5 rounded-3xl border border-slate-200/80 dark:border-white/10 p-8 shadow-xl shadow-slate-200/50 dark:shadow-2xl apple-specular">
+                    <span className="text-[10px] font-extrabold text-[#E04F33] dark:text-[#FF8A73] bg-[#E04F33]/10 dark:bg-white/10 px-3 py-1 rounded-full uppercase tracking-widest border border-[#E04F33]/20 dark:border-white/15 font-mono">
                       Kaizen Editorial
                     </span>
-                    <h2 className="text-2xl sm:text-3xl font-extrabold text-white mt-4 font-serif">
+                    <h2 className="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white mt-4 font-serif">
                       The Art of Luxury Vacation Rentals & Design
                     </h2>
-                    <p className="text-slate-400 text-sm mt-2 leading-relaxed">
+                    <p className="text-slate-600 dark:text-slate-400 text-sm mt-2 leading-relaxed">
                       Exclusive columns on luxury real estate curation, interior design secrets, and guest experience benchmarks.
                     </p>
                   </div>
 
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                    <div className="glass-card glass-card-hover rounded-2xl border border-purple-900/30 overflow-hidden flex flex-col justify-between transition-all shadow-xl">
+                    <div className="glass-card bg-white/80 dark:bg-white/5 rounded-2xl border border-slate-200/80 dark:border-white/10 overflow-hidden flex flex-col justify-between transition-all shadow-xl shadow-slate-200/50 dark:shadow-2xl apple-specular">
                       <div>
                         <div className="h-40 relative">
                           <img 
@@ -1745,18 +1486,18 @@ export default function App() {
                           />
                         </div>
                         <div className="p-5 space-y-2">
-                          <p className="text-[10px] text-purple-400 font-bold uppercase tracking-wider font-mono">July 18, 2026 • 5 min read</p>
-                          <h3 className="font-extrabold text-base text-white">
+                          <p className="text-[10px] text-[#E04F33] dark:text-[#FF8A73] font-bold uppercase tracking-wider font-mono">July 18, 2026 • 5 min read</p>
+                          <h3 className="font-extrabold text-base text-slate-900 dark:text-white">
                             Curating Kaizen Scottsdale: Inside Our Design Playbook
                           </h3>
-                          <p className="text-xs text-slate-400 leading-relaxed line-clamp-3">
+                          <p className="text-xs text-slate-600 dark:text-slate-400 leading-relaxed line-clamp-3">
                             How we integrated custom local cactus gardens, heated infinity pools, and warm neutral linens to boost Scottsdale guest satisfaction.
                           </p>
                         </div>
                       </div>
                     </div>
 
-                    <div className="glass-card glass-card-hover rounded-2xl border border-purple-900/30 overflow-hidden flex flex-col justify-between transition-all shadow-xl">
+                    <div className="glass-card bg-white/80 dark:bg-white/5 rounded-2xl border border-slate-200/80 dark:border-white/10 overflow-hidden flex flex-col justify-between transition-all shadow-xl shadow-slate-200/50 dark:shadow-2xl apple-specular">
                       <div>
                         <div className="h-40 relative">
                           <img 
@@ -1766,18 +1507,18 @@ export default function App() {
                           />
                         </div>
                         <div className="p-5 space-y-2">
-                          <p className="text-[10px] text-purple-400 font-bold uppercase tracking-wider font-mono">July 14, 2026 • 7 min read</p>
-                          <h3 className="font-extrabold text-base text-white">
+                          <p className="text-[10px] text-[#E04F33] dark:text-[#FF8A73] font-bold uppercase tracking-wider font-mono">July 14, 2026 • 7 min read</p>
+                          <h3 className="font-extrabold text-base text-slate-900 dark:text-white">
                             The Jain-Friendly Gourmet Advantage in Modern Luxury
                           </h3>
-                          <p className="text-xs text-slate-400 leading-relaxed line-clamp-3">
+                          <p className="text-xs text-slate-600 dark:text-slate-400 leading-relaxed line-clamp-3">
                             A 5-star trip is more than just handing over a check-in code. We explore how catering to specialized dietary travelers secures top reviews.
                           </p>
                         </div>
                       </div>
                     </div>
 
-                    <div className="glass-card glass-card-hover rounded-2xl border border-purple-900/30 overflow-hidden flex flex-col justify-between transition-all shadow-xl">
+                    <div className="glass-card bg-white/80 dark:bg-white/5 rounded-2xl border border-slate-200/80 dark:border-white/10 overflow-hidden flex flex-col justify-between transition-all shadow-xl shadow-slate-200/50 dark:shadow-2xl apple-specular">
                       <div>
                         <div className="h-40 relative">
                           <img 
@@ -1787,11 +1528,11 @@ export default function App() {
                           />
                         </div>
                         <div className="p-5 space-y-2">
-                          <p className="text-[10px] text-purple-400 font-bold uppercase tracking-wider font-mono">June 29, 2026 • 6 min read</p>
-                          <h3 className="font-extrabold text-base text-white">
+                          <p className="text-[10px] text-[#E04F33] dark:text-[#FF8A73] font-bold uppercase tracking-wider font-mono">June 29, 2026 • 6 min read</p>
+                          <h3 className="font-extrabold text-base text-slate-900 dark:text-white">
                             Pensacola Coastal Living: High Amenities & Unmatched Comfort
                           </h3>
-                          <p className="text-xs text-slate-400 leading-relaxed line-clamp-3">
+                          <p className="text-xs text-slate-600 dark:text-slate-400 leading-relaxed line-clamp-3">
                             Coastal luxury requires absolute precision in design and private beach club access.
                           </p>
                         </div>
@@ -1803,46 +1544,46 @@ export default function App() {
 
               {/* VIEW C: STORIES */}
               {activeTab === 'stories' && (
-                <div className="space-y-8 animate-fade-in">
-                  <div className="glass-card rounded-3xl border border-purple-500/20 p-8 shadow-xl">
-                    <span className="text-[10px] font-extrabold text-purple-300 bg-purple-950/80 px-3 py-1 rounded-full uppercase tracking-widest border border-purple-500/30 font-mono">
+                <div className="space-y-8 animate-fade-in text-slate-900 dark:text-slate-100">
+                  <div className="glass-card bg-white/80 dark:bg-white/5 rounded-3xl border border-slate-200/80 dark:border-white/10 p-8 shadow-xl shadow-slate-200/50 dark:shadow-2xl apple-specular">
+                    <span className="text-[10px] font-extrabold text-[#E04F33] dark:text-[#FF8A73] bg-[#E04F33]/10 dark:bg-white/10 px-3 py-1 rounded-full uppercase tracking-widest border border-[#E04F33]/20 dark:border-white/15 font-mono">
                       Guest Chronicles
                     </span>
-                    <h2 className="text-2xl sm:text-3xl font-extrabold text-white mt-4 font-serif">
+                    <h2 className="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white mt-4 font-serif">
                       The Stories Behind Kaizen
                     </h2>
-                    <p className="text-slate-400 text-sm mt-2 leading-relaxed">
+                    <p className="text-slate-600 dark:text-slate-400 text-sm mt-2 leading-relaxed">
                       Read real testimonials from travelers who have experienced the Kaizen difference.
                     </p>
                   </div>
 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div className="glass-card p-6 rounded-2xl border border-purple-900/30 flex flex-col justify-between space-y-4">
-                      <p className="text-xs text-slate-300 leading-relaxed italic">
+                    <div className="glass-card bg-white/80 dark:bg-white/5 p-6 rounded-2xl border border-slate-200/80 dark:border-white/10 flex flex-col justify-between space-y-4 shadow-xl shadow-slate-200/50 dark:shadow-2xl apple-specular">
+                      <p className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed italic">
                         "Finding rental homes that accommodate specialized dietary needs and custom concierge dining is challenging. Kaizen curated a flawless family experience for us in Scottsdale. The absolute gold standard."
                       </p>
-                      <div className="flex items-center gap-3 pt-4 border-t border-purple-900/30">
-                        <div className="w-10 h-10 rounded-full bg-purple-950 text-purple-300 font-bold flex items-center justify-center font-mono text-xs border border-purple-500/30">
+                      <div className="flex items-center gap-3 pt-4 border-t border-slate-200 dark:border-white/10">
+                        <div className="w-10 h-10 rounded-full bg-[#E04F33]/10 dark:bg-white/10 text-[#E04F33] dark:text-[#FF8A73] font-bold flex items-center justify-center font-mono text-xs border border-[#E04F33]/20 dark:border-white/15">
                           AK
                         </div>
                         <div>
-                          <p className="font-extrabold text-white text-xs">Anand Kapoor</p>
-                          <p className="text-[10px] text-purple-300 font-mono">Scottsdale Villa Guest</p>
+                          <p className="font-extrabold text-slate-900 dark:text-white text-xs">Anand Kapoor</p>
+                          <p className="text-[10px] text-slate-500 dark:text-slate-400 font-mono">Scottsdale Villa Guest</p>
                         </div>
                       </div>
                     </div>
 
-                    <div className="glass-card p-6 rounded-2xl border border-purple-900/30 flex flex-col justify-between space-y-4">
-                      <p className="text-xs text-slate-300 leading-relaxed italic">
+                    <div className="glass-card bg-white/80 dark:bg-white/5 p-6 rounded-2xl border border-slate-200/80 dark:border-white/10 flex flex-col justify-between space-y-4 shadow-xl shadow-slate-200/50 dark:shadow-2xl apple-specular">
+                      <p className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed italic">
                         "Kaizen handles designer styling, 24/7 guest check-ins, and bespoke concierge requests effortlessly. Highly recommend their collection."
                       </p>
-                      <div className="flex items-center gap-3 pt-4 border-t border-purple-900/30">
-                        <div className="w-10 h-10 rounded-full bg-indigo-950 text-indigo-300 font-bold flex items-center justify-center font-mono text-xs border border-indigo-500/30">
+                      <div className="flex items-center gap-3 pt-4 border-t border-slate-200 dark:border-white/10">
+                        <div className="w-10 h-10 rounded-full bg-[#E04F33]/10 dark:bg-white/10 text-[#E04F33] dark:text-[#FF8A73] font-bold flex items-center justify-center font-mono text-xs border border-[#E04F33]/20 dark:border-white/15">
                           MR
                         </div>
                         <div>
-                          <p className="font-extrabold text-white text-xs">Marcus Roberts</p>
-                          <p className="text-[10px] text-purple-300 font-mono">Pensacola Retreat Guest</p>
+                          <p className="font-extrabold text-slate-900 dark:text-white text-xs">Marcus Roberts</p>
+                          <p className="text-[10px] text-slate-500 dark:text-slate-400 font-mono">Pensacola Retreat Guest</p>
                         </div>
                       </div>
                     </div>
@@ -1852,32 +1593,32 @@ export default function App() {
 
               {/* VIEW D: EXPERIENCE */}
               {activeTab === 'experiences' && (
-                <div className="space-y-8 animate-fade-in">
-                  <div className="glass-card rounded-3xl border border-purple-500/20 p-8 shadow-xl">
-                    <span className="text-[10px] font-extrabold text-purple-300 bg-purple-950/80 px-3 py-1 rounded-full uppercase tracking-widest border border-purple-500/30 font-mono">
+                <div className="space-y-8 animate-fade-in text-slate-900 dark:text-slate-100">
+                  <div className="glass-card bg-white/80 dark:bg-white/5 rounded-3xl border border-slate-200/80 dark:border-white/10 p-8 shadow-xl shadow-slate-200/50 dark:shadow-2xl apple-specular">
+                    <span className="text-[10px] font-extrabold text-[#E04F33] dark:text-[#FF8A73] bg-[#E04F33]/10 dark:bg-white/10 px-3 py-1 rounded-full uppercase tracking-widest border border-[#E04F33]/20 dark:border-white/15 font-mono">
                       The Kaizen Signature
                     </span>
-                    <h2 className="text-2xl sm:text-3xl font-extrabold text-white mt-4 font-serif">
+                    <h2 className="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white mt-4 font-serif">
                       Elevating Travel into Artistry
                     </h2>
-                    <p className="text-slate-400 text-sm mt-2 leading-relaxed">
+                    <p className="text-slate-600 dark:text-slate-400 text-sm mt-2 leading-relaxed">
                       We believe hospitality lies in custom, invisible luxuries. At every Kaizen villa, your trip is accompanied by curated personal services, premium amenities, and dedicated concierge lines.
                     </p>
                   </div>
 
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                    <div className="glass-card p-6 rounded-2xl border border-purple-900/30 space-y-3">
-                      <Sparkles className="w-6 h-6 text-purple-400" />
-                      <h3 className="font-extrabold text-base text-white font-serif">Heated Infinity Pools</h3>
-                      <p className="text-xs text-slate-400 leading-relaxed">
+                    <div className="glass-card bg-white/80 dark:bg-white/5 p-6 rounded-2xl border border-slate-200/80 dark:border-white/10 space-y-3 shadow-xl shadow-slate-200/50 dark:shadow-2xl apple-specular">
+                      <Sparkles className="w-6 h-6 text-[#E04F33]" />
+                      <h3 className="font-extrabold text-base text-slate-900 dark:text-white font-serif">Heated Infinity Pools</h3>
+                      <p className="text-xs text-slate-600 dark:text-slate-400 leading-relaxed">
                         Year-round temperature control, resort lighting, and private cabana loungers.
                       </p>
                     </div>
 
-                    <div className="glass-card p-6 rounded-2xl border border-purple-900/30 space-y-3">
-                      <Award className="w-6 h-6 text-indigo-400" />
-                      <h3 className="font-extrabold text-base text-white font-serif">24/7 Concierge Service</h3>
-                      <p className="text-xs text-slate-400 leading-relaxed">
+                    <div className="glass-card bg-white/80 dark:bg-white/5 p-6 rounded-2xl border border-slate-200/80 dark:border-white/10 space-y-3 shadow-xl shadow-slate-200/50 dark:shadow-2xl apple-specular">
+                      <Award className="w-6 h-6 text-[#E04F33]" />
+                      <h3 className="font-extrabold text-base text-slate-900 dark:text-white font-serif">24/7 Concierge Service</h3>
+                      <p className="text-xs text-slate-600 dark:text-slate-400 leading-relaxed">
                         Instant WhatsApp communication for dining reservations, airport transfers, and private chefs.
                       </p>
                     </div>
@@ -1887,15 +1628,15 @@ export default function App() {
 
               {/* VIEW E: ABOUT */}
               {activeTab === 'about' && (
-                <div className="space-y-8 animate-fade-in">
-                  <div className="glass-card rounded-3xl border border-purple-500/20 p-8 shadow-xl">
-                    <span className="text-[10px] font-extrabold text-purple-300 bg-purple-950/80 px-3 py-1 rounded-full uppercase tracking-widest border border-purple-500/30 font-mono">
+                <div className="space-y-8 animate-fade-in text-slate-900 dark:text-slate-100">
+                  <div className="glass-card bg-white/80 dark:bg-white/5 rounded-3xl border border-slate-200/80 dark:border-white/10 p-8 shadow-xl shadow-slate-200/50 dark:shadow-2xl apple-specular">
+                    <span className="text-[10px] font-extrabold text-[#E04F33] dark:text-[#FF8A73] bg-[#E04F33]/10 dark:bg-white/10 px-3 py-1 rounded-full uppercase tracking-widest border border-[#E04F33]/20 dark:border-white/15 font-mono">
                       The Kaizen Philosophy
                     </span>
-                    <h2 className="text-2xl sm:text-3xl font-extrabold text-white mt-4 font-serif">
+                    <h2 className="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white mt-4 font-serif">
                       Continuous Improvement. Exceptional Hospitality.
                     </h2>
-                    <p className="text-slate-400 text-sm mt-2 leading-relaxed">
+                    <p className="text-slate-600 dark:text-slate-400 text-sm mt-2 leading-relaxed">
                       At Kaizen, we merge high-end, culturally-inclusive hospitality with continuous operational improvement.
                     </p>
                   </div>
@@ -1910,25 +1651,25 @@ export default function App() {
       </main>
 
       {/* Footer */}
-      <footer className="bg-[#0B0A12]/90 border-t border-purple-900/40 mt-16 py-10">
+      <footer className="backdrop-blur-xl bg-white/40 dark:bg-black/20 border-t border-slate-200/50 dark:border-white/10 mt-16 py-10 transition-colors duration-300">
         <div className="max-w-7xl mx-auto px-6 flex flex-col md:flex-row items-center justify-between gap-6">
           <div className="flex items-center gap-3">
-            <div className="w-8 h-8 bg-purple-600 rounded flex items-center justify-center shadow-lg shadow-purple-600/30">
-              <span className="text-white font-bold text-xs font-mono">K</span>
+            <div className="w-10 h-10 bg-[#E04F33] rounded-lg flex items-center justify-center shadow-lg shadow-[#E04F33]/25 border border-white/20 shrink-0">
+              <span className="text-white font-extrabold text-base tracking-normal font-sans">改</span>
             </div>
             <div>
-              <p className="font-extrabold text-sm text-white font-serif tracking-wide">KAIZEN LUXURY ESTATES</p>
-              <p className="text-[10px] text-purple-300/80 font-mono tracking-widest leading-none">PREMIUM VACATION RENTALS</p>
+              <p className="font-extrabold text-sm text-slate-900 dark:text-white font-semibold tracking-wide font-serif">KAIZEN LUXURY ESTATES</p>
+              <p className="text-slate-500 dark:text-slate-400 text-xs tracking-widest font-mono uppercase leading-none mt-0.5">PREMIUM VACATION RENTALS</p>
             </div>
           </div>
 
-          <div className="flex items-center gap-6 text-xs text-slate-400 font-bold font-mono">
-            <button onClick={() => { setActiveTab('properties'); window.location.hash = ''; }} className="hover:text-purple-300 transition-colors">Properties</button>
-            <button onClick={() => { setActiveTab('experiences'); window.location.hash = ''; }} className="hover:text-purple-300 transition-colors">Experience</button>
-            <button onClick={() => { setActiveTab('about'); window.location.hash = ''; }} className="hover:text-purple-300 transition-colors">About Us</button>
+          <div className="flex items-center gap-6 font-mono font-bold">
+            <button onClick={() => { setActiveTab('properties'); window.location.hash = ''; }} className="text-slate-600 dark:text-slate-300 transition-colors duration-200 hover:text-orange-600 dark:hover:text-orange-400 text-sm">Properties</button>
+            <button onClick={() => { setActiveTab('experiences'); window.location.hash = ''; }} className="text-slate-600 dark:text-slate-300 transition-colors duration-200 hover:text-orange-600 dark:hover:text-orange-400 text-sm">Experience</button>
+            <button onClick={() => { setActiveTab('about'); window.location.hash = ''; }} className="text-slate-600 dark:text-slate-300 transition-colors duration-200 hover:text-orange-600 dark:hover:text-orange-400 text-sm">About Us</button>
           </div>
 
-          <p className="text-[10px] text-slate-400 font-mono text-center md:text-right">
+          <p className="text-slate-400 dark:text-slate-500 text-xs font-mono text-center md:text-right">
             © 2026 Kaizen Luxury Real Estate LLC. All rights reserved.
           </p>
         </div>
@@ -1939,24 +1680,24 @@ export default function App() {
           MODAL A: PROPERTY DETAILS & PLATFORMS
          ========================================== */}
       {selectedDeal && (
-        <div className="fixed inset-0 z-50 overflow-y-auto bg-slate-950/80 backdrop-blur-md flex items-center justify-center p-4">
-          <div className="glass-card rounded-3xl max-w-2xl w-full border border-purple-500/30 shadow-2xl overflow-hidden flex flex-col animate-scale-in">
+        <div className="fixed inset-0 z-50 overflow-y-auto bg-black/60 backdrop-blur-md flex items-center justify-center p-4">
+          <div className="bg-[#0F1014]/90 backdrop-blur-3xl rounded-3xl max-w-2xl w-full border border-white/15 shadow-2xl shadow-black/80 overflow-hidden flex flex-col animate-scale-in text-slate-100 apple-specular">
             
             {/* Header */}
-            <div className="bg-[#0B0A12] p-6 text-white flex justify-between items-start border-b border-purple-900/40">
+            <div className="bg-white/5 p-6 text-white flex justify-between items-start border-b border-white/10 backdrop-blur-xl">
               <div>
-                <span className="text-[10px] font-mono tracking-widest uppercase text-purple-300 bg-purple-950 px-2.5 py-1 rounded-full font-bold border border-purple-500/30">
+                <span className="text-[10px] font-mono tracking-widest uppercase text-[#FF8A73] bg-white/10 px-3 py-1 rounded-full font-bold border border-white/15">
                   Luxury Villa Details
                 </span>
-                <h3 className="text-xl font-extrabold tracking-tight mt-2 font-serif">{selectedDeal.title}</h3>
-                <p className="text-xs text-slate-400 mt-1 flex items-center gap-1 font-mono">
-                  <MapPin className="w-3 h-3 text-purple-400" />
+                <h3 className="text-xl font-extrabold tracking-tight mt-2 font-heading">{selectedDeal.title}</h3>
+                <p className="text-xs text-slate-300 mt-1 flex items-center gap-1 font-mono">
+                  <MapPin className="w-3.5 h-3.5 text-[#E04F33]" />
                   {selectedDeal.location} • {selectedDeal.bedsBaths} • {selectedDeal.squareFeet} SQFT
                 </p>
               </div>
               <button 
                 onClick={() => setSelectedDeal(null)}
-                className="p-1.5 bg-purple-950/80 hover:bg-purple-900 text-purple-300 rounded-full transition-colors border border-purple-500/30"
+                className="p-2 bg-white/5 hover:bg-white/15 text-slate-300 hover:text-white rounded-full transition-colors border border-white/10"
               >
                 <X className="w-4 h-4" />
               </button>
@@ -1967,7 +1708,7 @@ export default function App() {
               
               {/* Photo Gallery Viewer */}
               <div>
-                <div className="h-64 rounded-2xl overflow-hidden relative border border-purple-900/40 bg-[#0B0A12]">
+                <div className="h-64 rounded-2xl overflow-hidden relative border border-white/10 bg-black/40">
                   <img 
                     src={selectedDeal.images[activeImageIndex] || selectedDeal.imageUrl} 
                     alt={selectedDeal.title}
@@ -1994,7 +1735,7 @@ export default function App() {
                     </>
                   )}
 
-                  <div className="absolute bottom-3 right-3 bg-black/70 backdrop-blur px-2.5 py-1 rounded text-[10px] font-mono text-slate-200">
+                  <div className="absolute bottom-3 right-3 bg-black/70 backdrop-blur px-2.5 py-1 rounded-full text-[10px] font-mono text-slate-200 border border-white/10">
                     {activeImageIndex + 1} / {selectedDeal.images.length || 1} Photos
                   </div>
                 </div>
@@ -2007,7 +1748,7 @@ export default function App() {
                         key={idx}
                         onClick={() => setActiveImageIndex(idx)}
                         className={`w-16 h-12 rounded-lg overflow-hidden border-2 shrink-0 transition-all ${
-                          activeImageIndex === idx ? 'border-purple-500 scale-105' : 'border-purple-900/40 opacity-60 hover:opacity-100'
+                          activeImageIndex === idx ? 'border-[#E04F33] scale-105' : 'border-white/10 opacity-60 hover:opacity-100'
                         }`}
                       >
                         <img src={img} alt="" className="w-full h-full object-cover" />
@@ -2018,16 +1759,16 @@ export default function App() {
               </div>
 
               {/* Book / View on Platforms - CRUCIAL CUSTOMER SECTION */}
-              <div className="bg-[#0B0A12] p-5 rounded-2xl border border-purple-500/30 space-y-3">
+              <div className="bg-white/5 p-5 rounded-2xl border border-white/10 space-y-3 backdrop-blur-xl shadow-lg">
                 <div className="flex items-center justify-between">
                   <div>
-                    <h4 className="text-sm font-extrabold text-white font-serif flex items-center gap-1.5">
-                      <Globe className="w-4 h-4 text-purple-400" />
+                    <h4 className="text-sm font-extrabold text-white font-heading flex items-center gap-1.5">
+                      <Globe className="w-4 h-4 text-[#E04F33]" />
                       Book / View on Platforms
                     </h4>
-                    <p className="text-xs text-slate-400 mt-0.5">Select your preferred platform below to open the official active listing directly.</p>
+                    <p className="text-xs text-slate-300 mt-0.5">Select your preferred platform below to open the official active listing directly.</p>
                   </div>
-                  <span className="px-2.5 py-1 bg-purple-950 text-purple-300 text-[10px] font-mono font-bold rounded-full border border-purple-500/30">
+                  <span className="px-2.5 py-1 bg-white/10 text-[#FF8A73] text-[10px] font-mono font-bold rounded-full border border-white/15">
                     LIVE LISTINGS
                   </span>
                 </div>
@@ -2055,11 +1796,11 @@ export default function App() {
                       })}
                     </div>
                   ) : (
-                    <div className="p-4 rounded-xl bg-slate-900/80 border border-slate-800 text-center">
-                      <span className="px-3 py-1 rounded-full bg-slate-950 text-slate-400 text-xs font-mono font-bold inline-block">
+                    <div className="p-4 rounded-xl bg-white/5 border border-white/10 text-center">
+                      <span className="px-3 py-1 rounded-full bg-black/40 text-slate-300 text-xs font-mono font-bold inline-block border border-white/10">
                         Currently Unavailable / Fully Booked
                       </span>
-                      <p className="text-xs text-slate-500 mt-2">This property is currently not accepting new platform reservations.</p>
+                      <p className="text-xs text-slate-400 mt-2">This property is currently not accepting new platform reservations.</p>
                     </div>
                   )}
                 </div>
@@ -2067,15 +1808,15 @@ export default function App() {
 
               {/* Description text */}
               <div>
-                <h4 className="text-xs font-bold uppercase tracking-wider text-purple-300/80 mb-1.5 font-mono">Property Overview</h4>
+                <h4 className="text-xs font-bold uppercase tracking-wider text-[#FF8A73] mb-1.5 font-mono">Property Overview</h4>
                 <p className="text-xs text-slate-300 leading-relaxed">
                   {selectedDeal.description || 'This vetted corporate sublease property exhibits highly robust short-term rental performance indicators. Located in an area of exceptional tourism density with clear local HOA allowance.'}
                 </p>
               </div>
 
               {/* Full Specs Table Grid */}
-              <div className="bg-[#0B0A12]/80 p-4 rounded-xl border border-purple-900/40">
-                <h4 className="text-xs font-bold uppercase tracking-wider text-purple-300/80 mb-3 font-mono">Property Specifications</h4>
+              <div className="bg-white/5 p-4 rounded-2xl border border-white/10 backdrop-blur-xl">
+                <h4 className="text-xs font-bold uppercase tracking-wider text-[#FF8A73] mb-3 font-mono">Property Specifications</h4>
                 <div className="grid grid-cols-2 sm:grid-cols-3 gap-y-4 gap-x-6 text-xs">
                   <div>
                     <span className="text-[10px] text-slate-400 block uppercase font-mono">Nightly Rate</span>
@@ -2099,7 +1840,7 @@ export default function App() {
                   </div>
                   <div>
                     <span className="text-[10px] text-slate-400 block uppercase font-mono">Earliest Availability</span>
-                    <span className="font-extrabold text-purple-300 font-mono">{selectedDeal.availability}</span>
+                    <span className="font-extrabold text-[#FF8A73] font-mono">{selectedDeal.availability}</span>
                   </div>
                 </div>
               </div>
@@ -2107,7 +1848,7 @@ export default function App() {
             </div>
 
             {/* Bottom bar */}
-            <div className="bg-[#0B0A12] p-5 border-t border-purple-900/40 flex flex-wrap items-center justify-between gap-3">
+            <div className="bg-white/5 p-5 border-t border-white/10 flex flex-wrap items-center justify-between gap-3 backdrop-blur-xl">
               <span className="text-[10px] text-slate-400 font-mono">Kaizen Luxury Estates • Verified Property</span>
               <div className="flex items-center gap-3">
                 <button
@@ -2115,14 +1856,14 @@ export default function App() {
                   onClick={() => {
                     requireAuth(() => setShowLockPurchaseModal(true));
                   }}
-                  className="px-5 py-2.5 bg-gradient-to-r from-fuchsia-600 via-pink-600 to-rose-600 hover:from-fuchsia-500 hover:to-rose-500 text-white rounded-xl text-xs font-bold transition-all shadow-lg shadow-pink-600/30 flex items-center gap-2 cursor-pointer font-sans"
+                  className="px-5 py-2.5 bg-[#E04F33] hover:bg-[#ED5B3F] text-white rounded-xl text-xs font-bold transition-all shadow-lg shadow-[#E04F33]/25 border border-white/20 flex items-center gap-2 cursor-pointer font-sans"
                 >
                   <Lock className="w-3.5 h-3.5" />
                   <span>Lock & Secure Property (15-Min Hold)</span>
                 </button>
                 <button 
                   onClick={() => setSelectedDeal(null)}
-                  className="px-4 py-2.5 bg-purple-950/80 hover:bg-purple-900 text-purple-200 border border-purple-800 rounded-xl text-xs font-bold transition-all font-mono"
+                  className="px-4 py-2.5 bg-white/10 hover:bg-white/20 text-slate-200 border border-white/15 rounded-xl text-xs font-bold transition-all font-mono cursor-pointer"
                 >
                   Close
                 </button>
@@ -2138,25 +1879,25 @@ export default function App() {
           MODAL B: ADMIN PROPERTY EDITOR MODAL
          ========================================== */}
       {showPropertyEditorModal && (
-        <div className="fixed inset-0 z-50 overflow-y-auto bg-slate-950/85 backdrop-blur-md flex items-center justify-center p-4">
-          <div className="glass-card rounded-3xl max-w-3xl w-full border border-purple-500/40 shadow-2xl overflow-hidden flex flex-col animate-scale-in text-white">
+        <div className="fixed inset-0 z-50 overflow-y-auto bg-black/60 backdrop-blur-md flex items-center justify-center p-4">
+          <div className="bg-[#0F1014]/90 backdrop-blur-3xl rounded-3xl max-w-3xl w-full border border-white/15 shadow-2xl shadow-black/80 overflow-hidden flex flex-col animate-scale-in text-white apple-specular">
             
             {/* Header */}
-            <div className="bg-[#0B0A12] p-6 text-white flex justify-between items-center border-b border-purple-900/40">
-              <div className="flex items-center gap-2">
-                <div className="p-2 bg-purple-950 rounded-lg border border-purple-500/30 text-purple-300">
+            <div className="bg-white/5 p-6 text-white flex justify-between items-center border-b border-white/10 backdrop-blur-xl">
+              <div className="flex items-center gap-2.5">
+                <div className="p-2.5 bg-white/10 rounded-xl border border-white/15 text-[#FF8A73]">
                   <Building className="w-5 h-5" />
                 </div>
                 <div>
-                  <h3 className="text-lg font-extrabold font-serif">
+                  <h3 className="text-lg font-extrabold font-heading">
                     {editingDealId ? `Edit Property: ${adminForm.title}` : 'Create New Luxury Property'}
                   </h3>
-                  <p className="text-xs text-slate-400 font-mono">Update specs, images, and external platform listing links.</p>
+                  <p className="text-xs text-slate-300 font-mono">Update specs, images, and external platform listing links.</p>
                 </div>
               </div>
               <button 
                 onClick={() => setShowPropertyEditorModal(false)}
-                className="p-1.5 bg-purple-950/80 hover:bg-purple-900 text-purple-300 rounded-full transition-colors border border-purple-500/30"
+                className="p-2 bg-white/5 hover:bg-white/15 text-slate-300 hover:text-white rounded-full transition-colors border border-white/10"
               >
                 <X className="w-4 h-4" />
               </button>
@@ -2167,65 +1908,65 @@ export default function App() {
               
               {/* Section 1: Core Specs */}
               <div className="space-y-4">
-                <h4 className="text-xs font-bold text-purple-300 uppercase tracking-widest font-mono border-b border-purple-900/40 pb-1">
+                <h4 className="text-xs font-bold text-[#FF8A73] uppercase tracking-widest font-mono border-b border-white/10 pb-1">
                   1. Core Property Specs
                 </h4>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-xs font-bold text-slate-400 uppercase mb-1 font-mono">Property Title / Name *</label>
+                    <label className="block text-xs font-bold text-slate-300 uppercase mb-1 font-mono">Property Title / Name *</label>
                     <input 
                       type="text" 
                       required
                       placeholder="e.g. Coastal Modern Retreat"
                       value={adminForm.title}
                       onChange={(e) => setAdminForm({...adminForm, title: e.target.value})}
-                      className="w-full px-3.5 py-2.5 bg-[#141226] border border-purple-900/40 rounded-xl text-white text-xs focus:outline-none focus:border-purple-500"
+                      className="w-full px-3.5 py-2.5 bg-white/5 border border-white/10 rounded-xl text-white text-xs focus:outline-none focus:border-[#E04F33] focus:bg-white/10 transition-all"
                     />
                   </div>
 
                   <div>
-                    <label className="block text-xs font-bold text-slate-400 uppercase mb-1 font-mono">Location / Address *</label>
+                    <label className="block text-xs font-bold text-slate-300 uppercase mb-1 font-mono">Location / Address *</label>
                     <input 
                       type="text" 
                       required
                       placeholder="e.g. Pensacola, FL"
                       value={adminForm.location}
                       onChange={(e) => setAdminForm({...adminForm, location: e.target.value})}
-                      className="w-full px-3.5 py-2.5 bg-[#141226] border border-purple-900/40 rounded-xl text-white text-xs focus:outline-none focus:border-purple-500"
+                      className="w-full px-3.5 py-2.5 bg-white/5 border border-white/10 rounded-xl text-white text-xs focus:outline-none focus:border-[#E04F33] focus:bg-white/10 transition-all"
                     />
                   </div>
                 </div>
 
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
                   <div>
-                    <label className="block text-xs font-bold text-slate-400 uppercase mb-1 font-mono">Beds / Baths</label>
+                    <label className="block text-xs font-bold text-slate-300 uppercase mb-1 font-mono">Beds / Baths</label>
                     <input 
                       type="text" 
                       placeholder="3 bed, 2 bath"
                       value={adminForm.bedsBaths}
                       onChange={(e) => setAdminForm({...adminForm, bedsBaths: e.target.value})}
-                      className="w-full px-3 py-2 bg-[#141226] border border-purple-900/40 rounded-xl text-white text-xs"
+                      className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-xl text-white text-xs focus:border-[#E04F33] focus:bg-white/10 transition-all"
                     />
                   </div>
 
                   <div>
-                    <label className="block text-xs font-bold text-slate-400 uppercase mb-1 font-mono">Square Feet</label>
+                    <label className="block text-xs font-bold text-slate-300 uppercase mb-1 font-mono">Square Feet</label>
                     <input 
                       type="text" 
                       placeholder="1,300"
                       value={adminForm.squareFeet}
                       onChange={(e) => setAdminForm({...adminForm, squareFeet: e.target.value})}
-                      className="w-full px-3 py-2 bg-[#141226] border border-purple-900/40 rounded-xl text-white text-xs"
+                      className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-xl text-white text-xs focus:border-[#E04F33] focus:bg-white/10 transition-all"
                     />
                   </div>
 
                   <div>
-                    <label className="block text-xs font-bold text-slate-400 uppercase mb-1 font-mono">Furnished Status</label>
+                    <label className="block text-xs font-bold text-slate-300 uppercase mb-1 font-mono">Furnished Status</label>
                     <select
                       value={adminForm.furnished}
                       onChange={(e) => setAdminForm({...adminForm, furnished: e.target.value as 'Yes' | 'No'})}
-                      className="w-full px-3 py-2 bg-[#141226] border border-purple-900/40 rounded-xl text-white text-xs"
+                      className="w-full px-3 py-2 bg-[#1A1C22] border border-white/10 rounded-xl text-white text-xs focus:border-[#E04F33] transition-all"
                     >
                       <option value="Yes">Yes (Furnished)</option>
                       <option value="No">No (Unfurnished)</option>
@@ -2233,11 +1974,11 @@ export default function App() {
                   </div>
 
                   <div>
-                    <label className="block text-xs font-bold text-slate-400 uppercase mb-1 font-mono">Status</label>
+                    <label className="block text-xs font-bold text-slate-300 uppercase mb-1 font-mono">Status</label>
                     <select
                       value={adminForm.status}
                       onChange={(e) => setAdminForm({...adminForm, status: e.target.value as any})}
-                      className="w-full px-3 py-2 bg-[#141226] border border-purple-900/40 rounded-xl text-white text-xs"
+                      className="w-full px-3 py-2 bg-[#1A1C22] border border-white/10 rounded-xl text-white text-xs focus:border-[#E04F33] transition-all"
                     >
                       <option value="AVAILABLE">AVAILABLE</option>
                       <option value="OCCUPIED">OCCUPIED</option>
@@ -2250,88 +1991,88 @@ export default function App() {
 
               {/* Section 2: Financials & Analytics */}
               <div className="space-y-4">
-                <h4 className="text-xs font-bold text-purple-300 uppercase tracking-widest font-mono border-b border-purple-900/40 pb-1">
+                <h4 className="text-xs font-bold text-[#FF8A73] uppercase tracking-widest font-mono border-b border-white/10 pb-1">
                   2. Financials & Analytics (Airbtics)
                 </h4>
 
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
                   <div>
-                    <label className="block text-xs font-bold text-slate-400 uppercase mb-1 font-mono">Monthly Rent *</label>
+                    <label className="block text-xs font-bold text-slate-300 uppercase mb-1 font-mono">Monthly Rent *</label>
                     <input 
                       type="text" 
                       required
                       placeholder="$2,200"
                       value={adminForm.monthlyRent}
                       onChange={(e) => setAdminForm({...adminForm, monthlyRent: e.target.value})}
-                      className="w-full px-3 py-2 bg-[#141226] border border-purple-900/40 rounded-xl text-white text-xs font-mono font-bold"
+                      className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-xl text-white text-xs font-mono font-bold focus:border-[#E04F33] focus:bg-white/10 transition-all"
                     />
                   </div>
 
                   <div>
-                    <label className="block text-xs font-bold text-slate-400 uppercase mb-1 font-mono">Net Monthly Profit</label>
+                    <label className="block text-xs font-bold text-slate-300 uppercase mb-1 font-mono">Net Monthly Profit</label>
                     <input 
                       type="text" 
                       placeholder="~$1,700"
                       value={adminForm.estNetMonthlyProfit}
                       onChange={(e) => setAdminForm({...adminForm, estNetMonthlyProfit: e.target.value})}
-                      className="w-full px-3 py-2 bg-[#141226] border border-purple-900/40 rounded-xl text-emerald-400 text-xs font-mono font-bold"
+                      className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-xl text-emerald-400 text-xs font-mono font-bold focus:border-[#E04F33] focus:bg-white/10 transition-all"
                     />
                   </div>
 
                   <div>
-                    <label className="block text-xs font-bold text-slate-400 uppercase mb-1 font-mono">Nightly Rate (ADR)</label>
+                    <label className="block text-xs font-bold text-slate-300 uppercase mb-1 font-mono">Nightly Rate (ADR)</label>
                     <input 
                       type="text" 
                       placeholder="$215"
                       value={adminForm.adr}
                       onChange={(e) => setAdminForm({...adminForm, adr: e.target.value})}
-                      className="w-full px-3 py-2 bg-[#141226] border border-purple-900/40 rounded-xl text-white text-xs font-mono"
+                      className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-xl text-white text-xs font-mono focus:border-[#E04F33] focus:bg-white/10 transition-all"
                     />
                   </div>
 
                   <div>
-                    <label className="block text-xs font-bold text-slate-400 uppercase mb-1 font-mono">Est Occupancy</label>
+                    <label className="block text-xs font-bold text-slate-300 uppercase mb-1 font-mono">Est Occupancy</label>
                     <input 
                       type="text" 
                       placeholder="68%"
                       value={adminForm.estOccupancy}
                       onChange={(e) => setAdminForm({...adminForm, estOccupancy: e.target.value})}
-                      className="w-full px-3 py-2 bg-[#141226] border border-purple-900/40 rounded-xl text-white text-xs font-mono"
+                      className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-xl text-white text-xs font-mono focus:border-[#E04F33] focus:bg-white/10 transition-all"
                     />
                   </div>
                 </div>
 
                 <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
                   <div>
-                    <label className="block text-xs font-bold text-slate-400 uppercase mb-1 font-mono">Proj. Annual Revenue</label>
+                    <label className="block text-xs font-bold text-slate-300 uppercase mb-1 font-mono">Proj. Annual Revenue</label>
                     <input 
                       type="text" 
                       placeholder="$55,683"
                       value={adminForm.projectedAnnualRevenue}
                       onChange={(e) => setAdminForm({...adminForm, projectedAnnualRevenue: e.target.value})}
-                      className="w-full px-3 py-2 bg-[#141226] border border-purple-900/40 rounded-xl text-white text-xs font-mono"
+                      className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-xl text-white text-xs font-mono focus:border-[#E04F33] focus:bg-white/10 transition-all"
                     />
                   </div>
 
                   <div>
-                    <label className="block text-xs font-bold text-slate-400 uppercase mb-1 font-mono">Total Cash To Start</label>
+                    <label className="block text-xs font-bold text-slate-300 uppercase mb-1 font-mono">Total Cash To Start</label>
                     <input 
                       type="text" 
                       placeholder="$9,400"
                       value={adminForm.totalCashToStart}
                       onChange={(e) => setAdminForm({...adminForm, totalCashToStart: e.target.value})}
-                      className="w-full px-3 py-2 bg-[#141226] border border-purple-900/40 rounded-xl text-yellow-300 text-xs font-mono"
+                      className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-xl text-amber-300 text-xs font-mono focus:border-[#E04F33] focus:bg-white/10 transition-all"
                     />
                   </div>
 
                   <div>
-                    <label className="block text-xs font-bold text-slate-400 uppercase mb-1 font-mono">Lease Term</label>
+                    <label className="block text-xs font-bold text-slate-300 uppercase mb-1 font-mono">Lease Term</label>
                     <input 
                       type="text" 
                       placeholder="12 months"
                       value={adminForm.leaseTerm}
                       onChange={(e) => setAdminForm({...adminForm, leaseTerm: e.target.value})}
-                      className="w-full px-3 py-2 bg-[#141226] border border-purple-900/40 rounded-xl text-white text-xs"
+                      className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-xl text-white text-xs focus:border-[#E04F33] focus:bg-white/10 transition-all"
                     />
                   </div>
                 </div>
@@ -2339,7 +2080,7 @@ export default function App() {
 
               {/* Section 3: Image URL Manager */}
               <div className="space-y-4">
-                <h4 className="text-xs font-bold text-purple-300 uppercase tracking-widest font-mono border-b border-purple-900/40 pb-1 flex items-center justify-between">
+                <h4 className="text-xs font-bold text-[#FF8A73] uppercase tracking-widest font-mono border-b border-white/10 pb-1 flex items-center justify-between">
                   <span>3. Image Gallery Manager</span>
                   <span className="text-[10px] text-slate-400 font-normal">({adminForm.images.length} Photos)</span>
                 </h4>
@@ -2347,7 +2088,7 @@ export default function App() {
                 {/* Current Image List */}
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
                   {adminForm.images.map((imgUrl, idx) => (
-                    <div key={idx} className="relative group rounded-xl overflow-hidden border border-purple-900/40 h-24 bg-[#0B0A12]">
+                    <div key={idx} className="relative group rounded-xl overflow-hidden border border-white/10 h-24 bg-black/40">
                       <img src={imgUrl} alt="" className="w-full h-full object-cover" />
                       <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-1">
                         <button 
@@ -2356,14 +2097,14 @@ export default function App() {
                             const filtered = adminForm.images.filter((_, i) => i !== idx);
                             setAdminForm({ ...adminForm, images: filtered });
                           }}
-                          className="p-1.5 bg-red-600 hover:bg-red-500 text-white rounded-lg text-xs"
+                          className="p-1.5 bg-red-600 hover:bg-red-500 text-white rounded-lg text-xs transition-colors"
                           title="Remove photo"
                         >
                           <Trash2 className="w-3.5 h-3.5" />
                         </button>
                       </div>
                       {idx === 0 && (
-                        <span className="absolute bottom-1 left-1 bg-purple-600 text-white text-[8px] font-mono font-bold px-1.5 py-0.5 rounded">
+                        <span className="absolute bottom-1 left-1 bg-[#E04F33] text-white text-[8px] font-mono font-bold px-1.5 py-0.5 rounded border border-white/20">
                           PRIMARY
                         </span>
                       )}
@@ -2378,7 +2119,7 @@ export default function App() {
                     placeholder="Paste image URL (https://...)"
                     value={newImageUrlInput}
                     onChange={(e) => setNewImageUrlInput(e.target.value)}
-                    className="flex-1 px-3.5 py-2 bg-[#141226] border border-purple-900/40 rounded-xl text-white text-xs font-mono placeholder-slate-500"
+                    className="flex-1 px-3.5 py-2 bg-white/5 border border-white/10 rounded-xl text-white text-xs font-mono placeholder-slate-500 focus:border-[#E04F33] focus:bg-white/10 transition-all"
                   />
                   <button 
                     type="button"
@@ -2391,7 +2132,7 @@ export default function App() {
                         setNewImageUrlInput('');
                       }
                     }}
-                    className="px-4 py-2 bg-purple-950 hover:bg-purple-900 text-purple-200 border border-purple-500/30 rounded-xl text-xs font-bold font-mono"
+                    className="px-4 py-2 bg-white/10 hover:bg-white/20 text-white border border-white/15 rounded-xl text-xs font-bold font-mono transition-all cursor-pointer"
                   >
                     + Add Photo
                   </button>
@@ -2400,8 +2141,8 @@ export default function App() {
 
               {/* Section 4: Platform Listing Link Manager (CRUCIAL) */}
               <div className="space-y-4">
-                <div className="flex justify-between items-center border-b border-purple-900/40 pb-1">
-                  <h4 className="text-xs font-bold text-purple-300 uppercase tracking-widest font-mono">
+                <div className="flex justify-between items-center border-b border-white/10 pb-1">
+                  <h4 className="text-xs font-bold text-[#FF8A73] uppercase tracking-widest font-mono">
                     4. Platform Listing Link Manager
                   </h4>
                   <button 
@@ -2415,15 +2156,15 @@ export default function App() {
                         ]
                       });
                     }}
-                    className="px-3 py-1 bg-purple-900/60 hover:bg-purple-800 text-purple-200 rounded-lg text-[10px] font-bold font-mono border border-purple-500/30 flex items-center gap-1"
+                    className="px-3 py-1 bg-white/10 hover:bg-white/20 text-white rounded-lg text-[10px] font-bold font-mono border border-white/15 flex items-center gap-1 transition-all cursor-pointer"
                   >
-                    <Plus className="w-3 h-3" /> Add Platform
+                    <Plus className="w-3 h-3 text-[#E04F33]" /> Add Platform
                   </button>
                 </div>
 
                 <div className="space-y-3">
                   {adminForm.listings.map((item, idx) => (
-                    <div key={idx} className="p-3 bg-[#0B0A12]/90 rounded-xl border border-purple-900/40 flex flex-col sm:flex-row items-start sm:items-center gap-3">
+                    <div key={idx} className="p-3 bg-white/5 rounded-xl border border-white/10 flex flex-col sm:flex-row items-start sm:items-center gap-3">
                       
                       {/* Platform Choice */}
                       <select
@@ -2433,7 +2174,7 @@ export default function App() {
                           updated[idx].platform = e.target.value;
                           setAdminForm({ ...adminForm, listings: updated });
                         }}
-                        className="px-3 py-2 bg-[#141226] border border-purple-900/40 rounded-lg text-white text-xs font-bold font-mono"
+                        className="px-3 py-2 bg-[#1A1C22] border border-white/10 rounded-lg text-white text-xs font-bold font-mono focus:border-[#E04F33]"
                       >
                         {AVAILABLE_PLATFORMS.map(p => (
                           <option key={p} value={p}>{p}</option>
@@ -2451,7 +2192,7 @@ export default function App() {
                           updated[idx].url = e.target.value;
                           setAdminForm({ ...adminForm, listings: updated });
                         }}
-                        className="flex-1 w-full px-3 py-2 bg-[#141226] border border-purple-900/40 rounded-lg text-white text-xs font-mono placeholder-slate-500"
+                        className="flex-1 w-full px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-white text-xs font-mono placeholder-slate-500 focus:border-[#E04F33] transition-all"
                       />
 
                       {/* Active Toggle Switch */}
@@ -2463,10 +2204,10 @@ export default function App() {
                             updated[idx].isActive = !updated[idx].isActive;
                             setAdminForm({ ...adminForm, listings: updated });
                           }}
-                          className={`px-3 py-1.5 rounded-lg text-[10px] font-mono font-bold transition-all border flex items-center gap-1 ${
+                          className={`px-3 py-1.5 rounded-lg text-[10px] font-mono font-bold transition-all border flex items-center gap-1 cursor-pointer ${
                             item.isActive 
-                              ? 'bg-emerald-950 text-emerald-300 border-emerald-500/40' 
-                              : 'bg-slate-900 text-slate-500 border-slate-800'
+                              ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40' 
+                              : 'bg-white/5 text-slate-400 border-white/10'
                           }`}
                         >
                           {item.isActive ? <Check className="w-3 h-3 text-emerald-400" /> : null}
@@ -2479,7 +2220,7 @@ export default function App() {
                             const updated = adminForm.listings.filter((_, i) => i !== idx);
                             setAdminForm({ ...adminForm, listings: updated });
                           }}
-                          className="p-1.5 bg-[#141226] hover:bg-red-950 text-red-400 rounded-lg border border-red-900/40"
+                          className="p-1.5 bg-white/5 hover:bg-red-500/20 text-red-400 rounded-lg border border-white/10 transition-colors"
                           title="Remove platform link"
                         >
                           <Trash2 className="w-3.5 h-3.5" />
@@ -2490,7 +2231,7 @@ export default function App() {
                   ))}
 
                   {adminForm.listings.length === 0 && (
-                    <div className="p-4 rounded-xl bg-[#0B0A12] border border-purple-900/40 text-center text-xs text-slate-500 italic">
+                    <div className="p-4 rounded-xl bg-white/5 border border-white/10 text-center text-xs text-slate-400 italic">
                       No platform listing links added yet. Click "+ Add Platform" to add Airbnb, Vrbo, etc.
                     </div>
                   )}
@@ -2499,28 +2240,28 @@ export default function App() {
 
               {/* Description */}
               <div>
-                <label className="block text-xs font-bold text-slate-400 uppercase mb-1 font-mono">Property Description</label>
+                <label className="block text-xs font-bold text-slate-300 uppercase mb-1 font-mono">Property Description</label>
                 <textarea 
                   rows={3}
                   placeholder="Detail the property layout, location perks, and key guest amenities..."
                   value={adminForm.description}
                   onChange={(e) => setAdminForm({...adminForm, description: e.target.value})}
-                  className="w-full px-3.5 py-2.5 bg-[#141226] border border-purple-900/40 rounded-xl text-white text-xs focus:outline-none focus:border-purple-500"
+                  className="w-full px-3.5 py-2.5 bg-white/5 border border-white/10 rounded-xl text-white text-xs focus:outline-none focus:border-[#E04F33] focus:bg-white/10 transition-all"
                 />
               </div>
 
               {/* Submit Buttons */}
-              <div className="pt-4 border-t border-purple-900/40 flex items-center justify-end gap-3 font-mono">
+              <div className="pt-4 border-t border-white/10 flex items-center justify-end gap-3 font-mono">
                 <button 
                   type="button"
                   onClick={() => setShowPropertyEditorModal(false)}
-                  className="px-5 py-2.5 bg-[#141226] hover:bg-purple-950 border border-purple-900/40 text-slate-300 rounded-xl text-xs font-bold transition-all"
+                  className="px-5 py-2.5 bg-white/10 hover:bg-white/20 border border-white/15 text-slate-200 rounded-xl text-xs font-bold transition-all cursor-pointer"
                 >
                   Cancel
                 </button>
                 <button 
                   type="submit"
-                  className="px-6 py-2.5 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white rounded-xl text-xs font-black uppercase tracking-widest transition-all shadow-lg shadow-purple-600/30"
+                  className="px-6 py-2.5 bg-[#E04F33] hover:bg-[#ED5B3F] text-white rounded-xl text-xs font-black uppercase tracking-widest transition-all shadow-lg shadow-[#E04F33]/25 border border-white/20 cursor-pointer"
                 >
                   {editingDealId ? 'Save Changes' : 'Create Property'}
                 </button>

@@ -41,15 +41,15 @@ export const FavoritesView: React.FC<{ onSelectDeal: (deal: any) => void }> = ({
   };
 
   return (
-    <div className="max-w-6xl mx-auto p-6 space-y-6 font-sans text-slate-100">
+    <div className="max-w-6xl mx-auto p-6 space-y-6 font-sans text-slate-900 dark:text-slate-100">
       
-      <div className="flex items-center justify-between pb-4 border-b border-purple-900/60">
+      <div className="flex items-center justify-between pb-4 border-b border-slate-200 dark:border-white/10">
         <div>
-          <h1 className="text-2xl md:text-3xl font-black text-white flex items-center gap-2">
-            <Heart className="w-7 h-7 text-pink-500 fill-pink-500" />
-            Saved <span className="text-transparent bg-clip-text bg-gradient-to-r from-fuchsia-400 to-pink-500">Favorites</span>
+          <h1 className="text-2xl md:text-3xl font-black text-slate-900 dark:text-white flex items-center gap-2">
+            <Heart className="w-7 h-7 text-rose-500 fill-rose-500" />
+            Saved <span className="text-[#E04F33]">Favorites</span>
           </h1>
-          <p className="text-xs text-slate-400 mt-1">
+          <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
             Your shortlisted arbitrage deals & luxury villas saved for review.
           </p>
         </div>
@@ -58,14 +58,14 @@ export const FavoritesView: React.FC<{ onSelectDeal: (deal: any) => void }> = ({
       {loading ? (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 animate-pulse">
           {[1, 2].map((n) => (
-            <div key={n} className="h-64 bg-purple-950/40 rounded-3xl" />
+            <div key={n} className="h-64 bg-slate-200/60 dark:bg-white/5 rounded-2xl border border-slate-200 dark:border-white/5" />
           ))}
         </div>
       ) : favorites.length === 0 ? (
-        <div className="bg-[#18082e] rounded-3xl border border-purple-800/60 p-12 text-center space-y-4 shadow-xl">
-          <Heart className="w-12 h-12 text-purple-400/40 mx-auto" />
-          <h3 className="text-lg font-bold text-slate-200">No saved favorites yet</h3>
-          <p className="text-xs text-slate-400 max-w-sm mx-auto">
+        <div className="bg-white/80 dark:bg-white/5 backdrop-blur-2xl rounded-2xl border border-slate-200/80 dark:border-white/10 p-12 text-center space-y-4 shadow-xl shadow-slate-200/50 dark:shadow-2xl">
+          <Heart className="w-12 h-12 text-slate-400 dark:text-slate-600 mx-auto" />
+          <h3 className="text-lg font-heading font-bold text-slate-900 dark:text-slate-200">No saved favorites yet</h3>
+          <p className="text-xs text-slate-500 dark:text-slate-400 max-w-sm mx-auto font-sans">
             Click the heart icon on any villa property card in the search grid to bookmark it here for quick access.
           </p>
         </div>
@@ -75,7 +75,7 @@ export const FavoritesView: React.FC<{ onSelectDeal: (deal: any) => void }> = ({
             const prop = item.property || item;
             const propertyId = prop.id || item.id;
             const imageUrl = prop.images?.[0] || prop.imageUrl || 'https://images.unsplash.com/photo-1613977257363-707ba9348227?auto=format&fit=crop&q=80&w=1200';
-            const priceText = prop.price ? `$${prop.price.toLocaleString()}/mo` : (prop.monthlyRent || '');
+            const priceText = prop.price ? `$${prop.price.toLocaleString()}/mo` : (prop.adr ? `$${prop.adr}/night` : (prop.monthlyRent || ''));
             const title = prop.title || 'Luxury Villa';
             const location = prop.city ? `${prop.city}, ${prop.state}` : (prop.location || '');
 
@@ -83,43 +83,45 @@ export const FavoritesView: React.FC<{ onSelectDeal: (deal: any) => void }> = ({
               <div
                 key={item.id || propertyId}
                 onClick={() => onSelectDeal(prop)}
-                className="bg-[#18082e] hover:bg-[#200b3d] rounded-3xl border border-purple-800/60 overflow-hidden shadow-xl transition-all duration-200 group cursor-pointer flex flex-col justify-between"
+                className="bg-white/80 dark:bg-white/5 hover:bg-white dark:hover:bg-white/10 rounded-2xl border border-slate-200/80 dark:border-white/10 hover:border-slate-300 dark:hover:border-white/20 overflow-hidden shadow-xl shadow-slate-200/50 dark:shadow-2xl transition-all duration-300 group cursor-pointer flex flex-col justify-between apple-specular"
               >
-                <div className="relative h-48 overflow-hidden">
+                <div className="relative h-52 overflow-hidden bg-slate-100 dark:bg-[#06040a]">
                   <img
                     src={imageUrl}
                     alt={title}
-                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 ease-[cubic-bezier(0.16,1,0.3,1)] filter brightness-[0.98] dark:brightness-90 group-hover:brightness-100"
                   />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-black/30" />
+                  
                   <button
                     type="button"
                     onClick={(e) => handleRemove(e, propertyId)}
-                    className="absolute top-4 right-4 p-2.5 rounded-full bg-black/60 hover:bg-rose-950/90 text-rose-400 border border-rose-500/40 backdrop-blur-md transition-colors"
+                    className="absolute top-3.5 right-3.5 p-2.5 rounded-full bg-black/50 hover:bg-rose-950/90 text-rose-400 border border-white/20 backdrop-blur-md transition-colors cursor-pointer"
                     title="Remove from favorites"
                   >
-                    <Trash2 className="w-4 h-4" />
+                    <Trash2 className="w-3.5 h-3.5" />
                   </button>
                   {priceText && (
-                    <div className="absolute bottom-3 left-3 bg-black/70 backdrop-blur-md px-3 py-1 rounded-full text-xs font-bold text-emerald-300 font-mono">
+                    <div className="absolute bottom-3.5 left-3.5 bg-black/60 backdrop-blur-md border border-white/20 px-3 py-1 rounded-full text-[10px] font-bold text-white font-mono tracking-wider">
                       {priceText}
                     </div>
                   )}
                 </div>
 
-                <div className="p-6 space-y-4">
+                <div className="p-5 sm:p-6 space-y-4">
                   <div>
-                    <h3 className="text-lg font-bold text-white group-hover:text-fuchsia-300 transition-colors font-sans">
+                    <h3 className="text-lg font-heading font-bold text-slate-900 dark:text-white group-hover:text-[#E04F33] dark:group-hover:text-[#FF8A73] transition-colors">
                       {title}
                     </h3>
-                    <p className="text-xs text-slate-400 flex items-center gap-1 font-sans mt-0.5">
-                      <MapPin className="w-3.5 h-3.5 text-purple-400" />
+                    <p className="text-xs text-slate-500 dark:text-slate-400 flex items-center gap-1 font-sans mt-1">
+                      <MapPin className="w-3.5 h-3.5 text-[#E04F33]" />
                       {location}
                     </p>
                   </div>
 
-                  <div className="pt-2 flex items-center justify-between text-xs font-bold text-fuchsia-400 group-hover:translate-x-1 transition-transform">
-                    <span>View Property Details</span>
-                    <ArrowRight className="w-4 h-4" />
+                  <div className="pt-2 flex items-center justify-between text-xs font-bold text-slate-600 dark:text-slate-300 group-hover:text-[#E04F33] dark:group-hover:text-[#FF8A73] font-heading transition-colors">
+                    <span>View Villa Details</span>
+                    <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
                   </div>
                 </div>
               </div>

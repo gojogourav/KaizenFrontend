@@ -1,79 +1,220 @@
 @import "tailwindcss";
 
 @layer base {
+  :root {
+    --bg-dark: #0F1014;
+    --accent-orange: #E04F33;
+  }
+
+  html, body, #root {
+    overflow-x: hidden;
+    max-width: 100vw;
+    min-height: 100vh;
+  }
+
   body {
-    background-color: #090A10;
-    color: #F1F5F9;
-    font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+    font-family: 'Plus Jakarta Sans', 'Inter', system-ui, -apple-system, sans-serif;
+    position: relative;
+  }
+
+  /* Organic Subtle Physical Grain/Noise Overlay */
+  body::before {
+    content: "";
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    pointer-events: none;
+    z-index: 9999;
+    opacity: 0.015;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
   }
 }
 
-@keyframes marquee {
-  0% {
-    transform: translateX(0%);
-  }
-  100% {
-    transform: translateX(-100%);
-  }
+/* Bespoke Typography Utility Classes */
+.font-display {
+  font-family: 'Space Grotesk', system-ui, sans-serif;
 }
 
-@keyframes marquee-reverse {
-  0% {
-    transform: translateX(-100%);
-  }
-  100% {
-    transform: translateX(0%);
-  }
+.font-heading {
+  font-family: 'Space Grotesk', system-ui, sans-serif;
 }
 
-.animate-marquee {
-  animation: marquee 40s linear infinite;
+.font-sans {
+  font-family: 'Plus Jakarta Sans', 'Inter', system-ui, sans-serif;
 }
 
-.animate-marquee-reverse {
-  animation: marquee-reverse 40s linear infinite;
+.font-mono {
+  font-family: 'JetBrains Mono', monospace;
 }
 
-/* Glassmorphism & High-tech Dark Theme Primitives */
+/* Micro-interaction & Motion Utility Classes */
+.smooth-spring {
+  transition: all 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* High-Quality Apple Vision Pro / macOS Style Glassmorphism Primitives */
 .glass-panel {
-  background: rgba(19, 18, 31, 0.75);
-  backdrop-filter: blur(12px);
-  border: 1px solid rgba(139, 92, 246, 0.18);
+  background: rgba(255, 255, 255, 0.70);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  border: 1px solid rgba(226, 232, 240, 0.8);
+  box-shadow: 0 20px 40px -12px rgba(148, 163, 184, 0.25);
+}
+
+@media (prefers-color-scheme: dark) {
+  .glass-panel {
+    background: rgba(15, 16, 20, 0.75);
+    border: 1px solid rgba(255, 255, 255, 0.10);
+    box-shadow: 0 20px 50px -12px rgba(0, 0, 0, 0.6);
+  }
 }
 
 .glass-card {
-  background: rgba(23, 21, 39, 0.85);
-  backdrop-filter: blur(8px);
-  border: 1px solid rgba(139, 92, 246, 0.15);
-  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+  background: rgba(255, 255, 255, 0.65);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(226, 232, 240, 0.7);
+  box-shadow: 0 16px 35px -10px rgba(148, 163, 184, 0.2);
+}
+
+@media (prefers-color-scheme: dark) {
+  .glass-card {
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.10);
+    box-shadow: 0 16px 40px -10px rgba(0, 0, 0, 0.65);
+  }
 }
 
 .glass-card-hover {
-  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .glass-card-hover:hover {
-  border-color: rgba(167, 139, 250, 0.35);
-  box-shadow: 0 12px 40px 0 rgba(124, 58, 237, 0.15);
+  background: rgba(255, 255, 255, 0.85);
+  border-color: rgba(203, 213, 225, 0.9);
+  box-shadow: 0 25px 50px -12px rgba(148, 163, 184, 0.35);
   transform: translateY(-2px);
+}
+
+@media (prefers-color-scheme: dark) {
+  .glass-card-hover:hover {
+    background: rgba(255, 255, 255, 0.10);
+    border-color: rgba(255, 255, 255, 0.20);
+    box-shadow: 0 28px 60px -12px rgba(0, 0, 0, 0.85);
+    transform: translateY(-2px);
+  }
+}
+
+/* Apple-style 1px Inner Top Edge Specular Lighting */
+.apple-specular {
+  box-shadow: inset 0 1px 0 0 rgba(255, 255, 255, 0.15);
+}
+
+/* Subtle Optics Inner Border */
+.ring-inner-white {
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.1);
 }
 
 /* Custom sleek scrollbar */
 ::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
+  width: 6px;
+  height: 6px;
 }
 
 ::-webkit-scrollbar-track {
-  background: #090A10;
+  background: #0B0E17;
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #232038;
-  border-radius: 4px;
-  border: 1px solid rgba(139, 92, 246, 0.2);
+  background: #1C2436;
+  border-radius: 3px;
+  border: 1px solid rgba(255, 255, 255, 0.05);
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #3B3358;
+  background: #2D3A54;
 }
+
+/* Hide scrollbar for clean horizontal filter bars */
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+/* Zero-JS First Paint GPU-Accelerated Keyframe Animations */
+@keyframes kaizen-pulse-logo {
+  0%, 100% {
+    opacity: 0.8;
+    transform: scale(0.98);
+    filter: drop-shadow(0 0 12px rgba(224, 79, 51, 0.3));
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.02);
+    filter: drop-shadow(0 0 24px rgba(224, 79, 51, 0.6));
+  }
+}
+
+@keyframes kaizen-loader-bar {
+  0% {
+    width: 0%;
+  }
+  60% {
+    width: 75%;
+  }
+  100% {
+    width: 100%;
+  }
+}
+
+@keyframes kaizen-splash-fade {
+  0% {
+    opacity: 1;
+    visibility: visible;
+  }
+  99% {
+    opacity: 0;
+    visibility: visible;
+  }
+  100% {
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+  }
+}
+
+.animate-kaizen-logo {
+  animation: kaizen-pulse-logo 1.6s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+  will-change: transform, opacity, filter;
+}
+
+.animate-kaizen-bar {
+  animation: kaizen-loader-bar 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  will-change: width;
+}
+
+.animate-splash-fade-out {
+  animation: kaizen-splash-fade 0.4s ease-out forwards;
+}
+
+/* Ticker Marquee Moving Text Left to Right */
+@keyframes marquee-left-to-right {
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(0%);
+  }
+}
+
+.animate-marquee-ltr {
+  animation: marquee-left-to-right 35s linear infinite;
+  will-change: transform;
+}
+
+
