@@ -31,8 +31,8 @@ interface AuthContextType {
   login: (email: string, password?: string) => Promise<User | null>;
   logout: () => Promise<void>;
   updateProfile: (data: Partial<User>) => Promise<void>;
-  toggleFavorite: (propertyId: string) => Promise<boolean>;
-  isFavorite: (propertyId: string) => boolean;
+  toggleFavorite: (propertyId: string | number) => Promise<boolean>;
+  isFavorite: (propertyId: string | number) => boolean;
   refreshFavorites: () => Promise<void>;
 }
 
@@ -156,7 +156,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
-  const toggleFavorite = async (propertyId: string): Promise<boolean> => {
+  const toggleFavorite = async (propertyId: string | number): Promise<boolean> => {
     if (!token || !user) {
       throw new Error('Please login to save properties to your favorites.');
     }
@@ -186,7 +186,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
-  const isFavorite = (propertyId: string) => favorites.includes(String(propertyId));
+  const isFavorite = (propertyId: string | number) => favorites.includes(String(propertyId));
 
   return (
     <AuthContext.Provider

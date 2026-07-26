@@ -1,18 +1,30 @@
 import React from 'react';
 import { m } from 'motion/react';
 import { MapPin, Heart, ArrowUpRight, ShieldCheck, BedDouble, Maximize2, Star, CheckCircle2 } from 'lucide-react';
+import { Deal } from '../dealsData';
 
 export interface PropertyDeal {
-  id: string;
+  id: string | number;
   title: string;
   location: string;
   imageUrl: string;
-  adr: string | number;
-  furnished: string;
-  status: 'AVAILABLE' | 'OCCUPIED' | 'UNDER CONTRACT' | 'UNDER REVIEW' | string;
-  bedsBaths: string;
-  squareFeet: string | number;
-  description: string;
+  adr?: string | number;
+  furnished?: 'Yes' | 'No' | string | boolean;
+  status?: 'AVAILABLE' | 'OCCUPIED' | 'UNDER CONTRACT' | 'UNDER REVIEW' | 'MAINTENANCE' | string;
+  bedsBaths?: string;
+  squareFeet?: string | number;
+  description?: string;
+  monthlyRent?: string;
+  leaseTerm?: string;
+  projectedAnnualRevenue?: string;
+  estOccupancy?: string;
+  securityDeposit?: string;
+  concessions?: string;
+  availability?: string;
+  estNetMonthlyProfit?: string;
+  totalCashToStart?: string;
+  specialRequirements?: string;
+  images?: string[];
   listings?: Array<{ platform: string; isActive: boolean; url?: string }>;
   rating?: number;
   reviewCount?: number;
@@ -20,11 +32,11 @@ export interface PropertyDeal {
   [key: string]: any;
 }
 
-interface PropertyCardProps {
-  deal: PropertyDeal;
+export interface PropertyCardProps {
+  deal: Deal | PropertyDeal | any;
   isFavorite: boolean;
-  onToggleFavorite: (id: string, e?: React.MouseEvent) => void;
-  onOpenProspectus: (deal: PropertyDeal) => void;
+  onToggleFavorite: (id: string | number, e?: React.MouseEvent) => void;
+  onOpenProspectus: (deal: Deal | PropertyDeal | any) => void;
 }
 
 export const PropertyCard: React.FC<PropertyCardProps> = ({
@@ -33,10 +45,10 @@ export const PropertyCard: React.FC<PropertyCardProps> = ({
   onToggleFavorite,
   onOpenProspectus,
 }) => {
-  const activeListings = deal.listings?.filter((l) => l.isActive && l.url) || [];
+  const activeListings = deal.listings?.filter((l: { isActive?: boolean; url?: string; [key: string]: any }) => l.isActive && l.url) || [];
 
   // Deterministic realistic metadata if not provided
-  const hash = deal.id.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
+  const hash = String(deal.id).split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
   const rating = deal.rating || (4.9 + (hash % 10) / 100);
   const reviewCount = deal.reviewCount || (18 + (hash % 35));
   const availabilityRange = deal.availabilityRange || (deal.status === 'AVAILABLE' ? 'Available Dec 1 – Dec 8' : 'Under Review');

@@ -71,6 +71,8 @@ import { AdminLayout } from './components/admin/AdminLayout';
 import { HowItWorks } from './components/HowItWorks';
 import { PropertyCard } from './components/PropertyCard';
 
+export type TabType = 'properties' | 'how-it-works' | 'blogs' | 'stories' | 'experiences' | 'about' | 'admin' | 'dashboard' | 'favorites' | 'bookings';
+
 // Platform Colors & Icons map
 const PLATFORM_CONFIG: Record<string, { bg: string; text: string; border: string; iconLabel: string }> = {
   'Airbnb': {
@@ -116,7 +118,7 @@ const AVAILABLE_PLATFORMS = ['Airbnb', 'Vrbo', 'Booking.com', 'Zillow', 'Direct 
 import { AirbnbSearchBar, GuestCount, SearchPayload } from './components/AirbnbSearchBar';
 
 export default function App() {
-  const { user, isAuthenticated, logout, favorites, toggleFavorite } = useAuth();
+  const { user, isAuthenticated, logout, favorites, toggleFavorite, isFavorite } = useAuth();
 
   // Zero-JS First Paint Hybrid Splash State
   const [showSplash, setShowSplash] = useState(true);
@@ -134,7 +136,7 @@ export default function App() {
   }, []);
 
   // Navigation & View States
-  const [activeTab, setActiveTab] = useState<'properties' | 'how-it-works' | 'blogs' | 'stories' | 'experiences' | 'about' | 'admin' | 'dashboard' | 'favorites' | 'bookings'>('properties');
+  const [activeTab, setActiveTab] = useState<TabType>('properties');
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<'ALL' | 'AVAILABLE' | 'UNDER CONTRACT' | 'UNDER REVIEW'>('ALL');
   
@@ -527,7 +529,7 @@ export default function App() {
   };
 
   // Render Isolated Admin Layout if activeTab === 'admin'
-  if (activeTab === 'admin') {
+  if ((activeTab as string) === 'admin') {
     return (
       <div className="min-h-screen bg-[#0F1014] text-slate-100 font-sans selection:bg-[#E04F33] selection:text-white">
         
@@ -1329,7 +1331,7 @@ export default function App() {
                     key={item.id}
                     onClick={() => { setActiveTab(item.id as any); setShowFavoritesOnly(false); setSearchQuery(''); }}
                     className={`px-4 py-2 rounded-xl text-xs font-bold shrink-0 whitespace-nowrap transition-all backdrop-blur-xl ${
-                      activeTab === item.id && !showFavoritesOnly 
+                      (activeTab as string) === item.id && !showFavoritesOnly 
                         ? 'bg-white/20 text-white border border-white/25 shadow-md' 
                         : 'bg-white/5 text-slate-300 border border-white/10 hover:bg-white/10 hover:text-white'
                     }`}
@@ -1427,7 +1429,7 @@ export default function App() {
                         <PropertyCard
                           key={deal.id}
                           deal={deal}
-                          isFavorite={favorites.includes(deal.id)}
+                          isFavorite={isFavorite(deal.id)}
                           onToggleFavorite={(id) => toggleFavorite(id)}
                           onOpenProspectus={handleOpenProspectus}
                         />

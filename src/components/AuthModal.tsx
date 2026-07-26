@@ -22,6 +22,21 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onSuccess
 
   if (!isOpen) return null;
 
+  const extractErrorMessage = (err: any, fallback: string): string => {
+    if (!err) return fallback;
+    
+    if (typeof err === 'string' && err !== '[object Object]') return err;
+    if (err instanceof Error && err.message !== '[object Object]') return err.message;
+    
+    if (err?.response?.data?.message) return String(err.response.data.message);
+    if (err?.data?.message) return String(err.data.message);
+    if (err?.message && typeof err.message === 'string' && err.message !== '[object Object]') return err.message;
+    if (err?.error && typeof err.error === 'string') return err.error;
+    if (err?.detail && typeof err.detail === 'string') return err.detail;
+    
+    return fallback;
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
@@ -38,7 +53,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onSuccess
         if (onSuccess) onSuccess(userObj);
         return;
       } catch (err: any) {
-        setError(err.message || 'Admin login failed');
+        setError(extractErrorMessage(err, 'Admin login failed'));
         setLoading(false);
         return;
       }
@@ -50,7 +65,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onSuccess
       onClose();
       if (onSuccess) onSuccess(userObj);
     } catch (err: any) {
-      setError(err.message || 'Login failed. Please try again.');
+      setError(extractErrorMessage(err, 'Login failed. Please try again.'));
       setLoading(false);
     }
   };
