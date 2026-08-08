@@ -4,7 +4,8 @@
  */
 
 import React, { useState } from 'react';
-import { X, Lock, Mail } from 'lucide-react';
+import { X, Lock, Mail, AlertCircle } from 'lucide-react';
+import { z } from 'zod';
 import { useAuth, User } from '../context/AuthContext';
 
 interface AuthModalProps {
@@ -13,70 +14,63 @@ interface AuthModalProps {
   onSuccess?: (user?: User | null) => void;
 }
 
+// 1. Define Zod Schema for Login
+const loginSchema = z.object({
+  identifier: z.string().min(1, 'Username or email is required'),
+  password: z.string().min(6, 'Password must be at least 6 characters'),
+});
+
 export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onSuccess }) => {
   const { login } = useAuth();
-  const [email, setEmail] = useState('');
+
+  const [identifier, setIdentifier] = useState('');
   const [password, setPassword] = useState('');
+
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
+  const [apiError, setApiError] = useState('');
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
 
   if (!isOpen) return null;
 
   const extractErrorMessage = (err: any, fallback: string): string => {
     if (!err) return fallback;
-    if (typeof err === 'string') {
-      return err.includes('[object Object]') ? fallback : err;
-    }
-    if (typeof err.message === 'string' && err.message && !err.message.includes('[object Object]')) {
-      return err.message;
-    }
-    if (typeof err.error === 'string' && err.error && !err.error.includes('[object Object]')) {
-      return err.error;
-    }
-    if (err.error && typeof err.error.message === 'string' && !err.error.message.includes('[object Object]')) {
-      return err.error.message;
-    }
-    if (typeof err.detail === 'string' && err.detail && !err.detail.includes('[object Object]')) {
-      return err.detail;
-    }
-    if (err.data) {
-      if (typeof err.data === 'string' && !err.data.includes('[object Object]')) return err.data;
-      if (typeof err.data.message === 'string' && !err.data.message.includes('[object Object]')) return err.data.message;
-      if (typeof err.data.detail === 'string' && !err.data.detail.includes('[object Object]')) return err.data.detail;
-      if (typeof err.data.error === 'string' && !err.data.error.includes('[object Object]')) return err.data.error;
-    }
+    if (typeof err === 'string') return err;
+    if (err.message && typeof err.message === 'string') return err.message;
+    if (err.detail && typeof err.detail === 'string') return err.detail;
+    if (err.non_field_errors && Array.isArray(err.non_field_errors)) return err.non_field_errors[0];
     return fallback;
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError('');
-    setLoading(true);
-    
-    const cleanInput = email.trim().toLowerCase();
-    
-    // Check hardcoded admin credentials intercept
-    if ((cleanInput === 'admin' || cleanInput === 'admin@kaizen.com') && (password === 'admin123' || password === 'admin' || password === 'kaizen2026')) {
-      try {
-        const userObj = await login('admin@kaizen.com', password);
-        setLoading(false);
-        onClose();
-        if (onSuccess) onSuccess(userObj);
-        return;
-      } catch (err: any) {
-        setError(extractErrorMessage(err, 'Admin login failed'));
-        setLoading(false);
-        return;
-      }
+    setApiError('');
+    setFieldErrors({});
+
+    // 2. Validate with Zod before doing anything
+    const validation = loginSchema.safeParse({ identifier, password });
+
+    if (!validation.success) {
+      const errors: Record<string, string> = {};
+      validation.error.issues.forEach((issue) => {
+        if (issue.path[0]) {
+          errors[issue.path[0].toString()] = issue.message;
+        }
+      });
+      setFieldErrors(errors);
+      return;
     }
 
+    setLoading(true);
+
     try {
-      const userObj = await login(email, password);
+      const userObj = await login(validation.data.identifier.trim(), validation.data.password);
+
       setLoading(false);
       onClose();
       if (onSuccess) onSuccess(userObj);
+
     } catch (err: any) {
-      setError(extractErrorMessage(err, 'Login failed. Please try again.'));
+      setApiError(extractErrorMessage(err, 'Invalid credentials. Please try again.'));
       setLoading(false);
     }
   };
@@ -84,7 +78,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onSuccess
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-md animate-fade-in font-sans">
       <div className="relative w-full max-w-md bg-[#0F1014]/90 border border-white/15 rounded-3xl p-8 shadow-2xl shadow-black/80 text-slate-100 backdrop-blur-3xl apple-specular">
-        
+
         {/* Close Button */}
         <button
           onClick={onClose}
@@ -106,9 +100,11 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onSuccess
           </p>
         </div>
 
-        {error && (
-          <div className="mb-4 p-3 bg-red-500/20 border border-red-500/40 rounded-xl text-xs text-red-200 font-medium text-center">
-            {error}
+        {/* API Error Banner */}
+        {apiError && (
+          <div className="mb-4 p-3 bg-red-500/20 border border-red-500/40 rounded-xl text-xs text-red-200 font-medium flex items-center gap-2">
+            <AlertCircle className="w-4 h-4 shrink-0 text-red-400" />
+            <span>{apiError}</span>
           </div>
         )}
 
@@ -121,13 +117,19 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onSuccess
               <Mail className="w-4 h-4 text-[#E04F33] absolute left-3.5 top-1/2 -translate-y-1/2" />
               <input
                 type="text"
-                required
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
+                value={identifier}
+                onChange={(e) => setIdentifier(e.target.value)}
                 placeholder="Username or email"
-                className="w-full pl-10 pr-4 py-3 bg-white/5 border border-white/10 rounded-xl text-sm font-medium text-slate-100 placeholder:text-slate-500 focus:outline-none focus:border-[#E04F33] focus:bg-white/10 transition-all"
+                className={`w-full pl-10 pr-4 py-3 bg-white/5 border rounded-xl text-sm font-medium text-slate-100 placeholder:text-slate-500 focus:outline-none focus:bg-white/10 transition-all ${
+                  fieldErrors.identifier ? 'border-red-500/50 focus:border-red-500' : 'border-white/10 focus:border-[#E04F33]'
+                }`}
               />
             </div>
+            {fieldErrors.identifier && (
+              <p className="text-[10px] text-red-400 mt-1.5 font-medium flex items-center gap-1">
+                <AlertCircle className="w-3 h-3" /> {fieldErrors.identifier}
+              </p>
+            )}
           </div>
 
           <div>
@@ -138,13 +140,19 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onSuccess
               <Lock className="w-4 h-4 text-[#E04F33] absolute left-3.5 top-1/2 -translate-y-1/2" />
               <input
                 type="password"
-                required
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="••••••••"
-                className="w-full pl-10 pr-4 py-3 bg-white/5 border border-white/10 rounded-xl text-sm font-medium text-slate-100 placeholder:text-slate-500 focus:outline-none focus:border-[#E04F33] focus:bg-white/10 transition-all"
+                className={`w-full pl-10 pr-4 py-3 bg-white/5 border rounded-xl text-sm font-medium text-slate-100 placeholder:text-slate-500 focus:outline-none focus:bg-white/10 transition-all ${
+                  fieldErrors.password ? 'border-red-500/50 focus:border-red-500' : 'border-white/10 focus:border-[#E04F33]'
+                }`}
               />
             </div>
+            {fieldErrors.password && (
+              <p className="text-[10px] text-red-400 mt-1.5 font-medium flex items-center gap-1">
+                <AlertCircle className="w-3 h-3" /> {fieldErrors.password}
+              </p>
+            )}
           </div>
 
           <button

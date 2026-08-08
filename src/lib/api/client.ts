@@ -1,153 +1,229 @@
-/**
- * Centralized Fetch & Axios-compatible API Client
- * Configured for Vercel Next.js / React frontend and Django REST Framework backend
- */
+import { getAccessToken, setAccessToken } from './token_store';
 
-export const TOKEN_KEY = 'kaizen_auth_token';
+const isBrowser = typeof window !== 'undefined';
+const CSRF_SAFE_METHODS = new Set(['GET', 'HEAD', 'OPTIONS', 'TRACE']);
+const REFRESH_ENDPOINT = '/api/token/refresh/';
+const DEFAULT_TIMEOUT_MS = 15_000;
+const DEFAULT_RETRIES = 1;
 
-export const getStoredToken = (): string | null => {
-  if (typeof window === 'undefined') return null;
-  return localStorage.getItem(TOKEN_KEY);
-};
+function getCookie(name: string): string | null {
+  if (!isBrowser || !document.cookie) return null;
+  const match = document.cookie.split('; ').find((row) => row.startsWith(`${name}=`));
+  return match ? decodeURIComponent(match.split('=').slice(1).join('=')) : null;
+}
 
-export const setStoredToken = (token: string): void => {
-  if (typeof window !== 'undefined') {
-    localStorage.setItem(TOKEN_KEY, token);
-  }
-};
-
-export const removeStoredToken = (): void => {
-  if (typeof window !== 'undefined') {
-    localStorage.removeItem(TOKEN_KEY);
-  }
-};
-
-/**
- * Get configured API Base URL
- * Prefers NEXT_PUBLIC_API_BASE_URL for Vercel Next.js environments
- * then VITE_API_BASE_URL for Vite, falling back to relative '' for same-domain Cloud Run proxy.
- */
 export const getApiBaseUrl = (): string => {
   let url = '';
-  if (typeof process !== 'undefined' && process.env && process.env.NEXT_PUBLIC_API_BASE_URL) {
+
+  if (typeof process !== 'undefined' && process.env?.NEXT_PUBLIC_API_BASE_URL) {
     url = process.env.NEXT_PUBLIC_API_BASE_URL;
-  } else if (typeof import.meta !== 'undefined' && (import.meta as any).env && (import.meta as any).env.VITE_API_BASE_URL) {
+  } else if (typeof import.meta !== 'undefined' && (import.meta as any).env?.VITE_API_BASE_URL) {
     url = (import.meta as any).env.VITE_API_BASE_URL;
   }
-  return url.replace(/\/+$/, ''); // Strip trailing slashes
-};
 
-export interface ApiRequestOptions extends RequestInit {
-  params?: Record<string, string | number | boolean | undefined | null>;
-}
+  const isProd =
+    (typeof process !== 'undefined' && process.env?.NODE_ENV === 'production') ||
+    (typeof import.meta !== 'undefined' && (import.meta as any).env?.PROD);
+
+  if (!url && isProd) {
+    throw new Error('API base URL is not configured. Set NEXT_PUBLIC_API_BASE_URL or VITE_API_BASE_URL.');
+  }
+
+  return url.replace(/\/+$/, '');
+};
 
 export class DjangoApiError extends Error {
   status: number;
-  data: any;
+  data: unknown;
+  isTimeout: boolean;
 
-  constructor(message: string, status: number, data?: any) {
+  constructor(message: string, status: number, data?: unknown, isTimeout = false) {
     super(message);
     this.name = 'DjangoApiError';
     this.status = status;
     this.data = data;
+    this.isTimeout = isTimeout;
   }
 }
 
-/**
- * Robust fetch wrapper with Bearer token injection, CORS credentials,
- * and Django REST Framework global error handling
- */
-export async function apiClient<T = any>(
-  endpoint: string,
-  options: ApiRequestOptions = {}
-): Promise<T> {
-  const baseUrl = getApiBaseUrl();
+export interface ApiRequestOptions extends Omit<RequestInit, 'body'> {
+  params?: Record<string, string | number | boolean | undefined | null>;
+  body?: RequestInit['body'];
+  timeoutMs?: number;
+  retries?: number;
+  onSessionExpired?: () => void;
+  _isRetry?: boolean;
+}
+
+function buildUrl(base: string, endpoint: string, params?: ApiRequestOptions['params']): string {
   const cleanEndpoint = endpoint.startsWith('/') ? endpoint : `/${endpoint}`;
-  
-  let fullUrl = `${baseUrl}${cleanEndpoint}`;
-  if (options.params) {
+  let url = `${base}${cleanEndpoint}`;
+
+  if (params) {
     const searchParams = new URLSearchParams();
-    Object.entries(options.params).forEach(([key, value]) => {
+    for (const [key, value] of Object.entries(params)) {
       if (value !== undefined && value !== null && value !== '') {
         searchParams.append(key, String(value));
       }
-    });
-    const queryString = searchParams.toString();
-    if (queryString) {
-      fullUrl += (fullUrl.includes('?') ? '&' : '?') + queryString;
+    }
+    const qs = searchParams.toString();
+    if (qs) url += (url.includes('?') ? '&' : '?') + qs;
+  }
+
+  return url;
+}
+
+function sleep(ms: number): Promise<void> {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+function extractErrorMessage(data: unknown): string {
+  if (typeof data === 'string') return data;
+
+  if (data && typeof data === 'object') {
+    const d = data as Record<string, unknown>;
+    if (typeof d.detail === 'string') return d.detail;
+    if (typeof d.error === 'string') return d.error;
+    if (d.non_field_errors) {
+      return Array.isArray(d.non_field_errors) ? d.non_field_errors.join(', ') : String(d.non_field_errors);
+    }
+    const entries = Object.entries(d);
+    if (entries.length > 0) {
+      const fieldErrors = entries
+        .map(([key, val]) => `${key}: ${Array.isArray(val) ? val.join(', ') : val}`)
+        .join(' | ');
+      if (fieldErrors) return fieldErrors;
     }
   }
 
-  const token = getStoredToken();
+  return 'An error occurred while communicating with the server.';
+}
+
+let refreshPromise: Promise<string | null> | null = null;
+
+export async function refreshAccessToken(): Promise<string | null> {
+  if (!refreshPromise) {
+    refreshPromise = (async () => {
+      try {
+        const baseUrl = getApiBaseUrl();
+        const csrfToken = getCookie('csrftoken');
+
+        const response = await fetch(buildUrl(baseUrl, REFRESH_ENDPOINT), {
+          method: 'POST',
+          credentials: 'include',
+          headers: {
+            'Content-Type': 'application/json',
+            ...(csrfToken ? { 'X-CSRFToken': csrfToken } : {}),
+          },
+        });
+
+        if (!response.ok) {
+          setAccessToken(null);
+          return null;
+        }
+
+        const data = await response.json().catch(() => ({}));
+        const newToken: string | undefined = data.access;
+        setAccessToken(newToken ?? null);
+        return newToken ?? null;
+      } catch {
+        setAccessToken(null);
+        return null;
+      } finally {
+        refreshPromise = null;
+      }
+    })();
+  }
+
+  return refreshPromise;
+}
+
+export async function apiClient<T = unknown>(endpoint: string, options: ApiRequestOptions = {}): Promise<T> {
+  const {
+    params,
+    timeoutMs = DEFAULT_TIMEOUT_MS,
+    retries = DEFAULT_RETRIES,
+    onSessionExpired,
+    headers: callerHeaders,
+    method = 'GET',
+    _isRetry = false,
+    ...rest
+  } = options;
+
+  const baseUrl = getApiBaseUrl();
+  const fullUrl = buildUrl(baseUrl, endpoint, params);
+  const httpMethod = method.toUpperCase();
+  const token = getAccessToken();
 
   const headers: Record<string, string> = {
     'Content-Type': 'application/json',
-    'Accept': 'application/json',
-    ...(options.headers as Record<string, string>),
+    Accept: 'application/json',
+    ...(callerHeaders as Record<string, string>),
   };
 
-  if (token) {
-    headers['Authorization'] = `Bearer ${token}`;
+  if (token) headers.Authorization = `Bearer ${token}`;
+
+  if (!CSRF_SAFE_METHODS.has(httpMethod)) {
+    const csrfToken = getCookie('csrftoken');
+    if (csrfToken) headers['X-CSRFToken'] = csrfToken;
   }
 
-  const fetchOptions: RequestInit = {
-    ...options,
-    headers,
-    credentials: 'include', // Handles CORS cookie sessions
-  };
+  const maxAttempts = httpMethod === 'GET' ? Math.max(1, retries + 1) : 1;
+  let lastError: DjangoApiError | null = null;
 
-  try {
-    const response = await fetch(fullUrl, fetchOptions);
+  for (let attempt = 0; attempt < maxAttempts; attempt++) {
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), timeoutMs);
 
-    let data: any = {};
-    const contentType = response.headers.get('content-type');
-    if (contentType && contentType.includes('application/json')) {
-      data = await response.json().catch(() => ({}));
-    } else {
-      const text = await response.text().catch(() => '');
-      data = text ? { message: text } : {};
-    }
+    try {
+      const response = await fetch(fullUrl, {
+        ...rest,
+        method: httpMethod,
+        headers,
+        credentials: 'include',
+        signal: controller.signal,
+      });
 
-    // Handle global DRF error codes
-    if (!response.ok) {
-      if (response.status === 401) {
-        // Unauthorized token refresh or expired session
-        removeStoredToken();
-        if (typeof window !== 'undefined' && !window.location.pathname.includes('/login')) {
-          console.warn('[DRF Auth] Token expired or invalid 401. Session cleared.');
+      clearTimeout(timer);
+
+      let data: unknown = {};
+      const contentType = response.headers.get('content-type');
+      if (contentType?.includes('application/json')) {
+        data = await response.json().catch(() => ({}));
+      } else {
+        const text = await response.text().catch(() => '');
+        data = text ? { message: text } : {};
+      }
+
+      if (!response.ok) {
+        if (response.status === 401 && !_isRetry && !endpoint.startsWith(REFRESH_ENDPOINT)) {
+          const newToken = await refreshAccessToken();
+          if (newToken) {
+            return apiClient<T>(endpoint, { ...options, _isRetry: true });
+          }
+          onSessionExpired?.();
         }
+
+        throw new DjangoApiError(extractErrorMessage(data), response.status, data);
       }
 
-      // Format DRF validation error message payloads cleanly
-      let errorMessage = 'An error occurred while communicating with the server.';
-      if (typeof data === 'string') {
-        errorMessage = data;
-      } else if (data.detail) {
-        errorMessage = data.detail;
-      } else if (data.error) {
-        errorMessage = data.error;
-      } else if (data.non_field_errors) {
-        errorMessage = Array.isArray(data.non_field_errors)
-          ? data.non_field_errors.join(', ')
-          : String(data.non_field_errors);
-      } else if (typeof data === 'object' && Object.keys(data).length > 0) {
-        const fieldErrors = Object.entries(data)
-          .map(([key, val]) => `${key}: ${Array.isArray(val) ? val.join(', ') : val}`)
-          .join(' | ');
-        if (fieldErrors) errorMessage = fieldErrors;
+      return data as T;
+    } catch (error: any) {
+      clearTimeout(timer);
+
+      if (error instanceof DjangoApiError) {
+        lastError = error;
+        if (error.status < 500) throw error;
+      } else if (error?.name === 'AbortError') {
+        lastError = new DjangoApiError('Request timed out.', 408, undefined, true);
+      } else {
+        lastError = new DjangoApiError(error?.message || 'Network connection error. Please check your connection.', 0);
       }
 
-      throw new DjangoApiError(errorMessage, response.status, data);
+      if (attempt === maxAttempts - 1) throw lastError;
+      await sleep(2 ** attempt * 250 + Math.random() * 100);
     }
-
-    return data as T;
-  } catch (error: any) {
-    if (error instanceof DjangoApiError) {
-      throw error;
-    }
-    throw new DjangoApiError(
-      error.message || 'Network connection error. Please check your connection.',
-      500
-    );
   }
+
+  throw lastError ?? new DjangoApiError('Unknown request failure.', 0);
 }

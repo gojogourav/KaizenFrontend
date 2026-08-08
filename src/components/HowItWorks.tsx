@@ -4,15 +4,15 @@
  */
 
 import React, { useState } from 'react';
-import { 
-  Building, 
-  Lock, 
-  ShieldCheck, 
-  Key, 
-  ArrowRight, 
-  CheckCircle2, 
-  Clock, 
-  Send, 
+import {
+  Building,
+  Lock,
+  ShieldCheck,
+  Key,
+  ArrowRight,
+  CheckCircle2,
+  Clock,
+  Send,
   HelpCircle,
   Sparkles,
   DollarSign
@@ -67,7 +67,7 @@ export const HowItWorks: React.FC<{ onBrowseProperties: () => void }> = ({ onBro
 
   return (
     <div className="space-y-12 animate-fade-in font-sans text-slate-900 dark:text-slate-100 max-w-6xl mx-auto">
-      
+
       {/* Header Banner */}
       <div className="glass-card bg-white/80 dark:bg-white/5 rounded-3xl p-8 sm:p-10 border border-slate-200/80 dark:border-white/10 shadow-xl shadow-slate-200/50 dark:shadow-2xl relative overflow-hidden apple-specular">
         <div className="relative z-10 space-y-4 max-w-2xl">
@@ -109,7 +109,7 @@ export const HowItWorks: React.FC<{ onBrowseProperties: () => void }> = ({ onBro
           {STEPS.map((step) => {
             const IconComp = step.icon;
             return (
-              <div 
+              <div
                 key={step.num}
                 className="glass-card bg-white/70 dark:bg-white/5 p-8 rounded-3xl border border-slate-200/70 dark:border-white/10 hover:border-slate-300 dark:hover:border-white/20 transition-all duration-300 space-y-4 relative group apple-specular"
               >
@@ -137,7 +137,7 @@ export const HowItWorks: React.FC<{ onBrowseProperties: () => void }> = ({ onBro
 
       {/* Customer Lead Generation & Inquiry Form */}
       <div className="glass-card bg-white/80 dark:bg-white/5 rounded-3xl border border-slate-200/80 dark:border-white/10 p-8 sm:p-10 shadow-xl shadow-slate-200/50 dark:shadow-2xl grid grid-cols-1 lg:grid-cols-12 gap-8 items-center apple-specular">
-        
+
         <div className="lg:col-span-5 space-y-4">
           <span className="text-[10px] font-mono font-bold uppercase tracking-widest text-[#E04F33] bg-[#E04F33]/10 dark:bg-white/10 px-3 py-1 rounded-full border border-[#E04F33]/20 dark:border-white/15">
             Dedicated Customer Support

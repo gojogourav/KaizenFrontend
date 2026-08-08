@@ -1,26 +1,33 @@
-/**
- * @license
- * SPDX-License-Identifier: Apache-2.0
- */
-
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { api, getStoredToken, setStoredToken, removeStoredToken } from '../api/client';
-import { User as DbUser } from '../types/database';
+import { z } from 'zod';
+import api from '../api/client';
+import { getAccessToken, setAccessToken } from '../lib/api/token_store';
 
-export interface User extends Partial<DbUser> {
-  id: string | number;
-  name?: string;
-  username?: string;
-  email: string;
-  first_name?: string;
-  last_name?: string;
-  role: any;
-  is_staff?: boolean;
-  is_superuser?: boolean;
-  avatarUrl?: string;
-  company?: string;
-  phone?: string;
-}
+export const UserSchema = z.object({
+  id: z.union([z.string(), z.number()]),
+  email: z.string().email(),
+  username: z.string().optional().nullable(),
+  first_name: z.string().optional().nullable(),
+  last_name: z.string().optional().nullable(),
+  role: z.string().optional().nullable(),
+  is_staff: z.boolean().optional().nullable(),
+  is_superuser: z.boolean().optional().nullable(),
+  avatarUrl: z.string().optional().nullable(),
+  company: z.string().optional().nullable(),
+  phone: z.string().optional().nullable(),
+}).transform((data) => {
+  const name = (data.first_name || data.last_name)
+    ? `${data.first_name || ''} ${data.last_name || ''}`.trim()
+    : data.username || data.email;
+
+  return {
+    ...data,
+    name,
+    role: data.role || (data.is_staff ? 'admin' : 'customer')
+  };
+});
+
+export type User = z.infer<typeof UserSchema>;
 
 interface AuthContextType {
   user: User | null;
@@ -28,7 +35,7 @@ interface AuthContextType {
   isAuthenticated: boolean;
   isLoading: boolean;
   favorites: string[];
-  login: (email: string, password?: string) => Promise<User | null>;
+  login: (identifier: string, password?: string) => Promise<User | null>;
   logout: () => Promise<void>;
   updateProfile: (data: Partial<User>) => Promise<void>;
   toggleFavorite: (propertyId: string | number) => Promise<boolean>;
@@ -38,80 +45,41 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-const normalizeUser = (u: any): User => {
-  if (!u) return u;
-  const name = u.name || (u.first_name || u.last_name ? `${u.first_name || ''} ${u.last_name || ''}`.trim() : u.username || u.email);
-  return {
-    ...u,
-    id: u.id,
-    email: u.email,
-    name,
-    username: u.username || u.email,
-    role: u.role || (u.is_staff ? 'admin' : 'customer'),
-  };
-};
-
 const extractFavoriteIds = (favRes: any): string[] => {
   if (!favRes) return [];
   if (Array.isArray(favRes)) {
     return favRes.map((f: any) => String(f.property?.id || f.id || f));
   }
-  if (favRes.favoriteIds && Array.isArray(favRes.favoriteIds)) {
-    return favRes.favoriteIds.map((id: any) => String(id));
-  }
-  if (favRes.favorites && Array.isArray(favRes.favorites)) {
-    return favRes.favorites.map((f: any) => String(f.property?.id || f.id || f));
-  }
   return [];
 };
 
+const removeToken = () => setAccessToken(null);
+
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
-  const [token, setToken] = useState<string | null>(getStoredToken());
+  const [token, setToken] = useState<string | null>(getAccessToken());
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [favorites, setFavorites] = useState<string[]>([]);
 
-  // Load user profile on mount if token exists
   useEffect(() => {
     const initAuth = async () => {
-      const storedToken = getStoredToken();
+      const storedToken = getAccessToken();
       if (storedToken) {
-        if (storedToken === 'mock_admin_jwt_token' || storedToken.startsWith('mock_')) {
-          const mockAdminUser: User = {
-            id: 'admin_1',
-            email: 'admin@kaizen.com',
-            name: 'Kaizen Administrator',
-            username: 'admin',
-            role: 'admin',
-            is_staff: true,
-            is_superuser: true,
-            avatarUrl: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150',
-            company: 'Kaizen Luxury Estates',
-          };
-          setUser(mockAdminUser);
-          setToken(storedToken);
-          setIsLoading(false);
-          return;
-        }
-
         try {
-          const res: any = await api.getUserProfile();
-          const rawUser = res?.user || (res?.email || res?.id ? res : null);
-          const userObj = rawUser ? normalizeUser(rawUser) : null;
-          if (userObj) {
-            setUser(userObj);
-            setToken(storedToken);
-            // Load favorites
-            const favRes = await api.getFavorites().catch(() => []);
-            setFavorites(extractFavoriteIds(favRes));
-          } else {
-            removeStoredToken();
-            setToken(null);
-          }
+          const rawUser = await api.getUserProfile();
+
+          const parsedUser = UserSchema.parse(rawUser);
+
+          setUser(parsedUser);
+          setToken(storedToken);
+
+          const favRes = await api.getFavorites().catch(() => []);
+          setFavorites(extractFavoriteIds(favRes));
         } catch (err) {
-          console.warn('Failed to restore session:', err);
-          removeStoredToken();
+          console.warn('Session expired or invalid schema returned from backend:', err);
+          removeToken();
           setToken(null);
+          setUser(null);
         }
       }
       setIsLoading(false);
@@ -120,71 +88,39 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     initAuth();
   }, []);
 
-  const login = async (email: string, password?: string): Promise<User | null> => {
+  // Secure Login via Django API
+  const login = async (identifier: string, password?: string): Promise<User | null> => {
     setIsLoading(true);
-    const cleanEmail = email.trim().toLowerCase();
-    const isAdminCreds = (cleanEmail === 'admin' || cleanEmail === 'admin@kaizen.com') &&
-      (!password || password === 'admin123' || password === 'admin' || password === 'kaizen2026');
 
     try {
-      const res: any = await api.login({ email, password });
-      const rawUser = res?.user || (res?.email || res?.id ? res : null);
-      const userObj = rawUser ? normalizeUser(rawUser) : null;
-      if (res?.token && userObj) {
-        setStoredToken(res.token);
-        setToken(res.token);
-        setUser(userObj);
+      const isEmail = identifier.includes('@');
+      const credentials = {
+        [isEmail ? 'email' : 'username']: identifier,
+        password: password || '',
+      };
 
-        // Fetch favorites after login
+      const rawUser = await api.login(credentials);
+
+      const parsedUser = UserSchema.parse(rawUser);
+
+      const currentToken = getAccessToken();
+
+      if (currentToken && parsedUser) {
+        setToken(currentToken);
+        setUser(parsedUser);
+
         const favRes = await api.getFavorites().catch(() => []);
         setFavorites(extractFavoriteIds(favRes));
-        return userObj;
+
+        setIsLoading(false);
+        return parsedUser;
       }
+
+      throw new Error('Authentication failed. No token received.');
     } catch (err) {
-      if (isAdminCreds) {
-        // Fallback to mock admin session on Vercel/demo deployments where backend API is offline
-        const mockAdminUser: User = {
-          id: 'admin_1',
-          email: 'admin@kaizen.com',
-          name: 'Kaizen Administrator',
-          username: 'admin',
-          role: 'admin',
-          is_staff: true,
-          is_superuser: true,
-          avatarUrl: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150',
-          company: 'Kaizen Luxury Estates',
-        };
-        const mockToken = 'mock_admin_jwt_token';
-        setStoredToken(mockToken);
-        setToken(mockToken);
-        setUser(mockAdminUser);
-        return mockAdminUser;
-      }
-      throw err;
-    } finally {
       setIsLoading(false);
+      throw err;
     }
-
-    if (isAdminCreds) {
-      const mockAdminUser: User = {
-        id: 'admin_1',
-        email: 'admin@kaizen.com',
-        name: 'Kaizen Administrator',
-        username: 'admin',
-        role: 'admin',
-        is_staff: true,
-        is_superuser: true,
-        avatarUrl: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150',
-        company: 'Kaizen Luxury Estates',
-      };
-      const mockToken = 'mock_admin_jwt_token';
-      setStoredToken(mockToken);
-      setToken(mockToken);
-      setUser(mockAdminUser);
-      return mockAdminUser;
-    }
-
-    return null;
   };
 
   const logout = async () => {
@@ -192,7 +128,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     try {
       await api.logout().catch(() => {});
     } finally {
-      removeStoredToken();
+      removeToken();
       setToken(null);
       setUser(null);
       setFavorites([]);
@@ -201,12 +137,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const updateProfile = async (data: Partial<User>) => {
-    const res: any = await api.updateUserProfile(data);
-    const rawUser = res?.user || (res?.email || res?.id ? res : null);
-    const userObj = rawUser ? normalizeUser(rawUser) : null;
-    if (userObj) {
-      setUser(userObj);
-    }
+    const res = await api.updateUserProfile(data);
+    const rawUser = (res as any).user || res;
+
+    const parsedUser = UserSchema.parse(rawUser);
+    setUser(parsedUser);
   };
 
   const refreshFavorites = async () => {
@@ -226,26 +161,26 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     const strId = String(propertyId);
     const exists = favorites.includes(strId);
+
     if (exists) {
       setFavorites((prev) => prev.filter((id) => id !== strId));
-      try {
-        const res = await api.removeFavorite(strId);
-        if (res) setFavorites(extractFavoriteIds(res));
-        return false;
-      } catch (err) {
-        setFavorites((prev) => [...prev, strId]); // revert
-        throw err;
-      }
     } else {
       setFavorites((prev) => [...prev, strId]);
-      try {
-        const res = await api.addFavorite(strId);
-        if (res) setFavorites(extractFavoriteIds(res));
+    }
+
+    try {
+      if (exists) {
+        await api.removeFavorite(propertyId);
+        return false;
+      } else {
+        await api.addFavorite(propertyId);
         return true;
-      } catch (err) {
-        setFavorites((prev) => prev.filter((id) => id !== strId)); // revert
-        throw err;
       }
+    } catch (err) {
+      setFavorites((prev) =>
+        exists ? [...prev, strId] : prev.filter((id) => id !== strId)
+      );
+      throw err;
     }
   };
 

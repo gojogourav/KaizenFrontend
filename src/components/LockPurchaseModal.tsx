@@ -1,9 +1,4 @@
-/**
- * @license
- * SPDX-License-Identifier: Apache-2.0
- */
-
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { X, Lock, ShieldCheck, CheckCircle2, Clock, AlertCircle } from 'lucide-react';
 import { api } from '../api/client';
 
@@ -20,22 +15,43 @@ export const LockPurchaseModal: React.FC<LockPurchaseModalProps> = ({ isOpen, de
   const [timeLeft, setTimeLeft] = useState<number>(900); // 15 minutes in seconds
   const [error, setError] = useState('');
 
+  const expirationTimeRef = useRef<number | null>(null);
+  const isMounted = useRef(true);
+
+  useEffect(() => {
+    isMounted.current = true;
+    return () => {
+      isMounted.current = false;
+    };
+  }, []);
+
   useEffect(() => {
     let timer: NodeJS.Timeout;
-    if (step === 'LOCKED' && timeLeft > 0) {
+
+    if (step === 'LOCKED') {
+      // Set absolute expiration time only once when locked
+      if (!expirationTimeRef.current) {
+        expirationTimeRef.current = Date.now() + (timeLeft * 1000);
+      }
+
       timer = setInterval(() => {
-        setTimeLeft((prev) => {
-          if (prev <= 1) {
-            clearInterval(timer);
-            setStep('IDLE');
-            setError('Property hold lock expired. Please initiate a new lock.');
-            return 0;
-          }
-          return prev - 1;
-        });
+        if (!expirationTimeRef.current) return;
+
+        const remaining = Math.max(0, Math.floor((expirationTimeRef.current - Date.now()) / 1000));
+        setTimeLeft(remaining);
+
+        if (remaining <= 0) {
+          clearInterval(timer);
+          setStep('IDLE');
+          setError('Property hold lock expired. Please initiate a new lock.');
+          expirationTimeRef.current = null;
+        }
       }, 1000);
     }
-    return () => clearInterval(timer);
+
+    return () => {
+      if (timer) clearInterval(timer);
+    };
   }, [step, timeLeft]);
 
   if (!isOpen || !deal) return null;
@@ -51,13 +67,16 @@ export const LockPurchaseModal: React.FC<LockPurchaseModalProps> = ({ isOpen, de
     setStep('LOCKING');
     try {
       const res = await api.lockProperty(deal.id);
+      if (!isMounted.current) return;
       const bookingData = (res as any)?.booking || res;
       if (bookingData) {
         setBooking(bookingData);
         setTimeLeft(bookingData.lockDurationSeconds || 900);
+        expirationTimeRef.current = Date.now() + ((bookingData.lockDurationSeconds || 900) * 1000);
         setStep('LOCKED');
       }
     } catch (err: any) {
+      if (!isMounted.current) return;
       setError(err.message || 'Failed to lock property');
       setStep('IDLE');
     }
@@ -66,10 +85,13 @@ export const LockPurchaseModal: React.FC<LockPurchaseModalProps> = ({ isOpen, de
   const handleCompletePurchase = async () => {
     const bookingId = booking?.id || booking?.bookingId;
     if (!bookingId) return;
+
     setError('');
     setStep('PURCHASING');
     try {
       const res = await api.purchaseProperty(bookingId);
+      if (!isMounted.current) return;
+
       const bookingData = (res as any)?.booking || res;
       if (bookingData) {
         setBooking(bookingData);
@@ -77,6 +99,7 @@ export const LockPurchaseModal: React.FC<LockPurchaseModalProps> = ({ isOpen, de
         onSuccess();
       }
     } catch (err: any) {
+      if (!isMounted.current) return;
       setError(err.message || 'Transaction failed');
       setStep('LOCKED');
     }
@@ -85,17 +108,22 @@ export const LockPurchaseModal: React.FC<LockPurchaseModalProps> = ({ isOpen, de
   const handleCancelLock = async () => {
     const bookingId = booking?.id || booking?.bookingId;
     if (bookingId) {
-      await api.cancelBooking(bookingId).catch(() => {});
+      // Fire and forget cancellation - no need to await or handle state since we are closing
+      api.cancelBooking(bookingId).catch(() => {});
     }
+
+    // Reset state and close immediately for a snappy UI
+    expirationTimeRef.current = null;
     setStep('IDLE');
+    setTimeLeft(900);
+    setError('');
     onClose();
   };
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-md animate-fade-in font-sans">
       <div className="relative w-full max-w-lg bg-[#0F1014]/90 backdrop-blur-3xl border border-white/15 rounded-3xl p-8 shadow-2xl shadow-black/80 text-slate-100 apple-specular">
-        
-        {/* Close button */}
+
         <button
           onClick={handleCancelLock}
           className="absolute top-5 right-5 p-2 text-slate-400 hover:text-white rounded-full hover:bg-white/10 transition-colors"
@@ -123,7 +151,7 @@ export const LockPurchaseModal: React.FC<LockPurchaseModalProps> = ({ isOpen, de
           </div>
         )}
 
-        {/* STEP IDLE: Confirm initiate lock */}
+        {/* STEP IDLE */}
         {step === 'IDLE' && (
           <div className="space-y-6">
             <div className="bg-white/5 p-5 rounded-2xl border border-white/10 space-y-3 backdrop-blur-xl">
@@ -155,7 +183,7 @@ export const LockPurchaseModal: React.FC<LockPurchaseModalProps> = ({ isOpen, de
           </div>
         )}
 
-        {/* STEP LOCKED: Live Countdown & Purchase Trigger */}
+        {/* STEP LOCKED */}
         {step === 'LOCKED' && (
           <div className="space-y-6">
             <div className="bg-white/5 p-5 rounded-2xl border border-amber-500/40 text-center space-y-2 backdrop-blur-xl">

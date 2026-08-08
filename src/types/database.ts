@@ -58,3 +58,8 @@ export interface LeadPayload {
   message: string;
   property_reference?: string | number | null;
 }
+
+export interfase DashBoardPayload{
+
+
+}

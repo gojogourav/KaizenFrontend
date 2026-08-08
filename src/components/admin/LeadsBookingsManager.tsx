@@ -5,12 +5,15 @@
 
 import React, { useState, useEffect } from 'react';
 import { Users, Lock, Trash2, Search, RefreshCw } from 'lucide-react';
-import { api } from '../../api/client';
+
+import api from '@/src/api/client';
+import type { Booking } from '../../types/database';
 
 export const LeadsBookingsManager: React.FC = () => {
   const [activeSubTab, setActiveSubTab] = useState<'leads' | 'bookings'>('leads');
-  const [leads, setLeads] = useState<any[]>([]);
-  const [bookings, setBookings] = useState<any[]>([]);
+
+  const [leads, setLeads] = useState<Lead[]>([]);
+  const [bookings, setBookings] = useState<Booking[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
 
@@ -18,11 +21,12 @@ export const LeadsBookingsManager: React.FC = () => {
     setLoading(true);
     try {
       const [leadsRes, bookingsRes] = await Promise.all([
-        api.getLeads().catch(() => ({ leads: [] })),
-        api.getMyBookings().catch(() => ({ bookings: [] }))
+        api.getLeads().catch(() => [] as Lead[]),
+        api.getMyBookings().catch(() => [] as Booking[])
       ]);
-      setLeads(Array.isArray(leadsRes) ? leadsRes : ((leadsRes as any)?.leads || []));
-      setBookings(Array.isArray(bookingsRes) ? bookingsRes : ((bookingsRes as any)?.bookings || []));
+
+      setLeads(leadsRes);
+      setBookings(bookingsRes);
     } catch (err) {
       console.warn('Failed to load admin leads & bookings:', err);
     } finally {
@@ -41,6 +45,7 @@ export const LeadsBookingsManager: React.FC = () => {
       setLeads((prev) => prev.filter((l) => l.id !== id));
     } catch (err) {
       console.warn('Failed to delete lead:', err);
+      alert('Could not delete the lead. Please try again.');
     }
   };
 
@@ -51,9 +56,10 @@ export const LeadsBookingsManager: React.FC = () => {
   );
 
   const filteredBookings = bookings.filter((b) => {
-    const title = b.property?.title || b.propertyTitle || '';
-    const loc = b.property?.city || b.location || '';
-    const ref = String(b.id || b.bookingId || '');
+    // Relying strictly on your provided Property interface inside Booking
+    const title = b.property?.title || '';
+    const loc = b.property?.city || '';
+    const ref = String(b.id || '');
     return (
       title.toLowerCase().includes(searchQuery.toLowerCase()) ||
       loc.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -63,7 +69,7 @@ export const LeadsBookingsManager: React.FC = () => {
 
   return (
     <div className="space-y-6 text-slate-100 font-sans">
-      
+
       {/* Header Bar */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-white/10">
         <div>
@@ -80,7 +86,7 @@ export const LeadsBookingsManager: React.FC = () => {
           onClick={loadData}
           className="px-4 py-2 bg-white/5 hover:bg-white/10 border border-white/10 text-slate-200 rounded-xl text-xs font-bold transition-all flex items-center gap-2 cursor-pointer font-mono shrink-0"
         >
-          <RefreshCw className="w-3.5 h-3.5 text-[#E04F33]" />
+          <RefreshCw className={`w-3.5 h-3.5 text-[#E04F33] ${loading ? 'animate-spin' : ''}`} />
           <span>Refresh Data</span>
         </button>
       </div>
@@ -155,13 +161,16 @@ export const LeadsBookingsManager: React.FC = () => {
                     <tr key={lead.id} className="hover:bg-white/5 transition-colors">
                       <td className="py-3.5 px-4">
                         <p className="font-bold text-white text-sm">{lead.name}</p>
-                        <p className="text-[10px] font-mono text-slate-300">{lead.email} • {lead.phone || lead.phone_number || 'No phone'}</p>
+                        <p className="text-[10px] font-mono text-slate-300">
+                          {lead.email} • {lead.phone_number || 'No phone'}
+                        </p>
                       </td>
                       <td className="py-3.5 px-4 text-slate-300 max-w-xs leading-relaxed">
                         {lead.message || 'General inquiry'}
                       </td>
                       <td className="py-3.5 px-4 font-mono text-slate-400">
-                        {lead.createdAt ? new Date(lead.createdAt).toLocaleDateString() : 'Recent'}
+                        {/* Changed from lead.createdAt to lead.created_at to match DRF standards */}
+                        {lead.created_at ? new Date(lead.created_at).toLocaleDateString() : 'Recent'}
                       </td>
                       <td className="py-3.5 px-4 text-right">
                         <button
@@ -199,10 +208,10 @@ export const LeadsBookingsManager: React.FC = () => {
                 </thead>
                 <tbody className="divide-y divide-white/5">
                   {filteredBookings.map((b) => {
-                    const id = b.id || b.bookingId;
-                    const status = b.booking_state || b.status || 'Locked';
-                    const propTitle = b.property?.title || b.propertyTitle || 'Property';
-                    const propLoc = b.property?.city ? `${b.property.city}, ${b.property.state}` : (b.location || '');
+                    const id = b.id;
+                    const status = b.booking_state || 'Locked';
+                    const propTitle = b.property?.title || 'Unknown Property';
+                    const propLoc = b.property?.city ? `${b.property.city}, ${b.property.state}` : '';
 
                     return (
                       <tr key={id} className="hover:bg-white/5 transition-colors">
