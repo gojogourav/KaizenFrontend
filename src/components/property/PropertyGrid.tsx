@@ -40,7 +40,7 @@ const PropertyGridContent: React.FC<PropertyGridProps> = ({
       </p>
     );
 
-  const properties = data || [];
+  const properties = Array.isArray(data) ? data : (data as any)?.results || [];
   if (properties.length === 0) {
     return (
       <EmptyState

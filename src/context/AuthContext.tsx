@@ -15,6 +15,13 @@ interface AuthContextValue {
   user: User | null;
   loading: boolean;
   login: (email: string, password: string) => Promise<User>;
+  register: (data: {
+    username: string;
+    email?: string;
+    password: string;
+    first_name?: string;
+    last_name?: string;
+  }) => Promise<User>;
   logout: () => Promise<void>;
   favorites: Favorite[];
   favoritesLoading: boolean;
@@ -82,6 +89,22 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
     [loadFavorites],
   );
 
+  const register = useCallback(
+    async (data: {
+      username: string;
+      email?: string;
+      password: string;
+      first_name?: string;
+      last_name?: string;
+    }) => {
+      const newUser = await api.register(data);
+      setUser(newUser);
+      loadFavorites();
+      return newUser;
+    },
+    [loadFavorites],
+  );
+
   const logout = useCallback(async () => {
     await api.logout();
     setUser(null);
@@ -117,6 +140,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
       user,
       loading,
       login,
+      register,
       logout,
       favorites,
       favoritesLoading,
@@ -127,6 +151,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
       user,
       loading,
       login,
+      register,
       logout,
       favorites,
       favoritesLoading,

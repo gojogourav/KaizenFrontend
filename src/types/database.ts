@@ -7,6 +7,8 @@ export interface User {
   name?: string;
   avatarUrl?: string;
   company?: string;
+  is_staff?: boolean;
+  is_superuser?: boolean;
 }
 
 export interface PropertyListing {

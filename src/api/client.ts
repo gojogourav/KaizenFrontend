@@ -15,6 +15,8 @@ import type { User, LeadPayload } from "../types/database";
 
 export const api = {
   login: (credentials: LoginCredentials) => authService.login(credentials),
+  register: (data: { username: string; email?: string; password: string; first_name?: string; last_name?: string }) =>
+    authService.register(data),
   logout: () => authService.logout(),
   restoreSession: () => authService.restoreSession(),
   getUserProfile: () => authService.getProfile(),

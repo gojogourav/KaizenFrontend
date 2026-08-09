@@ -1,4 +1,9 @@
-import { getAccessToken, setAccessToken } from "./token-store";
+import {
+  getAccessToken,
+  setAccessToken,
+  getRefreshToken,
+  setRefreshToken,
+} from "./token-store";
 
 const isBrowser = typeof window !== "undefined";
 const CSRF_SAFE_METHODS = new Set(["GET", "HEAD", "OPTIONS", "TRACE"]);
@@ -31,10 +36,13 @@ export const getApiBaseUrl = (): string => {
       process.env?.NODE_ENV === "production") ||
     (typeof import.meta !== "undefined" && (import.meta as any).env?.PROD);
 
-  if (!url && isProd) {
-    throw new Error(
-      "API base URL is not configured. Set NEXT_PUBLIC_API_BASE_URL or VITE_API_BASE_URL.",
-    );
+  if (!url) {
+    if (isProd) {
+      throw new Error(
+        "API base URL is not configured. Set NEXT_PUBLIC_API_BASE_URL or VITE_API_BASE_URL.",
+      );
+    }
+    url = "http://127.0.0.1:8000";
   }
 
   return url.replace(/\/+$/, "");
@@ -129,6 +137,7 @@ export async function refreshAccessToken(): Promise<string | null> {
       try {
         const baseUrl = getApiBaseUrl();
         const csrfToken = getCookie("csrftoken");
+        const storedRefreshToken = getRefreshToken();
 
         const response = await fetch(buildUrl(baseUrl, REFRESH_ENDPOINT), {
           method: "POST",
@@ -137,19 +146,28 @@ export async function refreshAccessToken(): Promise<string | null> {
             "Content-Type": "application/json",
             ...(csrfToken ? { "X-CSRFToken": csrfToken } : {}),
           },
+          ...(storedRefreshToken
+            ? { body: JSON.stringify({ refresh: storedRefreshToken }) }
+            : {}),
         });
 
         if (!response.ok) {
           setAccessToken(null);
+          setRefreshToken(null);
           return null;
         }
 
         const data = await response.json().catch(() => ({}));
         const newToken: string | undefined = data.access;
+        const newRefreshToken: string | undefined = data.refresh;
         setAccessToken(newToken ?? null);
+        if (newRefreshToken) {
+          setRefreshToken(newRefreshToken);
+        }
         return newToken ?? null;
       } catch {
         setAccessToken(null);
+        setRefreshToken(null);
         return null;
       } finally {
         refreshPromise = null;
@@ -181,10 +199,16 @@ export async function apiClient<T = unknown>(
   const token = getAccessToken();
 
   const headers: Record<string, string> = {
-    "Content-Type": "application/json",
     Accept: "application/json",
     ...(callerHeaders as Record<string, string>),
   };
+
+  if (!headers["Content-Type"] && !(rest.body instanceof FormData)) {
+    headers["Content-Type"] = "application/json";
+  }
+  if (headers["Content-Type"] === "multipart/form-data") {
+    delete headers["Content-Type"];
+  }
 
   if (token) headers.Authorization = `Bearer ${token}`;
 

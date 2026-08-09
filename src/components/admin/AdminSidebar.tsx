@@ -82,7 +82,7 @@ export const AdminSidebar: React.FC<AdminSidebarProps> = ({
           <span className="text-white">Live System Health</span>
         </div>
         <p className="text-[10px] text-slate-300">
-          All services operating normally.
+          All services operating normally. Server latency: 12ms.
         </p>
       </div>
     </div>

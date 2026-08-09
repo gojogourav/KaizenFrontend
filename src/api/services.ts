@@ -1,6 +1,11 @@
 import { apiClient, refreshAccessToken } from "./http";
 import type { ApiRequestOptions } from "./http";
-import { setAccessToken } from "./token-store";
+import {
+  getAccessToken,
+  setAccessToken,
+  getRefreshToken,
+  setRefreshToken,
+} from "./token-store";
 import type {
   User,
   Property,
@@ -9,6 +14,12 @@ import type {
   LeadPayload,
   DashboardResponse,
 } from "../types/database";
+
+function extractArray<T>(res: any): T[] {
+  if (Array.isArray(res)) return res;
+  if (res && Array.isArray(res.results)) return res.results;
+  return [];
+}
 
 export type PropertyPayload = Omit<
   Property,
@@ -30,32 +41,56 @@ export const authService = {
     credentials: LoginCredentials,
     opts?: RequestOpts,
   ): Promise<User> {
-    if (!credentials.password || !(credentials.email || credentials.username)) {
+    const identifier = credentials.username || credentials.email;
+    if (!credentials.password || !identifier) {
       throw new Error(
         "An email or username and a password are required to log in.",
       );
     }
-    const response = await apiClient<{ access: string; user: User }>(
+    const payload = {
+      username: credentials.username || identifier,
+      email: credentials.email || identifier,
+      password: credentials.password,
+    };
+    const response = await apiClient<{ access: string; refresh?: string; user: User }>(
       "/api/login/",
       {
         method: "POST",
-        body: JSON.stringify(credentials),
+        body: JSON.stringify(payload),
         ...opts,
       },
     );
     setAccessToken(response.access);
+    if (response.refresh) {
+      setRefreshToken(response.refresh);
+    }
     return response.user;
   },
 
   async logout(opts?: RequestOpts): Promise<void> {
     try {
-      await apiClient<void>("/api/logout/", { method: "POST", ...opts });
+      const refresh = getRefreshToken();
+      await apiClient<void>("/api/logout/", {
+        method: "POST",
+        ...(refresh ? { body: JSON.stringify({ refresh }) } : {}),
+        ...opts,
+      });
     } finally {
       setAccessToken(null);
+      setRefreshToken(null);
     }
   },
 
   async restoreSession(): Promise<boolean> {
+    const existingToken = getAccessToken();
+    if (existingToken) {
+      try {
+        await apiClient<User>("/api/me/", { method: "GET" });
+        return true;
+      } catch {
+        // Token might be expired, fall through to refresh
+      }
+    }
     return (await refreshAccessToken()) !== null;
   },
 
@@ -70,9 +105,60 @@ export const authService = {
       ...opts,
     });
   },
+
+  async register(
+    data: { username: string; email?: string; password: string; first_name?: string; last_name?: string },
+    opts?: RequestOpts,
+  ): Promise<User> {
+    const response = await apiClient<{ access: string; refresh?: string; user: User }>(
+      "/api/register/",
+      {
+        method: "POST",
+        body: JSON.stringify(data),
+        ...opts,
+      },
+    );
+    if (response.access) {
+      setAccessToken(response.access);
+    }
+    if (response.refresh) {
+      setRefreshToken(response.refresh);
+    }
+    return response.user || (response as unknown as User);
+  },
+
+  async requestPasswordReset(email: string, opts?: RequestOpts): Promise<void> {
+    return apiClient<void>("/api/password-reset/", {
+      method: "POST",
+      body: JSON.stringify({ email }),
+      ...opts,
+    });
+  },
+
+  async confirmPasswordReset(data: any, opts?: RequestOpts): Promise<void> {
+    return apiClient<void>("/api/password-reset/confirm/", {
+      method: "POST",
+      body: JSON.stringify(data),
+      ...opts,
+    });
+  },
+
+  async uploadAvatar(file: File, opts?: RequestOpts): Promise<User> {
+    const formData = new FormData();
+    formData.append("avatar", file);
+    return apiClient<User>("/api/me/avatar/", {
+      method: "POST",
+      body: formData,
+      headers: {
+        "Content-Type": "multipart/form-data",
+      },
+      ...opts,
+    });
+  },
 };
 
 export interface PropertyFilters {
+  [key: string]: string | number | boolean | undefined | null;
   city?: string;
   status?: string;
   property_type?: string;
@@ -82,16 +168,18 @@ export interface PropertyFilters {
   radius_km?: number;
 }
 
+
 export const propertyService = {
   async getProperties(
     filters?: PropertyFilters,
     opts?: RequestOpts,
   ): Promise<Property[]> {
-    return apiClient<Property[]>("/api/properties/", {
+    const res = await apiClient<any>("/api/properties/", {
       method: "GET",
       params: filters,
       ...opts,
     });
+    return extractArray<Property>(res);
   },
 
   async getPropertyById(
@@ -113,6 +201,56 @@ export const propertyService = {
       body: JSON.stringify(data),
       ...opts,
     });
+  },
+
+  async updateProperty(
+    id: string | number,
+    data: Partial<PropertyPayload>,
+    opts?: RequestOpts,
+  ): Promise<Property> {
+    return apiClient<Property>(`/api/properties/${id}/`, {
+      method: "PATCH",
+      body: JSON.stringify(data),
+      ...opts,
+    });
+  },
+
+  async deleteProperty(
+    id: string | number,
+    opts?: RequestOpts,
+  ): Promise<void> {
+    return apiClient<void>(`/api/properties/${id}/`, {
+      method: "DELETE",
+      ...opts,
+    });
+  },
+
+  async uploadPropertyImages(
+    id: string | number,
+    files: File[],
+    opts?: RequestOpts,
+  ): Promise<Property> {
+    const formData = new FormData();
+    files.forEach((file) => formData.append("images", file));
+    return apiClient<Property>(`/api/properties/${id}/images/`, {
+      method: "POST",
+      body: formData,
+      headers: {
+        "Content-Type": "multipart/form-data",
+      },
+      ...opts,
+    });
+  },
+
+  async getSimilarProperties(
+    id: string | number,
+    opts?: RequestOpts,
+  ): Promise<Property[]> {
+    const res = await apiClient<any>(`/api/properties/${id}/similar/`, {
+      method: "GET",
+      ...opts,
+    });
+    return extractArray<Property>(res);
   },
 };
 
@@ -148,8 +286,19 @@ export const bookingService = {
   },
 
   async getUserBookings(opts?: RequestOpts): Promise<Booking[]> {
-    return apiClient<Booking[]>("/api/me/bookings/", {
+    const res = await apiClient<any>("/api/me/bookings/", {
       method: "GET",
+      ...opts,
+    });
+    return extractArray<Booking>(res);
+  },
+
+  async createPaymentIntent(
+    bookingId: string | number,
+    opts?: RequestOpts,
+  ): Promise<{ clientSecret: string }> {
+    return apiClient<{ clientSecret: string }>(`/api/bookings/${bookingId}/payment-intent/`, {
+      method: "POST",
       ...opts,
     });
   },
@@ -177,10 +326,11 @@ export const favoriteService = {
   },
 
   async getFavorites(opts?: RequestOpts): Promise<Favorite[]> {
-    return apiClient<Favorite[]>("/api/me/favorites/", {
+    const res = await apiClient<any>("/api/me/favorites/", {
       method: "GET",
       ...opts,
     });
+    return extractArray<Favorite>(res);
   },
 };
 
@@ -210,5 +360,31 @@ export const dashboardService = {
       method: "GET",
       ...opts,
     });
+  },
+};
+
+export const adminService = {
+  async getUsers(opts?: RequestOpts): Promise<User[]> {
+    const res = await apiClient<any>("/api/admin/users/", {
+      method: "GET",
+      ...opts,
+    });
+    return extractArray<User>(res);
+  },
+
+  async getBookings(opts?: RequestOpts): Promise<Booking[]> {
+    const res = await apiClient<any>("/api/admin/bookings/", {
+      method: "GET",
+      ...opts,
+    });
+    return extractArray<Booking>(res);
+  },
+
+  async getLeads(opts?: RequestOpts): Promise<LeadPayload[]> {
+    const res = await apiClient<any>("/api/admin/leads/", {
+      method: "GET",
+      ...opts,
+    });
+    return extractArray<LeadPayload>(res);
   },
 };
