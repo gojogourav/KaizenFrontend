@@ -1,216 +1,145 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
-import { z } from 'zod';
-import api from '../api/client';
-import { getAccessToken, setAccessToken } from '../lib/api/token_store';
+import React, {
+  createContext,
+  useCallback,
+  useContext,
+  useEffect,
+  useMemo,
+  useState,
+} from "react";
+import { api } from "../api/client";
+import type { User, Favorite } from "../types/database";
 
-export const UserSchema = z.object({
-  id: z.union([z.string(), z.number()]),
-  email: z.string().email(),
-  username: z.string().optional().nullable(),
-  first_name: z.string().optional().nullable(),
-  last_name: z.string().optional().nullable(),
-  role: z.string().optional().nullable(),
-  is_staff: z.boolean().optional().nullable(),
-  is_superuser: z.boolean().optional().nullable(),
-  avatarUrl: z.string().optional().nullable(),
-  company: z.string().optional().nullable(),
-  phone: z.string().optional().nullable(),
-}).transform((data) => {
-  const name = (data.first_name || data.last_name)
-    ? `${data.first_name || ''} ${data.last_name || ''}`.trim()
-    : data.username || data.email;
+export type { User };
 
-  return {
-    ...data,
-    name,
-    role: data.role || (data.is_staff ? 'admin' : 'customer')
-  };
-});
-
-export type User = z.infer<typeof UserSchema>;
-
-interface AuthContextType {
+interface AuthContextValue {
   user: User | null;
-  token: string | null;
-  isAuthenticated: boolean;
-  isLoading: boolean;
-  favorites: string[];
-  login: (identifier: string, password?: string) => Promise<User | null>;
+  loading: boolean;
+  login: (email: string, password: string) => Promise<User>;
   logout: () => Promise<void>;
-  updateProfile: (data: Partial<User>) => Promise<void>;
-  toggleFavorite: (propertyId: string | number) => Promise<boolean>;
+  favorites: Favorite[];
+  favoritesLoading: boolean;
   isFavorite: (propertyId: string | number) => boolean;
-  refreshFavorites: () => Promise<void>;
+  toggleFavorite: (propertyId: string | number) => Promise<void>;
 }
 
-const AuthContext = createContext<AuthContextType | undefined>(undefined);
+const AuthContext = createContext<AuthContextValue | null>(null);
 
-const extractFavoriteIds = (favRes: any): string[] => {
-  if (!favRes) return [];
-  if (Array.isArray(favRes)) {
-    return favRes.map((f: any) => String(f.property?.id || f.id || f));
-  }
-  return [];
-};
-
-const removeToken = () => setAccessToken(null);
-
-export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
+  children,
+}) => {
   const [user, setUser] = useState<User | null>(null);
-  const [token, setToken] = useState<string | null>(getAccessToken());
-  const [isLoading, setIsLoading] = useState<boolean>(true);
-  const [favorites, setFavorites] = useState<string[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [favorites, setFavorites] = useState<Favorite[]>([]);
+  const [favoritesLoading, setFavoritesLoading] = useState(false);
 
-  useEffect(() => {
-    const initAuth = async () => {
-      const storedToken = getAccessToken();
-      if (storedToken) {
-        try {
-          const rawUser = await api.getUserProfile();
-
-          const parsedUser = UserSchema.parse(rawUser);
-
-          setUser(parsedUser);
-          setToken(storedToken);
-
-          const favRes = await api.getFavorites().catch(() => []);
-          setFavorites(extractFavoriteIds(favRes));
-        } catch (err) {
-          console.warn('Session expired or invalid schema returned from backend:', err);
-          removeToken();
-          setToken(null);
-          setUser(null);
-        }
-      }
-      setIsLoading(false);
-    };
-
-    initAuth();
+  const loadFavorites = useCallback(async () => {
+    setFavoritesLoading(true);
+    try {
+      const list = await api.getFavorites();
+      setFavorites(list);
+    } catch {
+      setFavorites([]);
+    } finally {
+      setFavoritesLoading(false);
+    }
   }, []);
 
-  // Secure Login via Django API
-  const login = async (identifier: string, password?: string): Promise<User | null> => {
-    setIsLoading(true);
+  useEffect(() => {
+    let cancelled = false;
 
-    try {
-      const isEmail = identifier.includes('@');
-      const credentials = {
-        [isEmail ? 'email' : 'username']: identifier,
-        password: password || '',
-      };
-
-      const rawUser = await api.login(credentials);
-
-      const parsedUser = UserSchema.parse(rawUser);
-
-      const currentToken = getAccessToken();
-
-      if (currentToken && parsedUser) {
-        setToken(currentToken);
-        setUser(parsedUser);
-
-        const favRes = await api.getFavorites().catch(() => []);
-        setFavorites(extractFavoriteIds(favRes));
-
-        setIsLoading(false);
-        return parsedUser;
+    (async () => {
+      const restored = await api.restoreSession();
+      if (cancelled) return;
+      if (!restored) {
+        setLoading(false);
+        return;
       }
-
-      throw new Error('Authentication failed. No token received.');
-    } catch (err) {
-      setIsLoading(false);
-      throw err;
-    }
-  };
-
-  const logout = async () => {
-    setIsLoading(true);
-    try {
-      await api.logout().catch(() => {});
-    } finally {
-      removeToken();
-      setToken(null);
-      setUser(null);
-      setFavorites([]);
-      setIsLoading(false);
-    }
-  };
-
-  const updateProfile = async (data: Partial<User>) => {
-    const res = await api.updateUserProfile(data);
-    const rawUser = (res as any).user || res;
-
-    const parsedUser = UserSchema.parse(rawUser);
-    setUser(parsedUser);
-  };
-
-  const refreshFavorites = async () => {
-    if (!token) return;
-    try {
-      const res = await api.getFavorites();
-      setFavorites(extractFavoriteIds(res));
-    } catch (err) {
-      console.warn('Failed to fetch favorites:', err);
-    }
-  };
-
-  const toggleFavorite = async (propertyId: string | number): Promise<boolean> => {
-    if (!token || !user) {
-      throw new Error('Please login to save properties to your favorites.');
-    }
-
-    const strId = String(propertyId);
-    const exists = favorites.includes(strId);
-
-    if (exists) {
-      setFavorites((prev) => prev.filter((id) => id !== strId));
-    } else {
-      setFavorites((prev) => [...prev, strId]);
-    }
-
-    try {
-      if (exists) {
-        await api.removeFavorite(propertyId);
-        return false;
-      } else {
-        await api.addFavorite(propertyId);
-        return true;
+      try {
+        const profile = await api.getUserProfile();
+        if (!cancelled) {
+          setUser(profile);
+          loadFavorites();
+        }
+      } catch {
+        if (!cancelled) setUser(null);
+      } finally {
+        if (!cancelled) setLoading(false);
       }
-    } catch (err) {
-      setFavorites((prev) =>
-        exists ? [...prev, strId] : prev.filter((id) => id !== strId)
-      );
-      throw err;
-    }
-  };
+    })();
 
-  const isFavorite = (propertyId: string | number) => favorites.includes(String(propertyId));
+    return () => {
+      cancelled = true;
+    };
+  }, [loadFavorites]);
 
-  return (
-    <AuthContext.Provider
-      value={{
-        user,
-        token,
-        isAuthenticated: !!user,
-        isLoading,
-        favorites,
-        login,
-        logout,
-        updateProfile,
-        toggleFavorite,
-        isFavorite,
-        refreshFavorites,
-      }}
-    >
-      {children}
-    </AuthContext.Provider>
+  const login = useCallback(
+    async (email: string, password: string) => {
+      const loggedInUser = await api.login({ email, password });
+      setUser(loggedInUser);
+      loadFavorites();
+      return loggedInUser;
+    },
+    [loadFavorites],
   );
+
+  const logout = useCallback(async () => {
+    await api.logout();
+    setUser(null);
+    setFavorites([]);
+  }, []);
+
+  const isFavorite = useCallback(
+    (propertyId: string | number) =>
+      favorites.some((f) => f.property.id === propertyId),
+    [favorites],
+  );
+
+  const toggleFavorite = useCallback(
+    async (propertyId: string | number) => {
+      const currentlyFavorite = favorites.some(
+        (f) => f.property.id === propertyId,
+      );
+      if (currentlyFavorite) {
+        await api.removeFavorite(propertyId);
+        setFavorites((prev) =>
+          prev.filter((f) => f.property.id !== propertyId),
+        );
+      } else {
+        const created = await api.addFavorite(propertyId);
+        setFavorites((prev) => [...prev, created]);
+      }
+    },
+    [favorites],
+  );
+
+  const value = useMemo(
+    () => ({
+      user,
+      loading,
+      login,
+      logout,
+      favorites,
+      favoritesLoading,
+      isFavorite,
+      toggleFavorite,
+    }),
+    [
+      user,
+      loading,
+      login,
+      logout,
+      favorites,
+      favoritesLoading,
+      isFavorite,
+      toggleFavorite,
+    ],
+  );
+
+  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };
 
-export const useAuth = () => {
-  const context = useContext(AuthContext);
-  if (!context) {
-    throw new Error('useAuth must be used within an AuthProvider');
-  }
-  return context;
-};
+export function useAuth(): AuthContextValue {
+  const ctx = useContext(AuthContext);
+  if (!ctx) throw new Error("useAuth must be used within an AuthProvider");
+  return ctx;
+}

@@ -5,42 +5,42 @@
 
 import React, { useState, useEffect, useMemo } from 'react';
 import { m } from 'motion/react';
-import { 
-  getStoredDeals, 
-  saveDeals, 
-  resetDealsToDefault, 
+import {
+  getStoredDeals,
+  saveDeals,
+  resetDealsToDefault,
   normalizeDeal,
   Deal,
   PlatformListing
 } from './dealsData';
-import { 
-  Building, 
-  ArrowRight, 
-  Calendar, 
-  DollarSign, 
-  CheckCircle2, 
-  MapPin, 
-  Maximize2, 
-  Sparkles, 
-  Clock, 
-  Info, 
-  Lock, 
-  Plus, 
-  Trash2, 
-  Edit, 
-  X, 
-  ChevronRight, 
+import {
+  Building,
+  ArrowRight,
+  Calendar,
+  DollarSign,
+  CheckCircle2,
+  MapPin,
+  Maximize2,
+  Sparkles,
+  Clock,
+  Info,
+  Lock,
+  Plus,
+  Trash2,
+  Edit,
+  X,
+  ChevronRight,
   ChevronLeft,
-  Check, 
-  Settings, 
-  Send, 
-  FileText, 
-  RefreshCw, 
-  Download, 
-  Users, 
-  Eye, 
-  AlertTriangle, 
-  Sliders, 
+  Check,
+  Settings,
+  Send,
+  FileText,
+  RefreshCw,
+  Download,
+  Users,
+  Eye,
+  AlertTriangle,
+  Sliders,
   Layers,
   Heart,
   MessageSquare,
@@ -139,7 +139,7 @@ export default function App() {
   const [activeTab, setActiveTab] = useState<TabType>('properties');
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<'ALL' | 'AVAILABLE' | 'UNDER CONTRACT' | 'UNDER REVIEW'>('ALL');
-  
+
   // Airbnb Search Bar States
   const [searchWhere, setSearchWhere] = useState('');
   const [searchWhenDisplay, setSearchWhenDisplay] = useState('');
@@ -151,7 +151,7 @@ export default function App() {
     infants: 0,
     pets: 0,
   });
-  
+
   // Storage & Core Data States
   const [deals, setDeals] = useState<Deal[]>([]);
   const [showFavoritesOnly, setShowFavoritesOnly] = useState(false);
@@ -162,16 +162,16 @@ export default function App() {
   const [userDropdownOpen, setUserDropdownOpen] = useState(false);
   const [pendingAction, setPendingAction] = useState<(() => void) | null>(null);
   const [pendingTab, setPendingTab] = useState<string | null>(null);
-  
+
   // Property Modal & Image Gallery States
   const [selectedDeal, setSelectedDeal] = useState<Deal | null>(null);
   const [activeImageIndex, setActiveImageIndex] = useState(0);
   const [notification, setNotification] = useState<{ message: string; type: 'success' | 'info' | 'error' } | null>(null);
-  
+
   // Admin Property Editor Modal State
   const [showPropertyEditorModal, setShowPropertyEditorModal] = useState(false);
   const [editingDealId, setEditingDealId] = useState<string | null>(null);
-  
+
   // Admin Form State
   const [adminForm, setAdminForm] = useState<{
     title: string;
@@ -339,7 +339,7 @@ export default function App() {
   const filteredDeals = useMemo(() => {
     return deals.filter(deal => {
       const q = (searchWhere || searchQuery).toLowerCase().trim();
-      const matchesSearch = !q || 
+      const matchesSearch = !q ||
                             deal.location.toLowerCase().includes(q) ||
                             deal.title.toLowerCase().includes(q) ||
                             (deal.description && deal.description.toLowerCase().includes(q));
@@ -476,7 +476,7 @@ export default function App() {
   const handleToggleStatus = (id: string) => {
     const updated = deals.map(d => {
       if (d.id === id) {
-        const nextStatus: Deal['status'] = 
+        const nextStatus: Deal['status'] =
           d.status === 'AVAILABLE' ? 'OCCUPIED' :
           d.status === 'OCCUPIED' ? 'UNDER CONTRACT' : 'AVAILABLE';
         return { ...d, status: nextStatus };
@@ -532,7 +532,7 @@ export default function App() {
   if ((activeTab as string) === 'admin') {
     return (
       <div className="min-h-screen bg-[#0F1014] text-slate-100 font-sans selection:bg-[#E04F33] selection:text-white">
-        
+
         {/* Toast Notification Banner */}
         {notification && (
           <div className={`fixed top-4 right-4 z-50 px-5 py-4 rounded-xl shadow-2xl flex items-center gap-3 border backdrop-blur-xl transition-all duration-300 animate-slide-in ${
@@ -558,7 +558,7 @@ export default function App() {
           }}
           propertyManagementView={
             <div className="space-y-8 animate-fade-in">
-              
+
               {/* Admin Header & Stats Banner */}
               <div className="bg-white/5 backdrop-blur-2xl rounded-3xl border border-white/10 p-8 shadow-2xl relative overflow-hidden">
                 <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-6 relative z-10">
@@ -576,21 +576,21 @@ export default function App() {
                   </div>
 
                   <div className="flex flex-wrap items-center gap-3">
-                    <button 
+                    <button
                       onClick={handleDownloadDealsJson}
                       className="px-4 py-2.5 bg-white/5 hover:bg-white/10 border border-white/10 text-slate-200 rounded-xl text-xs font-bold transition-all flex items-center gap-2 font-mono"
                     >
                       <Download className="w-4 h-4 text-[#E04F33]" />
                       Export Schema
                     </button>
-                    <button 
+                    <button
                       onClick={handleResetToDefault}
                       className="px-4 py-2.5 bg-white/5 hover:bg-red-950/60 border border-red-900/40 text-red-400 rounded-xl text-xs font-bold transition-all flex items-center gap-2 font-mono"
                     >
                       <RefreshCw className="w-4 h-4" />
                       Reset Defaults
                     </button>
-                    <button 
+                    <button
                       onClick={handleOpenCreateModal}
                       className="px-6 py-2.5 bg-[#E04F33] hover:bg-[#ED5B3F] text-white rounded-xl text-xs font-black uppercase tracking-widest transition-all shadow-lg shadow-[#E04F33]/25 flex items-center gap-2 font-mono border border-white/20 cursor-pointer"
                     >
@@ -629,7 +629,7 @@ export default function App() {
 
               {/* Property Overview Management Table */}
               <div className="bg-white/5 backdrop-blur-2xl rounded-3xl border border-white/10 p-6 shadow-2xl space-y-6">
-                
+
                 <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                   <div>
                     <h3 className="font-extrabold text-xl text-white font-serif flex items-center gap-2">
@@ -639,7 +639,7 @@ export default function App() {
                     <p className="text-xs text-slate-400 mt-0.5">Toggle platform links, edit financial specs, or add new luxury listings.</p>
                   </div>
 
-                  <button 
+                  <button
                     onClick={handleOpenCreateModal}
                     className="px-4 py-2 bg-[#E04F33] hover:bg-[#ED5B3F] text-white rounded-lg text-xs font-bold uppercase tracking-wider transition-all flex items-center gap-1.5 font-mono shadow-md cursor-pointer border border-white/10"
                   >
@@ -668,8 +668,8 @@ export default function App() {
                           <tr key={deal.id} className="hover:bg-white/5 transition-colors">
                             <td className="py-3.5 px-4 min-w-[220px]">
                               <div className="flex items-center gap-4 min-w-0">
-                                <img 
-                                  src={deal.imageUrl} 
+                                <img
+                                  src={deal.imageUrl}
                                   alt={deal.title}
                                   className="w-12 h-12 rounded-lg object-cover border border-white/10 shrink-0"
                                   onError={(e) => {
@@ -715,8 +715,8 @@ export default function App() {
                                     key={idx}
                                     onClick={() => handleToggleListingActive(deal.id, idx)}
                                     className={`px-2 py-0.5 rounded text-[9px] font-bold font-mono transition-all border cursor-pointer ${
-                                      item.isActive 
-                                        ? 'bg-[#E04F33]/20 text-[#FF8A73] border-[#E04F33]/40' 
+                                      item.isActive
+                                        ? 'bg-[#E04F33]/20 text-[#FF8A73] border-[#E04F33]/40'
                                         : 'bg-white/5 text-slate-500 border-white/10 line-through'
                                     }`}
                                     title={`Toggle ${item.platform} ON/OFF`}
@@ -735,14 +735,14 @@ export default function App() {
 
                             <td className="py-3.5 px-4 text-right">
                               <div className="flex items-center justify-end gap-2">
-                                <button 
+                                <button
                                   onClick={() => handleOpenEditModal(deal)}
                                   className="px-2.5 py-1.5 bg-white/5 hover:bg-white/10 text-slate-200 rounded-lg border border-white/10 transition-colors flex items-center gap-1 font-mono text-[10px] cursor-pointer"
                                 >
                                   <Edit className="w-3.5 h-3.5" />
                                   Edit
                                 </button>
-                                <button 
+                                <button
                                   onClick={() => handleDeleteProperty(deal.id)}
                                   className="p-1.5 bg-white/5 hover:bg-red-950/60 text-red-400 rounded-lg border border-white/10 transition-colors cursor-pointer"
                                   title="Delete Property"
@@ -768,7 +768,7 @@ export default function App() {
         {showPropertyEditorModal && (
           <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md font-sans">
             <div className="relative w-full max-w-3xl bg-[#0F1014] border border-white/15 rounded-3xl p-6 sm:p-8 shadow-2xl max-h-[90vh] overflow-y-auto text-slate-100 apple-specular">
-              <button 
+              <button
                 onClick={() => setShowPropertyEditorModal(false)}
                 className="absolute top-6 right-6 p-2 text-slate-400 hover:text-white rounded-full hover:bg-white/10"
               >
@@ -783,8 +783,8 @@ export default function App() {
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
                     <label className="block text-xs font-bold text-[#FF8A73] uppercase mb-1 font-mono">Title</label>
-                    <input 
-                      type="text" 
+                    <input
+                      type="text"
                       required
                       value={adminForm.title}
                       onChange={(e) => setAdminForm({...adminForm, title: e.target.value})}
@@ -793,8 +793,8 @@ export default function App() {
                   </div>
                   <div>
                     <label className="block text-xs font-bold text-[#FF8A73] uppercase mb-1 font-mono">Location</label>
-                    <input 
-                      type="text" 
+                    <input
+                      type="text"
                       required
                       value={adminForm.location}
                       onChange={(e) => setAdminForm({...adminForm, location: e.target.value})}
@@ -806,8 +806,8 @@ export default function App() {
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
                   <div>
                     <label className="block text-xs font-bold text-[#FF8A73] uppercase mb-1 font-mono">Beds/Baths</label>
-                    <input 
-                      type="text" 
+                    <input
+                      type="text"
                       value={adminForm.bedsBaths}
                       onChange={(e) => setAdminForm({...adminForm, bedsBaths: e.target.value})}
                       className="w-full px-3.5 py-2.5 bg-white/5 border border-white/10 rounded-xl text-white text-xs focus:outline-none focus:border-[#E04F33] font-mono"
@@ -815,8 +815,8 @@ export default function App() {
                   </div>
                   <div>
                     <label className="block text-xs font-bold text-[#FF8A73] uppercase mb-1 font-mono">Monthly Rent</label>
-                    <input 
-                      type="text" 
+                    <input
+                      type="text"
                       value={adminForm.monthlyRent}
                       onChange={(e) => setAdminForm({...adminForm, monthlyRent: e.target.value})}
                       className="w-full px-3.5 py-2.5 bg-white/5 border border-white/10 rounded-xl text-white text-xs focus:outline-none focus:border-[#E04F33] font-mono"
@@ -824,8 +824,8 @@ export default function App() {
                   </div>
                   <div>
                     <label className="block text-xs font-bold text-[#FF8A73] uppercase mb-1 font-mono">Net Profit</label>
-                    <input 
-                      type="text" 
+                    <input
+                      type="text"
                       value={adminForm.estNetMonthlyProfit}
                       onChange={(e) => setAdminForm({...adminForm, estNetMonthlyProfit: e.target.value})}
                       className="w-full px-3.5 py-2.5 bg-white/5 border border-white/10 rounded-xl text-white text-xs focus:outline-none focus:border-[#E04F33] font-mono"
@@ -849,8 +849,8 @@ export default function App() {
 
                 <div>
                   <label className="block text-xs font-bold text-[#FF8A73] uppercase mb-1 font-mono">Cover Image URL</label>
-                  <input 
-                    type="text" 
+                  <input
+                    type="text"
                     required
                     value={adminForm.imageUrl}
                     onChange={(e) => setAdminForm({...adminForm, imageUrl: e.target.value})}
@@ -860,7 +860,7 @@ export default function App() {
 
                 <div>
                   <label className="block text-xs font-bold text-[#FF8A73] uppercase mb-1 font-mono">Description</label>
-                  <textarea 
+                  <textarea
                     rows={3}
                     value={adminForm.description}
                     onChange={(e) => setAdminForm({...adminForm, description: e.target.value})}
@@ -869,14 +869,14 @@ export default function App() {
                 </div>
 
                 <div className="pt-4 border-t border-white/10 flex justify-end gap-3 font-mono">
-                  <button 
+                  <button
                     type="button"
                     onClick={() => setShowPropertyEditorModal(false)}
                     className="px-5 py-2.5 bg-white/5 hover:bg-white/10 border border-white/10 text-slate-300 rounded-xl text-xs font-bold"
                   >
                     Cancel
                   </button>
-                  <button 
+                  <button
                     type="submit"
                     className="px-6 py-2.5 bg-[#E04F33] hover:bg-[#ED5B3F] text-white rounded-xl text-xs font-black uppercase tracking-widest border border-white/20 shadow-lg shadow-[#E04F33]/25 cursor-pointer"
                   >
@@ -896,15 +896,15 @@ export default function App() {
 
   return (
     <div className="min-h-screen bg-slate-50 text-slate-900 dark:bg-[#0F1014] dark:text-slate-100 font-sans flex flex-col transition-colors duration-300 relative selection:bg-[#E04F33] selection:text-white">
-      
+
       {/* 1. Pure Tailwind Ambient Mesh Gradient Background Spanning Viewport */}
       <div className="fixed inset-0 overflow-hidden pointer-events-none z-0 select-none">
         {/* Base Layer */}
         <div className="absolute inset-0 bg-slate-50 dark:bg-[#0F1014] transition-colors duration-500" />
-        
+
         {/* Top-Left / Corner Burnt Orange Orb */}
         <div className="absolute -top-[12%] -left-[12%] w-[55vw] h-[55vw] max-w-[650px] max-h-[650px] rounded-full bg-[#E04F33]/10 dark:bg-[#E04F33]/15 blur-[120px] pointer-events-none" />
-        
+
         {/* Opposing Bottom-Right Slate / Pearl Orb */}
         <div className="absolute -bottom-[12%] -right-[12%] w-[60vw] h-[60vw] max-w-[700px] max-h-[700px] rounded-full bg-slate-200/60 dark:bg-slate-800/30 blur-[140px] pointer-events-none" />
 
@@ -914,7 +914,7 @@ export default function App() {
 
       {/* Zero-JS First Paint Hybrid Splash Overlay (GPU keyframes) */}
       {showSplash && (
-        <div 
+        <div
           className={`fixed inset-0 z-[9999] bg-slate-50 dark:bg-[#0F1014] flex flex-col items-center justify-center p-6 ${
             splashFading ? 'animate-splash-fade-out' : 'opacity-100'
           }`}
@@ -961,10 +961,10 @@ export default function App() {
       {/* Main Header Navbar */}
       <header className="sticky top-0 z-40 bg-white/70 dark:bg-[#0E121B]/80 backdrop-blur-2xl border-b border-slate-200/60 dark:border-white/10 shadow-xl shadow-slate-200/50 dark:shadow-apple-glass apple-specular transition-colors duration-300">
         <div className="max-w-7xl mx-auto px-6 h-20 flex items-center justify-between">
-          
+
           {/* Kaizen Logo & Emblem */}
-          <div 
-            className="flex items-center gap-3 cursor-pointer group" 
+          <div
+            className="flex items-center gap-3 cursor-pointer group"
             onClick={() => { setActiveTab('properties'); setShowFavoritesOnly(false); window.location.hash = ''; }}
           >
             <div className="w-10 h-10 bg-[#E04F33] rounded-lg flex items-center justify-center shadow-lg shadow-[#E04F33]/25 border border-white/20 group-hover:scale-105 transition-all duration-300">
@@ -978,14 +978,14 @@ export default function App() {
 
           {/* Navigation Links */}
           <nav className="hidden lg:flex items-center gap-6 text-xs font-bold uppercase tracking-widest">
-            <button 
+            <button
               onClick={() => { setActiveTab('properties'); setShowFavoritesOnly(false); setSearchQuery(''); window.location.hash = ''; }}
               className={`pb-1 border-b-2 transition-colors ${activeTab === 'properties' && !showFavoritesOnly ? 'border-[#E04F33] text-slate-900 dark:text-white' : 'border-transparent text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'}`}
             >
               Properties
             </button>
 
-            <button 
+            <button
               onClick={() => { setActiveTab('how-it-works'); window.location.hash = ''; }}
               className={`pb-1 border-b-2 transition-colors ${activeTab === 'how-it-works' ? 'border-[#E04F33] text-slate-900 dark:text-white' : 'border-transparent text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'}`}
             >
@@ -994,21 +994,21 @@ export default function App() {
 
             {isAuthenticated && (
               <>
-                <button 
+                <button
                   onClick={() => { setActiveTab('dashboard'); window.location.hash = ''; }}
                   className={`pb-1 border-b-2 transition-colors flex items-center gap-1.5 ${activeTab === 'dashboard' ? 'border-[#E04F33] text-slate-900 dark:text-white' : 'border-transparent text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'}`}
                 >
                   <LayoutDashboard className="w-3.5 h-3.5 text-[#E04F33]" />
                   Dashboard
                 </button>
-                <button 
+                <button
                   onClick={() => { setActiveTab('favorites'); window.location.hash = ''; }}
                   className={`pb-1 border-b-2 transition-colors flex items-center gap-1.5 ${activeTab === 'favorites' ? 'border-[#E04F33] text-slate-900 dark:text-white' : 'border-transparent text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'}`}
                 >
                   <Heart className="w-3.5 h-3.5 text-rose-500" />
                   Favorites
                 </button>
-                <button 
+                <button
                   onClick={() => { setActiveTab('bookings'); window.location.hash = ''; }}
                   className={`pb-1 border-b-2 transition-colors flex items-center gap-1.5 ${activeTab === 'bookings' ? 'border-[#E04F33] text-slate-900 dark:text-white' : 'border-transparent text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'}`}
                 >
@@ -1018,13 +1018,13 @@ export default function App() {
               </>
             )}
 
-            <button 
+            <button
               onClick={() => { setActiveTab('experiences'); window.location.hash = ''; }}
               className={`pb-1 border-b-2 transition-colors ${activeTab === 'experiences' ? 'border-[#E04F33] text-slate-900 dark:text-white' : 'border-transparent text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'}`}
             >
               Experience
             </button>
-            <button 
+            <button
               onClick={() => { setActiveTab('about'); window.location.hash = ''; }}
               className={`pb-1 border-b-2 transition-colors ${activeTab === 'about' ? 'border-[#E04F33] text-slate-900 dark:text-white' : 'border-transparent text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'}`}
             >
@@ -1034,9 +1034,9 @@ export default function App() {
 
           {/* Right Controls */}
           <div className="flex items-center gap-3">
-            
+
             {/* Saved Favorites Trigger */}
-            <button 
+            <button
               onClick={() => {
                 if (isAuthenticated) {
                   setActiveTab('favorites');
@@ -1046,8 +1046,8 @@ export default function App() {
                 }
               }}
               className={`p-2.5 rounded-full transition-all duration-300 relative border ${
-                activeTab === 'favorites' || showFavoritesOnly 
-                  ? 'text-rose-400 bg-rose-950/50 border-rose-500/40' 
+                activeTab === 'favorites' || showFavoritesOnly
+                  ? 'text-rose-400 bg-rose-950/50 border-rose-500/40'
                   : 'text-slate-300 hover:text-rose-400 hover:bg-white/5 border-white/10 hover:border-white/20'
               }`}
               title="Saved Favorites"
@@ -1198,9 +1198,9 @@ export default function App() {
 
           /* CUSTOMER PUBLIC VIEW */
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start w-full max-w-full overflow-hidden">
-            
+
             {/* Left Brand Sidebar (Hidden on mobile, visible on lg screens side-by-side) */}
-            <m.section 
+            <m.section
               initial={{ opacity: 0, x: -20 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ type: 'spring', stiffness: 100, damping: 18, delay: 0.15 }}
@@ -1212,9 +1212,9 @@ export default function App() {
                   <Sparkles className="w-3.5 h-3.5 text-[#E04F33] animate-pulse" />
                   <span className="text-[9px] font-bold text-[#FF8A73] tracking-[0.2em] uppercase font-mono">Kaizen Luxury Collection</span>
                 </div>
-                
+
                 {/* Headline with Staggered Word / Character Reveal */}
-                <m.h1 
+                <m.h1
                   initial="hidden"
                   animate="visible"
                   variants={{
@@ -1246,15 +1246,15 @@ export default function App() {
                 <p className="text-slate-300 text-xs sm:text-sm leading-relaxed mb-6 sm:mb-8 font-sans">
                   Indulge in our collection of meticulously curated luxury villas. Heated pools, private chefs, 24/7 concierge, and bespoke hospitality crafted to perfection.
                 </p>
-                
+
                 {/* Navigation Doors in Sleek Frosted Glass */}
                 <div className="space-y-3.5">
-                  
-                  <div 
+
+                  <div
                     onClick={() => { setActiveTab('properties'); setShowFavoritesOnly(false); }}
                     className={`p-4 rounded-xl border cursor-pointer group transition-all duration-300 backdrop-blur-2xl ${
                       activeTab === 'properties' && !showFavoritesOnly
-                        ? 'bg-white/15 border-white/20 shadow-2xl shadow-black/40 ring-1 ring-white/20' 
+                        ? 'bg-white/15 border-white/20 shadow-2xl shadow-black/40 ring-1 ring-white/20'
                         : 'bg-white/5 border-white/10 hover:border-white/20 hover:bg-white/10'
                     }`}
                   >
@@ -1268,11 +1268,11 @@ export default function App() {
                     </div>
                   </div>
 
-                  <div 
+                  <div
                     onClick={() => setActiveTab('how-it-works')}
                     className={`p-4 rounded-xl border cursor-pointer group transition-all duration-300 backdrop-blur-2xl ${
-                      activeTab === 'how-it-works' 
-                        ? 'bg-white/15 border-white/20 shadow-2xl shadow-black/40 ring-1 ring-white/20' 
+                      activeTab === 'how-it-works'
+                        ? 'bg-white/15 border-white/20 shadow-2xl shadow-black/40 ring-1 ring-white/20'
                         : 'bg-white/5 border-white/10 hover:border-white/20 hover:bg-white/10'
                     }`}
                   >
@@ -1286,11 +1286,11 @@ export default function App() {
                     </div>
                   </div>
 
-                  <div 
+                  <div
                     onClick={() => setActiveTab('experiences')}
                     className={`p-4 rounded-xl border cursor-pointer group transition-all duration-300 backdrop-blur-2xl ${
-                      activeTab === 'experiences' 
-                        ? 'bg-white/15 border-white/20 shadow-2xl shadow-black/40 ring-1 ring-white/20' 
+                      activeTab === 'experiences'
+                        ? 'bg-white/15 border-white/20 shadow-2xl shadow-black/40 ring-1 ring-white/20'
                         : 'bg-white/5 border-white/10 hover:border-white/20 hover:bg-white/10'
                     }`}
                   >
@@ -1327,12 +1327,12 @@ export default function App() {
                   { id: 'experiences', label: 'Experience' },
                   { id: 'about', label: 'About' },
                 ].map((item) => (
-                  <button 
+                  <button
                     key={item.id}
                     onClick={() => { setActiveTab(item.id as any); setShowFavoritesOnly(false); setSearchQuery(''); }}
                     className={`px-4 py-2 rounded-xl text-xs font-bold shrink-0 whitespace-nowrap transition-all backdrop-blur-xl ${
-                      (activeTab as string) === item.id && !showFavoritesOnly 
-                        ? 'bg-white/20 text-white border border-white/25 shadow-md' 
+                      (activeTab as string) === item.id && !showFavoritesOnly
+                        ? 'bg-white/20 text-white border border-white/25 shadow-md'
                         : 'bg-white/5 text-slate-300 border border-white/10 hover:bg-white/10 hover:text-white'
                     }`}
                   >
@@ -1344,7 +1344,7 @@ export default function App() {
               {/* VIEW A: ACTIVE PROPERTIES CATALOG */}
               {activeTab === 'properties' && (
                 <div className="space-y-6 animate-fade-in w-full max-w-full overflow-hidden">
-                  
+
                   {/* Airbnb-style Interactive Search Bar */}
                   <m.div
                     initial={{ scale: 0.95, opacity: 0 }}
@@ -1356,7 +1356,7 @@ export default function App() {
                       delay: 0.25,
                     }}
                   >
-                    <AirbnbSearchBar 
+                    <AirbnbSearchBar
                       where={searchWhere}
                       setWhere={setSearchWhere}
                       whenDisplay={searchWhenDisplay}
@@ -1382,8 +1382,8 @@ export default function App() {
                           key={filter}
                           onClick={() => setStatusFilter(filter)}
                           className={`px-3.5 py-1.5 rounded-lg text-xs font-bold whitespace-nowrap transition-all shrink-0 ${
-                            statusFilter === filter 
-                              ? 'bg-white/20 text-white border border-white/25 shadow-md' 
+                            statusFilter === filter
+                              ? 'bg-white/20 text-white border border-white/25 shadow-md'
                               : 'text-slate-300 hover:text-white hover:bg-white/5'
                           }`}
                         >
@@ -1416,7 +1416,7 @@ export default function App() {
                       <Building className="w-12 h-12 text-slate-400 mx-auto mb-4" />
                       <p className="font-bold text-white">No matching luxury villas found</p>
                       <p className="text-xs text-slate-300 mt-1">Try resetting the status filter or clearing your search term.</p>
-                      <button 
+                      <button
                         onClick={() => { setSearchQuery(''); setStatusFilter('ALL'); setShowFavoritesOnly(false); }}
                         className="mt-4 px-4 py-2 bg-[#E04F33] hover:bg-[#ED5B3F] text-white rounded-xl text-xs font-bold transition-colors shadow-lg shadow-[#E04F33]/20"
                       >
@@ -1481,9 +1481,9 @@ export default function App() {
                     <div className="glass-card bg-white/80 dark:bg-white/5 rounded-2xl border border-slate-200/80 dark:border-white/10 overflow-hidden flex flex-col justify-between transition-all shadow-xl shadow-slate-200/50 dark:shadow-2xl apple-specular">
                       <div>
                         <div className="h-40 relative">
-                          <img 
-                            src="https://images.unsplash.com/photo-1540555700478-4be289fbecef?auto=format&fit=crop&w=600&q=80" 
-                            alt="Luxury Scottsdale Villa design" 
+                          <img
+                            src="https://images.unsplash.com/photo-1540555700478-4be289fbecef?auto=format&fit=crop&w=600&q=80"
+                            alt="Luxury Scottsdale Villa design"
                             className="w-full h-full object-cover"
                           />
                         </div>
@@ -1502,9 +1502,9 @@ export default function App() {
                     <div className="glass-card bg-white/80 dark:bg-white/5 rounded-2xl border border-slate-200/80 dark:border-white/10 overflow-hidden flex flex-col justify-between transition-all shadow-xl shadow-slate-200/50 dark:shadow-2xl apple-specular">
                       <div>
                         <div className="h-40 relative">
-                          <img 
-                            src="https://images.unsplash.com/photo-1556910103-1c02745aae4d?auto=format&fit=crop&w=600&q=80" 
-                            alt="Private Chef Table Experience" 
+                          <img
+                            src="https://images.unsplash.com/photo-1556910103-1c02745aae4d?auto=format&fit=crop&w=600&q=80"
+                            alt="Private Chef Table Experience"
                             className="w-full h-full object-cover"
                           />
                         </div>
@@ -1523,9 +1523,9 @@ export default function App() {
                     <div className="glass-card bg-white/80 dark:bg-white/5 rounded-2xl border border-slate-200/80 dark:border-white/10 overflow-hidden flex flex-col justify-between transition-all shadow-xl shadow-slate-200/50 dark:shadow-2xl apple-specular">
                       <div>
                         <div className="h-40 relative">
-                          <img 
-                            src="https://images.unsplash.com/photo-1450622238302-a223f43d35fc?auto=format&fit=crop&w=600&q=80" 
-                            alt="Florida Coastal Villa" 
+                          <img
+                            src="https://images.unsplash.com/photo-1450622238302-a223f43d35fc?auto=format&fit=crop&w=600&q=80"
+                            alt="Florida Coastal Villa"
                             className="w-full h-full object-cover"
                           />
                         </div>
@@ -1684,7 +1684,7 @@ export default function App() {
       {selectedDeal && (
         <div className="fixed inset-0 z-50 overflow-y-auto bg-black/60 backdrop-blur-md flex items-center justify-center p-4">
           <div className="bg-[#0F1014]/90 backdrop-blur-3xl rounded-3xl max-w-2xl w-full border border-white/15 shadow-2xl shadow-black/80 overflow-hidden flex flex-col animate-scale-in text-slate-100 apple-specular">
-            
+
             {/* Header */}
             <div className="bg-white/5 p-6 text-white flex justify-between items-start border-b border-white/10 backdrop-blur-xl">
               <div>
@@ -1697,7 +1697,7 @@ export default function App() {
                   {selectedDeal.location} • {selectedDeal.bedsBaths} • {selectedDeal.squareFeet} SQFT
                 </p>
               </div>
-              <button 
+              <button
                 onClick={() => setSelectedDeal(null)}
                 className="p-2 bg-white/5 hover:bg-white/15 text-slate-300 hover:text-white rounded-full transition-colors border border-white/10"
               >
@@ -1707,12 +1707,12 @@ export default function App() {
 
             {/* Content area */}
             <div className="p-6 overflow-y-auto space-y-6 max-h-[600px]">
-              
+
               {/* Photo Gallery Viewer */}
               <div>
                 <div className="h-64 rounded-2xl overflow-hidden relative border border-white/10 bg-black/40">
-                  <img 
-                    src={selectedDeal.images[activeImageIndex] || selectedDeal.imageUrl} 
+                  <img
+                    src={selectedDeal.images[activeImageIndex] || selectedDeal.imageUrl}
                     alt={selectedDeal.title}
                     className="w-full h-full object-cover transition-all duration-300"
                     onError={(e) => {
@@ -1722,13 +1722,13 @@ export default function App() {
 
                   {selectedDeal.images.length > 1 && (
                     <>
-                      <button 
+                      <button
                         onClick={() => setActiveImageIndex((prev) => (prev > 0 ? prev - 1 : selectedDeal.images.length - 1))}
                         className="absolute left-3 top-1/2 -translate-y-1/2 p-2 bg-black/60 hover:bg-black/80 text-white rounded-full transition-all border border-white/20"
                       >
                         <ChevronLeft className="w-4 h-4" />
                       </button>
-                      <button 
+                      <button
                         onClick={() => setActiveImageIndex((prev) => (prev < selectedDeal.images.length - 1 ? prev + 1 : 0))}
                         className="absolute right-3 top-1/2 -translate-y-1/2 p-2 bg-black/60 hover:bg-black/80 text-white rounded-full transition-all border border-white/20"
                       >
@@ -1863,7 +1863,7 @@ export default function App() {
                   <Lock className="w-3.5 h-3.5" />
                   <span>Lock & Secure Property (15-Min Hold)</span>
                 </button>
-                <button 
+                <button
                   onClick={() => setSelectedDeal(null)}
                   className="px-4 py-2.5 bg-white/10 hover:bg-white/20 text-slate-200 border border-white/15 rounded-xl text-xs font-bold transition-all font-mono cursor-pointer"
                 >
@@ -1883,7 +1883,7 @@ export default function App() {
       {showPropertyEditorModal && (
         <div className="fixed inset-0 z-50 overflow-y-auto bg-black/60 backdrop-blur-md flex items-center justify-center p-4">
           <div className="bg-[#0F1014]/90 backdrop-blur-3xl rounded-3xl max-w-3xl w-full border border-white/15 shadow-2xl shadow-black/80 overflow-hidden flex flex-col animate-scale-in text-white apple-specular">
-            
+
             {/* Header */}
             <div className="bg-white/5 p-6 text-white flex justify-between items-center border-b border-white/10 backdrop-blur-xl">
               <div className="flex items-center gap-2.5">
@@ -1897,7 +1897,7 @@ export default function App() {
                   <p className="text-xs text-slate-300 font-mono">Update specs, images, and external platform listing links.</p>
                 </div>
               </div>
-              <button 
+              <button
                 onClick={() => setShowPropertyEditorModal(false)}
                 className="p-2 bg-white/5 hover:bg-white/15 text-slate-300 hover:text-white rounded-full transition-colors border border-white/10"
               >
@@ -1907,7 +1907,7 @@ export default function App() {
 
             {/* Form Container */}
             <form onSubmit={handleSaveProperty} className="p-6 overflow-y-auto space-y-6 max-h-[70vh]">
-              
+
               {/* Section 1: Core Specs */}
               <div className="space-y-4">
                 <h4 className="text-xs font-bold text-[#FF8A73] uppercase tracking-widest font-mono border-b border-white/10 pb-1">
@@ -1917,8 +1917,8 @@ export default function App() {
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
                     <label className="block text-xs font-bold text-slate-300 uppercase mb-1 font-mono">Property Title / Name *</label>
-                    <input 
-                      type="text" 
+                    <input
+                      type="text"
                       required
                       placeholder="e.g. Coastal Modern Retreat"
                       value={adminForm.title}
@@ -1929,8 +1929,8 @@ export default function App() {
 
                   <div>
                     <label className="block text-xs font-bold text-slate-300 uppercase mb-1 font-mono">Location / Address *</label>
-                    <input 
-                      type="text" 
+                    <input
+                      type="text"
                       required
                       placeholder="e.g. Pensacola, FL"
                       value={adminForm.location}
@@ -1943,8 +1943,8 @@ export default function App() {
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
                   <div>
                     <label className="block text-xs font-bold text-slate-300 uppercase mb-1 font-mono">Beds / Baths</label>
-                    <input 
-                      type="text" 
+                    <input
+                      type="text"
                       placeholder="3 bed, 2 bath"
                       value={adminForm.bedsBaths}
                       onChange={(e) => setAdminForm({...adminForm, bedsBaths: e.target.value})}
@@ -1954,8 +1954,8 @@ export default function App() {
 
                   <div>
                     <label className="block text-xs font-bold text-slate-300 uppercase mb-1 font-mono">Square Feet</label>
-                    <input 
-                      type="text" 
+                    <input
+                      type="text"
                       placeholder="1,300"
                       value={adminForm.squareFeet}
                       onChange={(e) => setAdminForm({...adminForm, squareFeet: e.target.value})}
@@ -2000,8 +2000,8 @@ export default function App() {
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
                   <div>
                     <label className="block text-xs font-bold text-slate-300 uppercase mb-1 font-mono">Monthly Rent *</label>
-                    <input 
-                      type="text" 
+                    <input
+                      type="text"
                       required
                       placeholder="$2,200"
                       value={adminForm.monthlyRent}
@@ -2012,8 +2012,8 @@ export default function App() {
 
                   <div>
                     <label className="block text-xs font-bold text-slate-300 uppercase mb-1 font-mono">Net Monthly Profit</label>
-                    <input 
-                      type="text" 
+                    <input
+                      type="text"
                       placeholder="~$1,700"
                       value={adminForm.estNetMonthlyProfit}
                       onChange={(e) => setAdminForm({...adminForm, estNetMonthlyProfit: e.target.value})}
@@ -2023,8 +2023,8 @@ export default function App() {
 
                   <div>
                     <label className="block text-xs font-bold text-slate-300 uppercase mb-1 font-mono">Nightly Rate (ADR)</label>
-                    <input 
-                      type="text" 
+                    <input
+                      type="text"
                       placeholder="$215"
                       value={adminForm.adr}
                       onChange={(e) => setAdminForm({...adminForm, adr: e.target.value})}
@@ -2034,8 +2034,8 @@ export default function App() {
 
                   <div>
                     <label className="block text-xs font-bold text-slate-300 uppercase mb-1 font-mono">Est Occupancy</label>
-                    <input 
-                      type="text" 
+                    <input
+                      type="text"
                       placeholder="68%"
                       value={adminForm.estOccupancy}
                       onChange={(e) => setAdminForm({...adminForm, estOccupancy: e.target.value})}
@@ -2047,8 +2047,8 @@ export default function App() {
                 <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
                   <div>
                     <label className="block text-xs font-bold text-slate-300 uppercase mb-1 font-mono">Proj. Annual Revenue</label>
-                    <input 
-                      type="text" 
+                    <input
+                      type="text"
                       placeholder="$55,683"
                       value={adminForm.projectedAnnualRevenue}
                       onChange={(e) => setAdminForm({...adminForm, projectedAnnualRevenue: e.target.value})}
@@ -2058,8 +2058,8 @@ export default function App() {
 
                   <div>
                     <label className="block text-xs font-bold text-slate-300 uppercase mb-1 font-mono">Total Cash To Start</label>
-                    <input 
-                      type="text" 
+                    <input
+                      type="text"
                       placeholder="$9,400"
                       value={adminForm.totalCashToStart}
                       onChange={(e) => setAdminForm({...adminForm, totalCashToStart: e.target.value})}
@@ -2069,8 +2069,8 @@ export default function App() {
 
                   <div>
                     <label className="block text-xs font-bold text-slate-300 uppercase mb-1 font-mono">Lease Term</label>
-                    <input 
-                      type="text" 
+                    <input
+                      type="text"
                       placeholder="12 months"
                       value={adminForm.leaseTerm}
                       onChange={(e) => setAdminForm({...adminForm, leaseTerm: e.target.value})}
@@ -2093,7 +2093,7 @@ export default function App() {
                     <div key={idx} className="relative group rounded-xl overflow-hidden border border-white/10 h-24 bg-black/40">
                       <img src={imgUrl} alt="" className="w-full h-full object-cover" />
                       <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-1">
-                        <button 
+                        <button
                           type="button"
                           onClick={() => {
                             const filtered = adminForm.images.filter((_, i) => i !== idx);
@@ -2116,14 +2116,14 @@ export default function App() {
 
                 {/* Add new image input */}
                 <div className="flex gap-2">
-                  <input 
-                    type="url" 
+                  <input
+                    type="url"
                     placeholder="Paste image URL (https://...)"
                     value={newImageUrlInput}
                     onChange={(e) => setNewImageUrlInput(e.target.value)}
                     className="flex-1 px-3.5 py-2 bg-white/5 border border-white/10 rounded-xl text-white text-xs font-mono placeholder-slate-500 focus:border-[#E04F33] focus:bg-white/10 transition-all"
                   />
-                  <button 
+                  <button
                     type="button"
                     onClick={() => {
                       if (newImageUrlInput.trim()) {
@@ -2147,7 +2147,7 @@ export default function App() {
                   <h4 className="text-xs font-bold text-[#FF8A73] uppercase tracking-widest font-mono">
                     4. Platform Listing Link Manager
                   </h4>
-                  <button 
+                  <button
                     type="button"
                     onClick={() => {
                       setAdminForm({
@@ -2167,7 +2167,7 @@ export default function App() {
                 <div className="space-y-3">
                   {adminForm.listings.map((item, idx) => (
                     <div key={idx} className="p-3 bg-white/5 rounded-xl border border-white/10 flex flex-col sm:flex-row items-start sm:items-center gap-3">
-                      
+
                       {/* Platform Choice */}
                       <select
                         value={item.platform}
@@ -2184,8 +2184,8 @@ export default function App() {
                       </select>
 
                       {/* URL Input */}
-                      <input 
-                        type="url" 
+                      <input
+                        type="url"
                         required
                         placeholder="Listing URL (https://...)"
                         value={item.url}
@@ -2207,8 +2207,8 @@ export default function App() {
                             setAdminForm({ ...adminForm, listings: updated });
                           }}
                           className={`px-3 py-1.5 rounded-lg text-[10px] font-mono font-bold transition-all border flex items-center gap-1 cursor-pointer ${
-                            item.isActive 
-                              ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40' 
+                            item.isActive
+                              ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40'
                               : 'bg-white/5 text-slate-400 border-white/10'
                           }`}
                         >
@@ -2216,7 +2216,7 @@ export default function App() {
                           {item.isActive ? 'Active' : 'Inactive'}
                         </button>
 
-                        <button 
+                        <button
                           type="button"
                           onClick={() => {
                             const updated = adminForm.listings.filter((_, i) => i !== idx);
@@ -2243,7 +2243,7 @@ export default function App() {
               {/* Description */}
               <div>
                 <label className="block text-xs font-bold text-slate-300 uppercase mb-1 font-mono">Property Description</label>
-                <textarea 
+                <textarea
                   rows={3}
                   placeholder="Detail the property layout, location perks, and key guest amenities..."
                   value={adminForm.description}
@@ -2254,14 +2254,14 @@ export default function App() {
 
               {/* Submit Buttons */}
               <div className="pt-4 border-t border-white/10 flex items-center justify-end gap-3 font-mono">
-                <button 
+                <button
                   type="button"
                   onClick={() => setShowPropertyEditorModal(false)}
                   className="px-5 py-2.5 bg-white/10 hover:bg-white/20 border border-white/15 text-slate-200 rounded-xl text-xs font-bold transition-all cursor-pointer"
                 >
                   Cancel
                 </button>
-                <button 
+                <button
                   type="submit"
                   className="px-6 py-2.5 bg-[#E04F33] hover:bg-[#ED5B3F] text-white rounded-xl text-xs font-black uppercase tracking-widest transition-all shadow-lg shadow-[#E04F33]/25 border border-white/20 cursor-pointer"
                 >

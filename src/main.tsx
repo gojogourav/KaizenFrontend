@@ -1,17 +1,18 @@
-import {StrictMode} from 'react';
-import {createRoot} from 'react-dom/client';
-import { LazyMotion, domAnimation } from 'motion/react';
-import App from './App.tsx';
+import React from 'react';
+import ReactDOM from 'react-dom/client';
 import { AuthProvider } from './context/AuthContext';
+import App from './App';
 import './index.css';
 
-createRoot(document.getElementById('root')!).render(
-  <StrictMode>
-    <LazyMotion features={domAnimation} strict>
-      <AuthProvider>
-        <App />
-      </AuthProvider>
-    </LazyMotion>
-  </StrictMode>,
-);
+const rootEl = document.getElementById('root');
+if (!rootEl) {
+  throw new Error('Root element #root not found in index.html.');
+}
 
+ReactDOM.createRoot(rootEl).render(
+  <React.StrictMode>
+    <AuthProvider>
+      <App />
+    </AuthProvider>
+  </React.StrictMode>,
+);
