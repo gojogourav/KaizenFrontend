@@ -79,6 +79,8 @@ export const AdminPropertyManager: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | number | null>(null);
+  const [submitError, setSubmitError] = useState<string | null>(null);
+  const [submitting, setSubmitting] = useState(false);
 
   const [formData, setFormData] = useState({
     title: "",
@@ -97,22 +99,24 @@ export const AdminPropertyManager: React.FC = () => {
       setLoading(true);
       const apiProps = await propertyService.getProperties();
       if (apiProps && apiProps.length > 0) {
-        const mapped: PropertyItem[] = apiProps.map((p: Property, idx: number) => ({
-          id: p.id,
-          title: p.title,
-          location: `${p.city || "Pensacola"}, ${p.state || "FL"}`,
-          bedsBaths: p.bedsBaths || "3 bed, 2 bath",
-          monthlyRent: p.price || p.adr || 2400,
-          netProfit: Math.round((p.price || 2400) * 0.75),
-          occupancyEst: `${60 + (idx % 20)}%`,
-          status: (p.status as any) || "AVAILABLE",
-          imageUrl:
-            p.images && p.images[0]
-              ? p.images[0]
-              : DEFAULT_PROPERTIES[idx % DEFAULT_PROPERTIES.length].imageUrl,
-          description: p.description || "Newly sourced luxury property.",
-          platforms: ["Airbnb", "Vrbo", "Booking.com"],
-        }));
+        const mapped: PropertyItem[] = apiProps.map((p: Property, idx: number) => {
+          const rent = (p as any).rent_monthly ?? p.price ?? p.adr ?? 2400;
+          const profit = (p as any).net_profit_monthly ?? Math.round(Number(rent) * 0.75);
+          const mediaUrl = (p as any).media?.[0]?.cdn_url ?? p.images?.[0];
+          return {
+            id: p.id,
+            title: p.title,
+            location: `${p.city || "Pensacola"}, ${p.state || "FL"}`,
+            bedsBaths: p.bedsBaths || `${(p as any).bedrooms || 3} bed, ${(p as any).bathrooms || 2} bath`,
+            monthlyRent: Number(rent),
+            netProfit: Number(profit),
+            occupancyEst: `${60 + (idx % 20)}%`,
+            status: (p.status as any) || "AVAILABLE",
+            imageUrl: mediaUrl || DEFAULT_PROPERTIES[idx % DEFAULT_PROPERTIES.length].imageUrl,
+            description: p.description || "Newly sourced luxury property.",
+            platforms: ["Airbnb", "Vrbo", "Booking.com"],
+          };
+        });
         setProperties(mapped);
       }
     } catch {
@@ -169,6 +173,8 @@ export const AdminPropertyManager: React.FC = () => {
 
   const handleFormSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setSubmitError(null);
+    setSubmitting(true);
     const rentNum = parseFloat(formData.monthlyRent.replace(/[^0-9.]/g, "")) || 2400;
     const profitNum = parseFloat(formData.netProfit.replace(/[^0-9.]/g, "")) || 1800;
 
@@ -260,12 +266,21 @@ export const AdminPropertyManager: React.FC = () => {
             prev.map((p) => (p.id === tempId ? { ...p, id: created.id } : p)),
           );
         }
-      } catch {
-        // Keep optimistic state item
+        setIsModalOpen(false);
+      } catch (err: any) {
+        // Optimistic item is already in the list — remove it on failure
+        setProperties((prev) => prev.filter((p) => p.id !== tempId));
+        const detail =
+          err?.data?.detail ||
+          err?.data?.title?.[0] ||
+          err?.data?.status?.[0] ||
+          err?.message ||
+          "Failed to create property. Please check your inputs.";
+        setSubmitError(String(detail));
       }
     }
 
-    setIsModalOpen(false);
+    setSubmitting(false);
   };
 
   const activeCount = properties.filter((p) => p.status === "AVAILABLE").length;
@@ -505,12 +520,20 @@ export const AdminPropertyManager: React.FC = () => {
                 {editingId ? "Edit Luxury Property" : "Create New Luxury Property"}
               </h3>
               <button
-                onClick={() => setIsModalOpen(false)}
+                onClick={() => { setIsModalOpen(false); setSubmitError(null); }}
                 className="p-2 rounded-full hover:bg-white/10 text-slate-400 hover:text-white transition-colors"
               >
                 <X className="w-5 h-5" />
               </button>
             </div>
+
+            {/* Error Banner */}
+            {submitError && (
+              <div className="px-4 py-3 rounded-xl bg-rose-950/60 border border-rose-500/40 text-rose-300 text-xs font-mono flex items-start gap-2">
+                <span className="text-rose-400 font-bold shrink-0">✕</span>
+                <span>{submitError}</span>
+              </div>
+            )}
 
             {/* Modal Form */}
             <form onSubmit={handleFormSubmit} className="space-y-4 font-mono text-xs">
@@ -649,9 +672,12 @@ export const AdminPropertyManager: React.FC = () => {
                 </button>
                 <button
                   type="submit"
-                  className="px-6 py-2.5 bg-[#E04F33] hover:bg-[#ED5B3F] text-white rounded-xl text-xs font-bold uppercase tracking-wider shadow-lg shadow-[#E04F33]/30 transition-all border border-white/20"
+                  disabled={submitting}
+                  className="px-6 py-2.5 bg-[#E04F33] hover:bg-[#ED5B3F] disabled:opacity-60 disabled:cursor-not-allowed text-white rounded-xl text-xs font-bold uppercase tracking-wider shadow-lg shadow-[#E04F33]/30 transition-all border border-white/20"
                 >
-                  {editingId ? "Save Changes" : "Create Property"}
+                  {submitting
+                    ? (editingId ? "Saving…" : "Creating…")
+                    : (editingId ? "Save Changes" : "Create Property")}
                 </button>
               </div>
             </form>

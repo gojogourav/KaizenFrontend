@@ -108,7 +108,6 @@ export default function App() {
           setActiveTab("properties");
           window.location.hash = "";
         }}
-        propertyManagementView={<AdminPropertyManager />}
       />
     );
   }

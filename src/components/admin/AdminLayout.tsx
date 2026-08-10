@@ -5,22 +5,20 @@ import {
   FileText,
   MessageSquareQuote,
   Settings,
-  ShieldCheck,
-  CheckCircle,
 } from "lucide-react";
 import { AdminHeader } from "./AdminHeader";
 import { AdminSidebar, type AdminSection } from "./AdminSidebar";
 import { AdminPropertyManager } from "./AdminPropertyManager";
+import { AdminLeadsManager } from "./AdminLeadsManager";
+import { AdminBlogManager } from "./AdminBlogManager";
+import { AdminStoriesManager } from "./AdminStoriesManager";
 import { useAuth } from "../../context/AuthContext";
 
 interface AdminLayoutProps {
   onExitAdmin: () => void;
-  propertyManagementView?: React.ReactNode;
 }
 
-export const AdminLayout: React.FC<AdminLayoutProps> = ({
-  onExitAdmin,
-}) => {
+export const AdminLayout: React.FC<AdminLayoutProps> = ({ onExitAdmin }) => {
   const { user } = useAuth();
   const [activeSection, setActiveSection] = useState<AdminSection>("properties");
 
@@ -70,73 +68,25 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({
 
         <main className="flex-1 min-w-0">
           {activeSection === "properties" && <AdminPropertyManager />}
-
-          {activeSection === "leads_bookings" && (
-            <div className="bg-[#141824]/90 border border-white/10 rounded-3xl p-8 space-y-4 shadow-2xl">
-              <div className="flex items-center gap-3">
-                <Users className="w-6 h-6 text-[#E04F33]" />
-                <h2 className="text-xl font-bold text-white font-heading">
-                  Leads & Leaseholds Workspace
-                </h2>
-              </div>
-              <p className="text-xs text-slate-400">
-                Inbound customer inquiries and property lock bookings dashboard.
-              </p>
-              <div className="p-6 rounded-2xl bg-white/5 border border-white/10 text-xs font-mono text-slate-300">
-                <p className="text-emerald-400 font-bold mb-2">✓ All system lead queues active</p>
-                <p className="text-slate-400">0 pending inquiries awaiting review.</p>
-              </div>
-            </div>
-          )}
-
-          {activeSection === "blogs" && (
-            <div className="bg-[#141824]/90 border border-white/10 rounded-3xl p-8 space-y-4 shadow-2xl">
-              <div className="flex items-center gap-3">
-                <FileText className="w-6 h-6 text-[#E04F33]" />
-                <h2 className="text-xl font-bold text-white font-heading">
-                  Editorial Blogs & Playbooks
-                </h2>
-              </div>
-              <p className="text-xs text-slate-400">
-                Publish articles, investment playbooks, and market analysis.
-              </p>
-              <div className="p-6 rounded-2xl bg-white/5 border border-white/10 text-xs font-mono text-slate-300">
-                <p className="text-slate-300">3 published editorial guides online.</p>
-              </div>
-            </div>
-          )}
-
-          {activeSection === "stories" && (
-            <div className="bg-[#141824]/90 border border-white/10 rounded-3xl p-8 space-y-4 shadow-2xl">
-              <div className="flex items-center gap-3">
-                <MessageSquareQuote className="w-6 h-6 text-[#E04F33]" />
-                <h2 className="text-xl font-bold text-white font-heading">
-                  Success Stories & Reviews
-                </h2>
-              </div>
-              <p className="text-xs text-slate-400">
-                Manage verified investor testimonials and customer review highlights.
-              </p>
-              <div className="p-6 rounded-2xl bg-white/5 border border-white/10 text-xs font-mono text-slate-300">
-                <p className="text-slate-300">12 verified testimonials active.</p>
-              </div>
-            </div>
-          )}
+          {activeSection === "leads_bookings" && <AdminLeadsManager />}
+          {activeSection === "blogs" && <AdminBlogManager />}
+          {activeSection === "stories" && <AdminStoriesManager />}
 
           {activeSection === "settings" && (
             <div className="bg-[#141824]/90 border border-white/10 rounded-3xl p-8 space-y-4 shadow-2xl">
               <div className="flex items-center gap-3">
                 <Settings className="w-6 h-6 text-[#E04F33]" />
                 <h2 className="text-xl font-bold text-white font-heading">
-                  Platform Settings & API Keys
+                  Platform Settings &amp; API Keys
                 </h2>
               </div>
               <p className="text-xs text-slate-400">
                 Configure global service fees, API credentials, and portal notifications.
               </p>
-              <div className="p-6 rounded-2xl bg-white/5 border border-white/10 text-xs font-mono text-slate-300">
-                <p className="text-emerald-400 font-bold mb-1">✓ Django DRF REST API Connected</p>
+              <div className="p-6 rounded-2xl bg-white/5 border border-white/10 text-xs font-mono text-slate-300 space-y-2">
+                <p className="text-emerald-400 font-bold">✓ Django DRF REST API Connected</p>
                 <p className="text-slate-400">Host: http://127.0.0.1:8000</p>
+                <p className="text-slate-400">DB: Supabase (PostGIS)</p>
               </div>
             </div>
           )}

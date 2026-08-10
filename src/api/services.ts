@@ -15,9 +15,17 @@ import type {
   DashboardResponse,
 } from "../types/database";
 
-function extractArray<T>(res: any): T[] {
+function extractArray<T>(res: any, context = "unknown endpoint"): T[] {
   if (Array.isArray(res)) return res;
-  if (res && Array.isArray(res.results)) return res.results;
+  if (res && typeof res === "object") {
+    for (const key of ["results", "data", "items", "properties", "bookings", "favorites"]) {
+      if (Array.isArray(res[key])) return res[key];
+    }
+  }
+  // Nothing matched — log the actual shape instead of silently returning
+  // an empty list, so this is debuggable instead of "no properties, no
+  // error, no clue why."
+  console.error(`[extractArray] ${context}: expected an array or a known wrapper key, got:`, res);
   return [];
 }
 
@@ -168,7 +176,6 @@ export interface PropertyFilters {
   radius_km?: number;
 }
 
-
 export const propertyService = {
   async getProperties(
     filters?: PropertyFilters,
@@ -179,7 +186,7 @@ export const propertyService = {
       params: filters,
       ...opts,
     });
-    return extractArray<Property>(res);
+    return extractArray<Property>(res, "GET /api/properties/");
   },
 
   async getPropertyById(
@@ -250,7 +257,7 @@ export const propertyService = {
       method: "GET",
       ...opts,
     });
-    return extractArray<Property>(res);
+    return extractArray<Property>(res, `GET /api/properties/${id}/similar/`);
   },
 };
 
@@ -290,7 +297,7 @@ export const bookingService = {
       method: "GET",
       ...opts,
     });
-    return extractArray<Booking>(res);
+    return extractArray<Booking>(res, "GET /api/me/bookings/");
   },
 
   async createPaymentIntent(
@@ -330,7 +337,7 @@ export const favoriteService = {
       method: "GET",
       ...opts,
     });
-    return extractArray<Favorite>(res);
+    return extractArray<Favorite>(res, "GET /api/me/favorites/");
   },
 };
 
@@ -369,7 +376,7 @@ export const adminService = {
       method: "GET",
       ...opts,
     });
-    return extractArray<User>(res);
+    return extractArray<User>(res, "GET /api/admin/users/");
   },
 
   async getBookings(opts?: RequestOpts): Promise<Booking[]> {
@@ -377,7 +384,7 @@ export const adminService = {
       method: "GET",
       ...opts,
     });
-    return extractArray<Booking>(res);
+    return extractArray<Booking>(res, "GET /api/admin/bookings/");
   },
 
   async getLeads(opts?: RequestOpts): Promise<LeadPayload[]> {
@@ -385,6 +392,6 @@ export const adminService = {
       method: "GET",
       ...opts,
     });
-    return extractArray<LeadPayload>(res);
+    return extractArray<LeadPayload>(res, "GET /api/admin/leads/");
   },
 };
