@@ -3,6 +3,7 @@ import {
   setAccessToken,
   getRefreshToken,
   setRefreshToken,
+  clearAllTokens,
 } from "./token-store";
 
 const isBrowser = typeof window !== "undefined";
@@ -152,8 +153,7 @@ export async function refreshAccessToken(): Promise<string | null> {
         });
 
         if (!response.ok) {
-          setAccessToken(null);
-          setRefreshToken(null);
+          clearAllTokens();
           return null;
         }
 
@@ -166,8 +166,7 @@ export async function refreshAccessToken(): Promise<string | null> {
         }
         return newToken ?? null;
       } catch {
-        setAccessToken(null);
-        setRefreshToken(null);
+        clearAllTokens();
         return null;
       } finally {
         refreshPromise = null;

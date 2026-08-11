@@ -14,25 +14,37 @@ import type {
   LeadPayload,
   DashboardResponse,
 } from "../types/database";
+import { PlatformListing } from "../dealsData";
 
 function extractArray<T>(res: any, context = "unknown endpoint"): T[] {
   if (Array.isArray(res)) return res;
   if (res && typeof res === "object") {
-    for (const key of ["results", "data", "items", "properties", "bookings", "favorites"]) {
+    for (const key of [
+      "results",
+      "data",
+      "items",
+      "properties",
+      "bookings",
+      "favorites",
+    ]) {
       if (Array.isArray(res[key])) return res[key];
     }
   }
   // Nothing matched — log the actual shape instead of silently returning
   // an empty list, so this is debuggable instead of "no properties, no
   // error, no clue why."
-  console.error(`[extractArray] ${context}: expected an array or a known wrapper key, got:`, res);
+  console.error(
+    `[extractArray] ${context}: expected an array or a known wrapper key, got:`,
+    res,
+  );
   return [];
 }
 
 export type PropertyPayload = Omit<
   Property,
   "id" | "created_at" | "updated_at" | "owner"
->;
+> & { listings?: PlatformListing[] };
+
 type RequestOpts = Pick<
   ApiRequestOptions,
   "signal" | "timeoutMs" | "onSessionExpired"
@@ -60,14 +72,15 @@ export const authService = {
       email: credentials.email || identifier,
       password: credentials.password,
     };
-    const response = await apiClient<{ access: string; refresh?: string; user: User }>(
-      "/api/login/",
-      {
-        method: "POST",
-        body: JSON.stringify(payload),
-        ...opts,
-      },
-    );
+    const response = await apiClient<{
+      access: string;
+      refresh?: string;
+      user: User;
+    }>("/api/login/", {
+      method: "POST",
+      body: JSON.stringify(payload),
+      ...opts,
+    });
     setAccessToken(response.access);
     if (response.refresh) {
       setRefreshToken(response.refresh);
@@ -115,17 +128,24 @@ export const authService = {
   },
 
   async register(
-    data: { username: string; email?: string; password: string; first_name?: string; last_name?: string },
+    data: {
+      username: string;
+      email?: string;
+      password: string;
+      first_name?: string;
+      last_name?: string;
+    },
     opts?: RequestOpts,
   ): Promise<User> {
-    const response = await apiClient<{ access: string; refresh?: string; user: User }>(
-      "/api/register/",
-      {
-        method: "POST",
-        body: JSON.stringify(data),
-        ...opts,
-      },
-    );
+    const response = await apiClient<{
+      access: string;
+      refresh?: string;
+      user: User;
+    }>("/api/register/", {
+      method: "POST",
+      body: JSON.stringify(data),
+      ...opts,
+    });
     if (response.access) {
       setAccessToken(response.access);
     }
@@ -222,10 +242,7 @@ export const propertyService = {
     });
   },
 
-  async deleteProperty(
-    id: string | number,
-    opts?: RequestOpts,
-  ): Promise<void> {
+  async deleteProperty(id: string | number, opts?: RequestOpts): Promise<void> {
     return apiClient<void>(`/api/properties/${id}/`, {
       method: "DELETE",
       ...opts,
@@ -304,10 +321,13 @@ export const bookingService = {
     bookingId: string | number,
     opts?: RequestOpts,
   ): Promise<{ clientSecret: string }> {
-    return apiClient<{ clientSecret: string }>(`/api/bookings/${bookingId}/payment-intent/`, {
-      method: "POST",
-      ...opts,
-    });
+    return apiClient<{ clientSecret: string }>(
+      `/api/bookings/${bookingId}/payment-intent/`,
+      {
+        method: "POST",
+        ...opts,
+      },
+    );
   },
 };
 

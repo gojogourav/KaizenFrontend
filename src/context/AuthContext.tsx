@@ -74,8 +74,19 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
       }
     })();
 
+    // When the refresh token is rejected (401 on /api/token/refresh/),
+    // http.ts fires this event — we react by clearing user state.
+    const handleSessionExpired = () => {
+      if (!cancelled) {
+        setUser(null);
+        setFavorites([]);
+      }
+    };
+    window.addEventListener("kaizen:session-expired", handleSessionExpired);
+
     return () => {
       cancelled = true;
+      window.removeEventListener("kaizen:session-expired", handleSessionExpired);
     };
   }, [loadFavorites]);
 

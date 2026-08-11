@@ -11,10 +11,16 @@ export interface User {
   is_superuser?: boolean;
 }
 
+export interface PlatformListing {
+  platform: string;
+  url: string;
+  isActive: boolean;
+}
+
 export interface PropertyListing {
   platform: string;
   isActive: boolean;
-  url?: string;
+  url: string;
 }
 
 export interface Property {
@@ -33,7 +39,7 @@ export interface Property {
   squareFeet?: string | number;
   furnished?: 'Yes' | 'No' | string;
   status?: 'AVAILABLE' | 'OCCUPIED' | 'UNDER CONTRACT' | 'UNDER REVIEW' | 'MAINTENANCE' | string;
-  listings?: PropertyListing[];
+  listings?: PlatformListing[];
   owner?: string | number;
   created_at?: string;
   updated_at?: string;

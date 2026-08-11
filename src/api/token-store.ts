@@ -44,3 +44,18 @@ export const setRefreshToken = (token: string | null): void => {
     }
   }
 };
+
+/**
+ * Wipes all stored tokens from memory and localStorage.
+ * Also dispatches a "kaizen:session-expired" event so AuthContext can
+ * react and clear the user state without a page reload.
+ */
+export const clearAllTokens = (): void => {
+  accessToken = null;
+  refreshToken = null;
+  if (typeof window !== "undefined") {
+    localStorage.removeItem(ACCESS_TOKEN_KEY);
+    localStorage.removeItem(REFRESH_TOKEN_KEY);
+    window.dispatchEvent(new CustomEvent("kaizen:session-expired"));
+  }
+};
