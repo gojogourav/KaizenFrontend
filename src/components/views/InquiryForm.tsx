@@ -1,4 +1,5 @@
 import React from "react";
+import { motion, AnimatePresence } from "motion/react";
 import { Send, CheckCircle2 } from "lucide-react";
 import { useInquiryForm } from "../../hooks/useInquiryForm";
 
@@ -8,10 +9,20 @@ export const InquiryForm: React.FC = () => {
 
   if (submitted) {
     return (
-      <div className="p-8 text-center space-y-4">
-        <div className="w-12 h-12 bg-emerald-100 dark:bg-emerald-950 text-emerald-600 dark:text-emerald-400 rounded-full flex items-center justify-center mx-auto border border-emerald-300 dark:border-emerald-500/40">
+      <motion.div
+        initial={{ opacity: 0, scale: 0.95 }}
+        animate={{ opacity: 1, scale: 1 }}
+        transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
+        className="p-8 text-center space-y-4"
+      >
+        <motion.div
+          initial={{ scale: 0.5, opacity: 0 }}
+          animate={{ scale: 1, opacity: 1 }}
+          transition={{ type: "spring", stiffness: 300, damping: 16, delay: 0.1 }}
+          className="w-12 h-12 bg-emerald-100 dark:bg-emerald-950 text-emerald-600 dark:text-emerald-400 rounded-full flex items-center justify-center mx-auto border border-emerald-300 dark:border-emerald-500/40"
+        >
           <CheckCircle2 className="w-6 h-6" aria-hidden="true" />
-        </div>
+        </motion.div>
         <h4 className="text-lg font-bold text-slate-900 dark:text-white">
           Inquiry Received
         </h4>
@@ -19,13 +30,15 @@ export const InquiryForm: React.FC = () => {
           Thank you! Our property acquisition specialist will review your
           request and reach out shortly.
         </p>
-        <button
+        <motion.button
+          whileHover={{ scale: 1.03 }}
+          whileTap={{ scale: 0.97 }}
           onClick={reset}
           className="mt-4 px-4 py-2 bg-slate-200 dark:bg-white/10 hover:bg-slate-300 dark:hover:bg-white/20 text-slate-900 dark:text-white rounded-xl text-xs font-mono font-bold border border-slate-300 dark:border-white/20"
         >
           Submit Another Request
-        </button>
-      </div>
+        </motion.button>
+      </motion.div>
     );
   }
 
@@ -38,14 +51,20 @@ export const InquiryForm: React.FC = () => {
       className="space-y-4 text-xs"
       noValidate
     >
-      {error && (
-        <div
-          role="alert"
-          className="p-3 bg-rose-950/80 border border-rose-500/50 text-rose-200 rounded-xl text-xs font-medium"
-        >
-          {error}
-        </div>
-      )}
+      <AnimatePresence>
+        {error && (
+          <motion.div
+            initial={{ opacity: 0, y: -8, height: 0 }}
+            animate={{ opacity: 1, y: 0, height: "auto" }}
+            exit={{ opacity: 0, y: -8, height: 0 }}
+            transition={{ duration: 0.25 }}
+            role="alert"
+            className="p-3 bg-rose-950/80 border border-rose-500/50 text-rose-200 rounded-xl text-xs font-medium overflow-hidden"
+          >
+            {error}
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div>
@@ -61,7 +80,7 @@ export const InquiryForm: React.FC = () => {
             required
             value={form.name}
             onChange={(e) => updateField("name", e.target.value)}
-            className="w-full px-3.5 py-2.5 bg-white dark:bg-[#141226] border border-slate-200 dark:border-white/10 rounded-xl text-slate-900 dark:text-white text-xs focus:outline-none focus:border-[#E04F33]"
+            className="w-full px-3.5 py-2.5 bg-white dark:bg-[#141226] border border-slate-200 dark:border-white/10 rounded-xl text-slate-900 dark:text-white text-xs focus:outline-none focus:border-[#E04F33] transition-colors"
           />
         </div>
         <div>
@@ -77,7 +96,7 @@ export const InquiryForm: React.FC = () => {
             required
             value={form.email}
             onChange={(e) => updateField("email", e.target.value)}
-            className="w-full px-3.5 py-2.5 bg-white dark:bg-[#141226] border border-slate-200 dark:border-white/10 rounded-xl text-slate-900 dark:text-white text-xs focus:outline-none focus:border-[#E04F33]"
+            className="w-full px-3.5 py-2.5 bg-white dark:bg-[#141226] border border-slate-200 dark:border-white/10 rounded-xl text-slate-900 dark:text-white text-xs focus:outline-none focus:border-[#E04F33] transition-colors"
           />
         </div>
       </div>
@@ -94,7 +113,7 @@ export const InquiryForm: React.FC = () => {
             id="inq-intent"
             value={form.intent}
             onChange={(e) => updateField("intent", e.target.value)}
-            className="w-full px-3.5 py-2.5 bg-white dark:bg-[#141226] border border-slate-200 dark:border-white/10 rounded-xl text-slate-900 dark:text-white text-xs focus:outline-none focus:border-[#E04F33] font-mono"
+            className="w-full px-3.5 py-2.5 bg-white dark:bg-[#141226] border border-slate-200 dark:border-white/10 rounded-xl text-slate-900 dark:text-white text-xs focus:outline-none focus:border-[#E04F33] font-mono transition-colors"
           >
             <option value="Acquire Turnkey Lease Deal">
               Acquire Turnkey Lease Deal
@@ -121,7 +140,7 @@ export const InquiryForm: React.FC = () => {
             id="inq-market"
             value={form.preferredMarket}
             onChange={(e) => updateField("preferredMarket", e.target.value)}
-            className="w-full px-3.5 py-2.5 bg-white dark:bg-[#141226] border border-slate-200 dark:border-white/10 rounded-xl text-slate-900 dark:text-white text-xs focus:outline-none focus:border-[#E04F33] font-mono"
+            className="w-full px-3.5 py-2.5 bg-white dark:bg-[#141226] border border-slate-200 dark:border-white/10 rounded-xl text-slate-900 dark:text-white text-xs focus:outline-none focus:border-[#E04F33] font-mono transition-colors"
           >
             <option value="Pensacola, FL">Pensacola, FL</option>
             <option value="Scottsdale, AZ">Scottsdale, AZ</option>
@@ -143,18 +162,20 @@ export const InquiryForm: React.FC = () => {
           rows={3}
           value={form.message}
           onChange={(e) => updateField("message", e.target.value)}
-          className="w-full px-3.5 py-2.5 bg-white dark:bg-[#141226] border border-slate-200 dark:border-white/10 rounded-xl text-slate-900 dark:text-white text-xs focus:outline-none focus:border-[#E04F33]"
+          className="w-full px-3.5 py-2.5 bg-white dark:bg-[#141226] border border-slate-200 dark:border-white/10 rounded-xl text-slate-900 dark:text-white text-xs focus:outline-none focus:border-[#E04F33] transition-colors"
         />
       </div>
 
-      <button
+      <motion.button
+        whileHover={{ scale: submitting ? 1 : 1.02 }}
+        whileTap={{ scale: submitting ? 1 : 0.98 }}
         type="submit"
         disabled={submitting}
-        className="w-full py-3 bg-[#E04F33] hover:bg-[#ED5B3F] text-white font-bold rounded-xl text-xs uppercase tracking-wider transition-all shadow-lg shadow-[#E04F33]/25 flex items-center justify-center gap-2 font-mono disabled:opacity-50"
+        className="w-full py-3 bg-[#E04F33] hover:bg-[#ED5B3F] text-white font-bold rounded-xl text-xs uppercase tracking-wider shadow-lg shadow-[#E04F33]/25 flex items-center justify-center gap-2 font-mono disabled:opacity-50"
       >
         <Send className="w-4 h-4" aria-hidden="true" />
         {submitting ? "Submitting…" : "Submit Acquisition Inquiry"}
-      </button>
+      </motion.button>
     </form>
   );
 };

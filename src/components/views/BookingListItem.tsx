@@ -1,4 +1,5 @@
 import React from "react";
+import { motion } from "motion/react";
 import { Clock, CheckCircle2, XCircle } from "lucide-react";
 import { StatusBadge } from "../common/StatusBadge";
 import type { Booking } from "../../types/database";
@@ -19,7 +20,11 @@ export const BookingListItem: React.FC<{ booking: Booking }> = ({
     : "";
 
   return (
-    <article className="bg-white/80 dark:bg-white/5 backdrop-blur-2xl rounded-3xl border border-slate-200/80 dark:border-white/10 p-6 shadow-xl flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
+    <motion.article
+      whileHover={{ y: -3 }}
+      transition={{ type: "spring", stiffness: 320, damping: 26 }}
+      className="bg-white/80 dark:bg-white/5 backdrop-blur-2xl rounded-3xl border border-slate-200/80 dark:border-white/10 hover:border-slate-300 dark:hover:border-white/20 p-6 shadow-xl flex flex-col md:flex-row items-start md:items-center justify-between gap-6"
+    >
       <div className="space-y-1">
         <div className="flex items-center gap-3">
           <span className="text-xs font-bold font-mono text-[#E04F33] dark:text-[#FF8A73] bg-[#E04F33]/10 dark:bg-white/10 px-3 py-1 rounded-full border border-[#E04F33]/20 dark:border-white/15">
@@ -44,11 +49,15 @@ export const BookingListItem: React.FC<{ booking: Booking }> = ({
           </p>
         )}
         {state === "LOCKED" && (
-          <p className="text-amber-600 dark:text-amber-300 font-bold">
+          <motion.p
+            animate={{ opacity: [1, 0.5, 1] }}
+            transition={{ duration: 1.8, repeat: Infinity, ease: "easeInOut" }}
+            className="text-amber-600 dark:text-amber-300 font-bold"
+          >
             Hold session active
-          </p>
+          </motion.p>
         )}
       </div>
-    </article>
+    </motion.article>
   );
 };

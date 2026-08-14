@@ -14,10 +14,6 @@ import type {
 import type { ApiRequestOptions } from "./http";
 import type { User, LeadPayload } from "../types/database";
 
-// Every method below forwards opts (signal, timeoutMs, onSessionExpired) to
-// its service call. Dropping it silently — as this file used to — means an
-// AbortController passed from a component's useAsync never actually
-// cancels the underlying fetch; it just gets ignored.
 type RequestOpts = Pick<
   ApiRequestOptions,
   "signal" | "timeoutMs" | "onSessionExpired"

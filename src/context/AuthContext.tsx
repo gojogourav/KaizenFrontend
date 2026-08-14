@@ -26,7 +26,7 @@ interface AuthContextValue {
   favorites: Favorite[];
   favoritesLoading: boolean;
   isFavorite: (propertyId: string | number) => boolean;
-  toggleFavorite: (propertyId: string | number) => Promise<void>;
+  toggleFavorite: (propertyId: string | number, propertySnapshot?: any) => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextValue | null>(null);
@@ -86,7 +86,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
 
     return () => {
       cancelled = true;
-      window.removeEventListener("kaizen:session-expired", handleSessionExpired);
+      window.removeEventListener(
+        "kaizen:session-expired",
+        handleSessionExpired,
+      );
     };
   }, [loadFavorites]);
 
@@ -124,26 +127,52 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
 
   const isFavorite = useCallback(
     (propertyId: string | number) =>
-      favorites.some((f) => f.property.id === propertyId),
+      favorites.some((f) => String(f.property.id) === String(propertyId)),
     [favorites],
   );
 
   const toggleFavorite = useCallback(
-    async (propertyId: string | number) => {
+    async (propertyId: string | number, propertySnapshot?: any) => {
       const currentlyFavorite = favorites.some(
-        (f) => f.property.id === propertyId,
+        (f) => String(f.property.id) === String(propertyId),
       );
+
       if (currentlyFavorite) {
-        await api.removeFavorite(propertyId);
+        const snapshot = favorites;
         setFavorites((prev) =>
-          prev.filter((f) => f.property.id !== propertyId),
+          prev.filter((f) => String(f.property.id) !== String(propertyId)),
         );
+        try {
+          await api.removeFavorite(propertyId);
+        } catch (err) {
+          console.error("Failed to remove favorite:", err);
+          setFavorites(snapshot); // rollback
+        }
       } else {
-        const created = await api.addFavorite(propertyId);
-        setFavorites((prev) => [...prev, created]);
+        const snapshot = favorites;
+        const optimisticEntry = {
+          id: `temp-${propertyId}`,
+          property: propertySnapshot ?? { id: propertyId },
+          created_at: new Date().toISOString(),
+        } as any;
+        setFavorites((prev) => [...prev, optimisticEntry]); // instant heart fill
+
+        try {
+          const created = await api.addFavorite(propertyId);
+          if (created && typeof created === "object" && "property" in created) {
+            setFavorites((prev) =>
+              prev.map((f) => (f.id === optimisticEntry.id ? created : f)),
+            );
+          } else {
+            await loadFavorites(); // backend said "already favorited" — resync
+          }
+        } catch (err) {
+          console.error("Failed to add favorite:", err);
+          setFavorites(snapshot); // rollback
+        }
       }
     },
-    [favorites],
+    [favorites, loadFavorites],
   );
 
   const value = useMemo(

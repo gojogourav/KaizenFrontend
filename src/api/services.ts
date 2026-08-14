@@ -14,7 +14,13 @@ import type {
   LeadPayload,
   DashboardResponse,
 } from "../types/database";
-import { PlatformListing } from "../dealsData";
+
+export interface PlatformListing {
+  platform: 'Airbnb' | 'Vrbo' | 'Booking.com' | 'Zillow' | 'Direct Website' | 'Custom' | string;
+  url: string;
+  isActive: boolean;
+}
+
 
 function extractArray<T>(res: any, context = "unknown endpoint"): T[] {
   if (Array.isArray(res)) return res;
@@ -30,9 +36,6 @@ function extractArray<T>(res: any, context = "unknown endpoint"): T[] {
       if (Array.isArray(res[key])) return res[key];
     }
   }
-  // Nothing matched — log the actual shape instead of silently returning
-  // an empty list, so this is debuggable instead of "no properties, no
-  // error, no clue why."
   console.error(
     `[extractArray] ${context}: expected an array or a known wrapper key, got:`,
     res,

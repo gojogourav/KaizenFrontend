@@ -301,9 +301,9 @@ async function startServer() {
     const isHardcodedAdmin = (inputUser === 'admin' || inputUser === 'admin@kaizen.com') && (password === 'admin123' || password === 'kaizen2026' || password === 'admin');
     const isAdmin = isHardcodedAdmin || inputUser.includes('admin');
     const userEmail = isAdmin ? 'admin@kaizen.com' : (inputUser.includes('@') ? inputUser : `${inputUser || 'shaktisahoo24'}@gmail.com`);
-    
+
     // Find or create user
-    let userId = Object.keys(BACKEND_USERS).find(id => 
+    let userId = Object.keys(BACKEND_USERS).find(id =>
       BACKEND_USERS[id].email.toLowerCase() === userEmail || (isAdmin && BACKEND_USERS[id].role === 'ADMIN')
     );
 
@@ -432,12 +432,12 @@ async function startServer() {
   // SEARCH API ENDPOINT (Existing & expanded)
   app.post("/api/properties/search", (req, res) => {
     const { location = '', statusFilter = 'ALL' } = req.body || {};
-    
+
     setTimeout(() => {
       const locQuery = (location || '').toLowerCase().trim();
 
       const filtered = BACKEND_DEALS.filter((deal) => {
-        const matchesLoc = !locQuery || 
+        const matchesLoc = !locQuery ||
           deal.location.toLowerCase().includes(locQuery) ||
           deal.title.toLowerCase().includes(locQuery) ||
           deal.description.toLowerCase().includes(locQuery);

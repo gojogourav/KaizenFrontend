@@ -1,15 +1,30 @@
 import React from "react";
+import { motion } from "motion/react";
 import { StatusBadge } from "../common/StatusBadge";
 import type { Booking } from "../../types/database";
+
+const rowContainer = {
+  hidden: {},
+  visible: { transition: { staggerChildren: 0.05 } },
+};
+
+const rowItem = {
+  hidden: { opacity: 0, x: -12 },
+  visible: { opacity: 1, x: 0, transition: { duration: 0.3, ease: [0.16, 1, 0.3, 1] } },
+};
 
 export const RecentBookingsTable: React.FC<{ bookings: Booking[] }> = ({
   bookings,
 }) => {
   if (bookings.length === 0) {
     return (
-      <p className="text-sm text-slate-500 dark:text-slate-400 py-6 text-center">
+      <motion.p
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        className="text-sm text-slate-500 dark:text-slate-400 py-6 text-center"
+      >
         No active lease locks recorded yet.
-      </p>
+      </motion.p>
     );
   }
 
@@ -36,10 +51,16 @@ export const RecentBookingsTable: React.FC<{ bookings: Booking[] }> = ({
             </th>
           </tr>
         </thead>
-        <tbody className="divide-y divide-slate-100 dark:divide-white/5">
+        <motion.tbody
+          variants={rowContainer}
+          initial="hidden"
+          animate="visible"
+          className="divide-y divide-slate-100 dark:divide-white/5"
+        >
           {bookings.map((b) => (
-            <tr
+            <motion.tr
               key={b.id}
+              variants={rowItem}
               className="hover:bg-slate-50 dark:hover:bg-white/5 transition-colors"
             >
               <td className="py-3 px-2 font-mono text-[#E04F33] dark:text-[#FF8A73]">
@@ -61,9 +82,9 @@ export const RecentBookingsTable: React.FC<{ bookings: Booking[] }> = ({
               <td className="py-3 px-2">
                 <StatusBadge status={b.state} />
               </td>
-            </tr>
+            </motion.tr>
           ))}
-        </tbody>
+        </motion.tbody>
       </table>
     </div>
   );

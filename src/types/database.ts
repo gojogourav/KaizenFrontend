@@ -59,6 +59,8 @@ export interface Favorite {
   id: string | number;
   property: Property;
   created_at: string;
+  toggleFavorite: (propertyId: string | number, propertySnapshot?: Partial<Property>) => Promise<void>;
+  media: string;
 }
 
 export interface LeadPayload {
