@@ -7,18 +7,27 @@ import type { PropertyFilters } from "../../api/services";
 
 interface PropertiesViewProps {
   onOpenProspectus: (property: Property) => void;
-  triggerNotification: (message: string, type?: "success" | "info" | "error") => void;
 }
 
 export const PropertiesView: React.FC<PropertiesViewProps> = ({ onOpenProspectus }) => {
   const [filters, setFilters] = useState<PropertyFilters>({});
 
   const handleSearch = (search: PropertySearchFilters) => {
+    let parsedCity = undefined;
+
+    if (search.location) {
+      parsedCity = search.location.split(',')[0].trim();
+    }
+
     setFilters((prev) => ({
       ...prev,
-      location: search.location || undefined,
-      checkIn: search.checkIn || undefined,
-      checkOut: search.checkOut || undefined,
+      city: parsedCity, // <--- Django expects 'city', NOT 'location'
+      check_in: search.checkIn || undefined,
+      check_out: search.checkOut || undefined,
+      bedrooms: search.bedrooms ? Number(search.bedrooms) : undefined,
+      min_rent: search.minRent ? Number(search.minRent) : undefined,
+      max_rent: search.maxRent ? Number(search.maxRent) : undefined,
+      sort: search.sort || undefined,
     } as PropertyFilters));
   };
 

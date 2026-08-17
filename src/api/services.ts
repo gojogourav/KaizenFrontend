@@ -15,10 +15,53 @@ import type {
   DashboardResponse,
 } from "../types/database";
 
+
 export interface PlatformListing {
-  platform: 'Airbnb' | 'Vrbo' | 'Booking.com' | 'Zillow' | 'Direct Website' | 'Custom' | string;
+  platform:
+    | "Airbnb"
+    | "Vrbo"
+    | "Booking.com"
+    | "Zillow"
+    | "Direct Website"
+    | "Custom"
+    | string;
   url: string;
   isActive: boolean;
+}
+
+export interface PropertyFilters {
+  [key: string]: string | number | boolean | undefined | null;
+  city?: string;
+  state?: string;
+  lat?: number;
+  lng?: number;
+  radius_km?: number;
+  bedrooms?: number;
+  bathrooms?: number;
+  min_rent?: number;
+  max_rent?: number;
+  check_in?: string;
+  check_out?: string;
+  status?: string;
+  sort?: "newest" | "rent_low" | "rent_high" | "profit";
+  search?: string;
+  property_type?: string;
+}
+
+export type PropertyPayload = Omit<
+  Property,
+  "id" | "created_at" | "updated_at" | "owner"
+> & { listings?: PlatformListing[] };
+
+type RequestOpts = Pick<
+  ApiRequestOptions,
+  "signal" | "timeoutMs" | "onSessionExpired"
+>;
+
+export interface LoginCredentials {
+  email?: string;
+  username?: string;
+  password: string;
 }
 
 
@@ -43,27 +86,9 @@ function extractArray<T>(res: any, context = "unknown endpoint"): T[] {
   return [];
 }
 
-export type PropertyPayload = Omit<
-  Property,
-  "id" | "created_at" | "updated_at" | "owner"
-> & { listings?: PlatformListing[] };
-
-type RequestOpts = Pick<
-  ApiRequestOptions,
-  "signal" | "timeoutMs" | "onSessionExpired"
->;
-
-export interface LoginCredentials {
-  email?: string;
-  username?: string;
-  password: string;
-}
 
 export const authService = {
-  async login(
-    credentials: LoginCredentials,
-    opts?: RequestOpts,
-  ): Promise<User> {
+  async login(credentials: LoginCredentials, opts?: RequestOpts): Promise<User> {
     const identifier = credentials.username || credentials.email;
     if (!credentials.password || !identifier) {
       throw new Error(
@@ -85,9 +110,7 @@ export const authService = {
       ...opts,
     });
     setAccessToken(response.access);
-    if (response.refresh) {
-      setRefreshToken(response.refresh);
-    }
+    if (response.refresh) setRefreshToken(response.refresh);
     return response.user;
   },
 
@@ -112,7 +135,7 @@ export const authService = {
         await apiClient<User>("/api/me/", { method: "GET" });
         return true;
       } catch {
-        // Token might be expired, fall through to refresh
+        // Token might be expired — fall through to refresh
       }
     }
     return (await refreshAccessToken()) !== null;
@@ -149,12 +172,8 @@ export const authService = {
       body: JSON.stringify(data),
       ...opts,
     });
-    if (response.access) {
-      setAccessToken(response.access);
-    }
-    if (response.refresh) {
-      setRefreshToken(response.refresh);
-    }
+    if (response.access) setAccessToken(response.access);
+    if (response.refresh) setRefreshToken(response.refresh);
     return response.user || (response as unknown as User);
   },
 
@@ -180,26 +199,14 @@ export const authService = {
     return apiClient<User>("/api/me/avatar/", {
       method: "POST",
       body: formData,
-      headers: {
-        "Content-Type": "multipart/form-data",
-      },
       ...opts,
     });
   },
 };
 
-export interface PropertyFilters {
-  [key: string]: string | number | boolean | undefined | null;
-  city?: string;
-  status?: string;
-  property_type?: string;
-  search?: string;
-  lat?: number;
-  lng?: number;
-  radius_km?: number;
-}
 
 export const propertyService = {
+
   async getProperties(
     filters?: PropertyFilters,
     opts?: RequestOpts,
@@ -212,11 +219,60 @@ export const propertyService = {
     return extractArray<Property>(res, "GET /api/properties/");
   },
 
+  async searchProperties(
+    filters?: PropertyFilters,
+    opts?: RequestOpts,
+  ): Promise<Property[]> {
+    const params: Record<string, any> = {};
+    if (filters?.city)       params.city       = filters.city;
+    if (filters?.state)      params.state      = filters.state;
+    if (filters?.lat)        params.lat        = filters.lat;
+    if (filters?.lng)        params.lng        = filters.lng;
+    if (filters?.radius_km)  params.radius_km  = filters.radius_km;
+    if (filters?.bedrooms)   params.bedrooms   = filters.bedrooms;
+    if (filters?.bathrooms)  params.bathrooms  = filters.bathrooms;
+    if (filters?.min_rent)   params.min_rent   = filters.min_rent;
+    if (filters?.max_rent)   params.max_rent   = filters.max_rent;
+    if (filters?.check_in)   params.check_in   = filters.check_in;
+    if (filters?.check_out)  params.check_out  = filters.check_out;
+    if (filters?.status)     params.status     = filters.status;
+    if (filters?.sort)       params.sort       = filters.sort;
+
+    const res = await apiClient<any>("/api/properties/search/", {
+      method: "GET",
+      params,
+      ...opts,
+    });
+    return extractArray<Property>(res, "GET /api/properties/search/");
+  },
+
   async getPropertyById(
     id: string | number,
     opts?: RequestOpts,
   ): Promise<Property> {
     return apiClient<Property>(`/api/properties/${id}/`, {
+      method: "GET",
+      ...opts,
+    });
+  },
+
+  async getSimilarProperties(
+    id: string | number,
+    opts?: RequestOpts,
+  ): Promise<Property[]> {
+    const res = await apiClient<any>(`/api/properties/${id}/similar/`, {
+      method: "GET",
+      ...opts,
+    });
+    return extractArray<Property>(res, `GET /api/properties/${id}/similar/`);
+  },
+
+
+  async getAvailability(
+    id: string | number,
+    opts?: RequestOpts,
+  ): Promise<{ property_id: number; booked_ranges: { check_in: string; check_out: string }[] }> {
+    return apiClient(`/api/properties/${id}/availability/`, {
       method: "GET",
       ...opts,
     });
@@ -262,35 +318,49 @@ export const propertyService = {
     return apiClient<Property>(`/api/properties/${id}/images/`, {
       method: "POST",
       body: formData,
-      headers: {
-        "Content-Type": "multipart/form-data",
-      },
       ...opts,
     });
   },
 
-  async getSimilarProperties(
-    id: string | number,
+
+  async deletePropertyImage(
+    mediaId: string | number,
     opts?: RequestOpts,
-  ): Promise<Property[]> {
-    const res = await apiClient<any>(`/api/properties/${id}/similar/`, {
-      method: "GET",
+  ): Promise<void> {
+    return apiClient<void>(`/api/media/${mediaId}/`, {
+      method: "DELETE",
       ...opts,
     });
-    return extractArray<Property>(res, `GET /api/properties/${id}/similar/`);
   },
+
 };
 
+
 export const bookingService = {
+
   async lockProperty(
     propertyId: string | number,
+    data: { check_in?: string; check_out?: string },
     opts?: RequestOpts,
-  ): Promise<Booking> {
-    return apiClient<Booking>(`/api/properties/${propertyId}/lock/`, {
+  ): Promise<{ booking_id: number; status: string; check_in?: string; check_out?: string }> {
+    return apiClient(`/api/properties/${propertyId}/lock/`, {
+      method: "POST",
+      body: JSON.stringify(data),
+      ...opts,
+    });
+  },
+
+
+  async createPaymentIntent(
+    bookingId: string | number,
+    opts?: RequestOpts,
+  ): Promise<{ clientSecret: string; mock?: boolean }> {
+    return apiClient(`/api/bookings/${bookingId}/payment-intent/`, {
       method: "POST",
       ...opts,
     });
   },
+
 
   async purchaseBooking(
     bookingId: string | number,
@@ -301,6 +371,7 @@ export const bookingService = {
       ...opts,
     });
   },
+
 
   async cancelBooking(
     bookingId: string | number,
@@ -319,20 +390,8 @@ export const bookingService = {
     });
     return extractArray<Booking>(res, "GET /api/me/bookings/");
   },
-
-  async createPaymentIntent(
-    bookingId: string | number,
-    opts?: RequestOpts,
-  ): Promise<{ clientSecret: string }> {
-    return apiClient<{ clientSecret: string }>(
-      `/api/bookings/${bookingId}/payment-intent/`,
-      {
-        method: "POST",
-        ...opts,
-      },
-    );
-  },
 };
+
 
 export const favoriteService = {
   async addFavorite(
@@ -364,12 +423,13 @@ export const favoriteService = {
   },
 };
 
+
 export const leadService = {
   async submitLead(
     data: LeadPayload,
     opts?: RequestOpts,
   ): Promise<{ success: boolean; id: string | number; message?: string }> {
-    return apiClient("/api/leads", {
+    return apiClient("/api/leads/", {
       method: "POST",
       body: JSON.stringify(data),
       ...opts,
@@ -377,9 +437,10 @@ export const leadService = {
   },
 };
 
+
 export const dashboardService = {
   async getDashboard(opts?: RequestOpts): Promise<DashboardResponse> {
-    return apiClient<DashboardResponse>("/api/me/dashboard", {
+    return apiClient<DashboardResponse>("/api/me/dashboard/", {
       method: "GET",
       ...opts,
     });
@@ -392,6 +453,7 @@ export const dashboardService = {
     });
   },
 };
+
 
 export const adminService = {
   async getUsers(opts?: RequestOpts): Promise<User[]> {

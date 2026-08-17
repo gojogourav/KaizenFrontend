@@ -17,6 +17,7 @@ import {
   TrendingUp,
   Home,
   Wallet,
+  Upload,
 } from "lucide-react";
 import { z } from "zod";
 import { propertyService } from "../../api/services";
@@ -66,11 +67,7 @@ const API_TO_STATUS: Record<string, PropertyStatus> = {
 };
 
 type PropertyStatus =
-  | "AVAILABLE"
-  | "OCCUPIED"
-  | "UNDER CONTRACT"
-  | "MAINTENANCE"
-  | "UNDER REVIEW";
+  "AVAILABLE" | "OCCUPIED" | "UNDER CONTRACT" | "MAINTENANCE" | "UNDER REVIEW";
 
 const STATUS_TONE: Record<PropertyStatus, "success" | "neutral" | "warning"> = {
   AVAILABLE: "success",
@@ -100,6 +97,11 @@ interface PropertyItem {
   listings: PlatformListing[];
   lat: number | null;
   lng: number | null;
+  media: PropertyMediaItem[];
+}
+interface PropertyMediaItem {
+  id: string | number;
+  cdn_url: string;
 }
 
 interface FilterState {
@@ -164,32 +166,39 @@ const propertySchema = z.object({
 });
 
 // ── Small presentational helpers ────────────────────────────────────────────
-const MetricCard: React.FC<{ icon: React.ElementType; label: string; value: string; tone: string }> = ({
-  icon: Icon,
-  label,
-  value,
-  tone,
-}) => (
+const MetricCard: React.FC<{
+  icon: React.ElementType;
+  label: string;
+  value: string;
+  tone: string;
+}> = ({ icon: Icon, label, value, tone }) => (
   <div className="bg-white/5 p-4 rounded-xl border border-white/10">
     <div className="flex items-center gap-1.5 mb-1">
       <Icon className={`w-3 h-3 ${tone}`} />
-      <span className="text-[10px] text-slate-400 uppercase font-mono font-bold">{label}</span>
+      <span className="text-[10px] text-slate-400 uppercase font-mono font-bold">
+        {label}
+      </span>
     </div>
-    <span className={`text-xl sm:text-2xl font-black font-mono block ${tone}`}>{value}</span>
+    <span className={`text-xl sm:text-2xl font-black font-mono block ${tone}`}>
+      {value}
+    </span>
   </div>
 );
 
-const PropertyStatusToggle: React.FC<{ status: PropertyStatus; onClick: () => void }> = ({ status, onClick }) => (
+const PropertyStatusToggle: React.FC<{
+  status: PropertyStatus;
+  onClick: () => void;
+}> = ({ status, onClick }) => (
   <button onClick={onClick} className="transition-transform active:scale-95">
     <StatusPill tone={STATUS_TONE[status]}>{status}</StatusPill>
   </button>
 );
 
-const PlatformChip: React.FC<{ platform: string; isActive: boolean; onClick: () => void }> = ({
-  platform,
-  isActive,
-  onClick,
-}) => (
+const PlatformChip: React.FC<{
+  platform: string;
+  isActive: boolean;
+  onClick: () => void;
+}> = ({ platform, isActive, onClick }) => (
   <button
     onClick={onClick}
     className={`px-2 py-1 rounded-lg text-[9px] font-bold font-mono transition-all border ${
@@ -210,7 +219,9 @@ export const AdminPropertyManager: React.FC = () => {
   const [properties, setProperties] = useState<PropertyItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [showPropertyEditorModal, setShowPropertyEditorModal] = useState(false);
-  const [editingDealId, setEditingDealId] = useState<string | number | null>(null);
+  const [editingDealId, setEditingDealId] = useState<string | number | null>(
+    null,
+  );
   const [showMapPicker, setShowMapPicker] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
@@ -219,57 +230,76 @@ export const AdminPropertyManager: React.FC = () => {
   const [filters, setFilters] = useState<FilterState>({ ...DEFAULT_FILTERS });
   const [gpsLoading, setGpsLoading] = useState(false);
 
-  const loadPropertiesFromApi = useCallback(async (activeFilters?: FilterState) => {
-    const f = activeFilters ?? filters;
-    try {
-      setLoading(true);
+  const [imageFiles, setImageFiles] = useState<File[]>([]);
+  const [imagePreviews, setImagePreviews] = useState<string[]>([]);
+  const [uploadingImages, setUploadingImages] = useState(false);
 
-      const apiFilters: PropertyFilters = {};
+  const [existingMedia, setExistingMedia] = useState<PropertyMediaItem[]>([]);
+  const [deletingMediaId, setDeletingMediaId] = useState<string | number | null>(null);
 
-      if (f.city.trim()) apiFilters.city = f.city.trim();
-      if (f.status) apiFilters.status = STATUS_TO_API[f.status] ?? f.status;
-      if (f.sortBy === "nearest" && f.userLat != null && f.userLng != null) {
-        apiFilters.lat = f.userLat;
-        apiFilters.lng = f.userLng;
-        apiFilters.radius_km = 500;
+  const loadPropertiesFromApi = useCallback(
+    async (activeFilters?: FilterState) => {
+      const f = activeFilters ?? filters;
+      try {
+        setLoading(true);
+
+        const apiFilters: PropertyFilters = {};
+
+        if (f.city.trim()) apiFilters.city = f.city.trim();
+        if (f.status) apiFilters.status = STATUS_TO_API[f.status] ?? f.status;
+        if (f.sortBy === "nearest" && f.userLat != null && f.userLng != null) {
+          apiFilters.lat = f.userLat;
+          apiFilters.lng = f.userLng;
+          apiFilters.radius_km = 500;
+        }
+
+        const apiProps: any = await propertyService.getProperties(apiFilters);
+
+        const mapped: PropertyItem[] = (apiProps ?? []).map(
+          (p: any, idx: number) => {
+            const rent = p.rent_monthly ?? p.price ?? p.adr ?? 2400;
+            const profit =
+              p.net_profit_monthly ?? Math.round(Number(rent) * 0.75);
+            const mediaUrl = p.media?.[0]?.cdn_url ?? p.images?.[0] ?? "";
+            const rawStatus = (p.status ?? "active").toLowerCase();
+
+            return {
+              id: p.id,
+              title: p.title,
+              city: p.city || "Pensacola",
+              state: p.state || "FL",
+              location: `${p.city || "Pensacola"}, ${p.state || "FL"}`,
+              bedrooms: p.bedrooms ?? 3,
+              bathrooms: parseFloat(p.bathrooms ?? 2),
+              lat: p.lat ?? null,
+              lng: p.lng ?? null,
+              monthlyRent: `$${Number(rent).toLocaleString()}`,
+              netProfit: `~$${Number(profit).toLocaleString()}`,
+              occupancyEst: `${60 + (idx % 20)}%`,
+              status: API_TO_STATUS[rawStatus] ?? "AVAILABLE",
+              imageUrl: mediaUrl || FALLBACK_IMAGE,
+              description:
+                p.description ||
+                "Newly sourced luxury property in high-demand vacation district.",
+              listings: p.listings || [],
+              media: p.media || [],
+            };
+          },
+        );
+        setProperties(mapped);
+      } catch (error) {
+        console.error("Failed to load properties:", error);
+        toast.error(
+          "Couldn't load properties",
+          "Check your connection and try refreshing.",
+        );
+      } finally {
+        setLoading(false);
       }
-
-      const apiProps: any = await propertyService.getProperties(apiFilters);
-
-      const mapped: PropertyItem[] = (apiProps ?? []).map((p: any, idx: number) => {
-        const rent = p.rent_monthly ?? p.price ?? p.adr ?? 2400;
-        const profit = p.net_profit_monthly ?? Math.round(Number(rent) * 0.75);
-        const mediaUrl = p.media?.[0]?.cdn_url ?? p.images?.[0] ?? "";
-        const rawStatus = (p.status ?? "active").toLowerCase();
-
-        return {
-          id: p.id,
-          title: p.title,
-          city: p.city || "Pensacola",
-          state: p.state || "FL",
-          location: `${p.city || "Pensacola"}, ${p.state || "FL"}`,
-          bedrooms: p.bedrooms ?? 3,
-          bathrooms: parseFloat(p.bathrooms ?? 2),
-          lat: p.lat ?? null,
-          lng: p.lng ?? null,
-          monthlyRent: `$${Number(rent).toLocaleString()}`,
-          netProfit: `~$${Number(profit).toLocaleString()}`,
-          occupancyEst: `${60 + (idx % 20)}%`,
-          status: API_TO_STATUS[rawStatus] ?? "AVAILABLE",
-          imageUrl: mediaUrl || FALLBACK_IMAGE,
-          description: p.description || "Newly sourced luxury property in high-demand vacation district.",
-          listings: p.listings || [],
-        };
-      });
-      setProperties(mapped);
-    } catch (error) {
-      console.error("Failed to load properties:", error);
-      toast.error("Couldn't load properties", "Check your connection and try refreshing.");
-    } finally {
-      setLoading(false);
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [filters]);
+      // eslint-disable-next-line react-hooks/exhaustive-deps
+    },
+    [filters],
+  );
 
   useEffect(() => {
     loadPropertiesFromApi(filters);
@@ -278,7 +308,10 @@ export const AdminPropertyManager: React.FC = () => {
 
   const handleSortByNearest = () => {
     if (!navigator.geolocation) {
-      toast.error("Location unavailable", "Your browser doesn't support geolocation.");
+      toast.error(
+        "Location unavailable",
+        "Your browser doesn't support geolocation.",
+      );
       return;
     }
     setGpsLoading(true);
@@ -293,20 +326,31 @@ export const AdminPropertyManager: React.FC = () => {
         setGpsLoading(false);
       },
       () => {
-        toast.error("Couldn't get your location", "Location access was denied or timed out.");
+        toast.error(
+          "Couldn't get your location",
+          "Location access was denied or timed out.",
+        );
         setGpsLoading(false);
       },
       { enableHighAccuracy: true, timeout: 8000 },
     );
   };
 
-  const hasActiveFilters = filters.city || filters.status || filters.sortBy !== "default";
+  const hasActiveFilters =
+    filters.city || filters.status || filters.sortBy !== "default";
 
   const handleOpenCreateModal = () => {
     setEditingDealId(null);
     setFieldErrors({});
     setSubmitError(null);
     setAdminForm({ ...DEFAULT_FORM_STATE });
+    setImageFiles([]);
+    setImagePreviews([]);
+    setShowPropertyEditorModal(true);
+
+    setImageFiles([]);
+    setImagePreviews([]);
+    setExistingMedia([]);
     setShowPropertyEditorModal(true);
   };
 
@@ -330,13 +374,38 @@ export const AdminPropertyManager: React.FC = () => {
       description: item.description,
       listings: item.listings || [],
     });
+    setImageFiles([]);
+    setImagePreviews([]);
     setShowPropertyEditorModal(true);
+
+    setImageFiles([]);
+    setImagePreviews([]);
+    setExistingMedia(item.media || []);
+    setShowPropertyEditorModal(true);
+  };
+  const handleImageFilesSelected = (files: FileList | null) => {
+    if (!files) return;
+    const arr = Array.from(files);
+    setImageFiles((prev) => [...prev, ...arr]);
+    setImagePreviews((prev) => [
+      ...prev,
+      ...arr.map((f) => URL.createObjectURL(f)),
+    ]);
+  };
+
+  const handleRemoveImageFile = (idx: number) => {
+    setImageFiles((prev) => prev.filter((_, i) => i !== idx));
+    setImagePreviews((prev) => {
+      URL.revokeObjectURL(prev[idx]);
+      return prev.filter((_, i) => i !== idx);
+    });
   };
 
   const handleDeleteProperty = async (item: PropertyItem) => {
     const ok = await confirm({
       title: `Delete "${item.title}"?`,
-      description: "This removes the listing and its platform links permanently. This can't be undone.",
+      description:
+        "This removes the listing and its platform links permanently. This can't be undone.",
       confirmLabel: "Delete property",
       tone: "danger",
     });
@@ -369,8 +438,10 @@ export const AdminPropertyManager: React.FC = () => {
       return;
     }
 
-    const rentNum = parseFloat(adminForm.monthlyRent.replace(/[^0-9.]/g, "")) || 2400;
-    const profitNum = parseFloat(adminForm.netProfit.replace(/[^0-9.]/g, "")) || 1800;
+    const rentNum =
+      parseFloat(adminForm.monthlyRent.replace(/[^0-9.]/g, "")) || 2400;
+    const profitNum =
+      parseFloat(adminForm.netProfit.replace(/[^0-9.]/g, "")) || 1800;
 
     const payload: any = {
       title: adminForm.title,
@@ -392,27 +463,80 @@ export const AdminPropertyManager: React.FC = () => {
     };
 
     try {
+      let savedId: string | number | null = editingDealId;
+
       if (editingDealId) {
         await propertyService.updateProperty(editingDealId, payload);
         toast.success("Changes saved");
       } else {
-        await propertyService.createProperty(payload);
+        const created: any = await propertyService.createProperty(payload);
+        savedId = created.id;
         toast.success("Property created");
       }
+
+      if (imageFiles.length > 0 && savedId) {
+        setUploadingImages(true);
+        try {
+          await propertyService.uploadPropertyImages(savedId, imageFiles);
+          toast.success(
+            `Uploaded ${imageFiles.length} photo${imageFiles.length > 1 ? "s" : ""}`,
+          );
+        } catch (uploadErr: any) {
+          console.error("Image upload failed", uploadErr);
+          toast.error(
+            "Photos didn't upload",
+            uploadErr?.message ||
+              "Property was saved. Try uploading again from Edit.",
+          );
+        } finally {
+          setUploadingImages(false);
+        }
+      }
+
       setShowPropertyEditorModal(false);
       loadPropertiesFromApi();
     } catch (err: any) {
-      setSubmitError(err?.message || "Failed to save property. Please check inputs.");
+      setSubmitError(
+        err?.message || "Failed to save property. Please check inputs.",
+      );
     } finally {
       setSubmitting(false);
     }
   };
 
+  const handleDeleteExistingImage = async (mediaId: string | number) => {
+    const ok = await confirm({
+      title: "Delete this photo?",
+      description: "This removes it permanently from storage.",
+      confirmLabel: "Delete photo",
+      tone: "danger",
+    });
+    if (!ok) return;
+
+    setDeletingMediaId(mediaId);
+    try {
+      await propertyService.deletePropertyImage(mediaId);
+      setExistingMedia((prev) => prev.filter((m) => m.id !== mediaId));
+      toast.success("Photo deleted");
+    } catch (err: any) {
+      console.error("Delete image failed", err);
+      toast.error("Couldn't delete photo", err?.message);
+    } finally {
+      setDeletingMediaId(null);
+    }
+  };
+
   const handleToggleStatus = async (prop: PropertyItem) => {
     const nextDisplayStatus: PropertyStatus =
-      prop.status === "AVAILABLE" ? "OCCUPIED" : prop.status === "OCCUPIED" ? "UNDER CONTRACT" : "AVAILABLE";
+      prop.status === "AVAILABLE"
+        ? "OCCUPIED"
+        : prop.status === "OCCUPIED"
+          ? "UNDER CONTRACT"
+          : "AVAILABLE";
     try {
-      await propertyService.updateProperty(prop.id, { status: STATUS_TO_API[nextDisplayStatus] } as any);
+      await propertyService.updateProperty(prop.id, {
+        status: STATUS_TO_API[nextDisplayStatus],
+      } as any);
       toast.success(`Marked as ${nextDisplayStatus.toLowerCase()}`);
       loadPropertiesFromApi();
     } catch (err) {
@@ -421,7 +545,10 @@ export const AdminPropertyManager: React.FC = () => {
     }
   };
 
-  const handleToggleListingActive = async (dealId: string | number, platformIndex: number) => {
+  const handleToggleListingActive = async (
+    dealId: string | number,
+    platformIndex: number,
+  ) => {
     const prop = properties.find((p) => p.id === dealId);
     if (!prop) return;
 
@@ -430,7 +557,9 @@ export const AdminPropertyManager: React.FC = () => {
     );
 
     try {
-      await propertyService.updateProperty(dealId, { listings: updatedListings } as any);
+      await propertyService.updateProperty(dealId, {
+        listings: updatedListings,
+      } as any);
       loadPropertiesFromApi();
     } catch (err) {
       console.error("Listing toggle failed", err);
@@ -442,8 +571,14 @@ export const AdminPropertyManager: React.FC = () => {
     () => ({
       total: properties.length,
       available: properties.filter((d) => d.status === "AVAILABLE").length,
-      activeLinks: properties.reduce((acc, d) => acc + (d.listings?.filter((l) => l.isActive).length || 0), 0),
-      totalYield: properties.reduce((acc, d) => acc + (parseInt(d.netProfit.replace(/[^0-9]/g, "")) || 0), 0),
+      activeLinks: properties.reduce(
+        (acc, d) => acc + (d.listings?.filter((l) => l.isActive).length || 0),
+        0,
+      ),
+      totalYield: properties.reduce(
+        (acc, d) => acc + (parseInt(d.netProfit.replace(/[^0-9]/g, "")) || 0),
+        0,
+      ),
     }),
     [properties],
   );
@@ -463,13 +598,17 @@ export const AdminPropertyManager: React.FC = () => {
               Property Management Workspace
             </h1>
             <p className="text-slate-400 text-xs mt-1 max-w-xl leading-relaxed">
-              Manage luxury villa listings, specs, photo galleries, and platform booking links (Airbnb, Vrbo,
-              Booking.com, Zillow, Direct Site).
+              Manage luxury villa listings, specs, photo galleries, and platform
+              booking links (Airbnb, Vrbo, Booking.com, Zillow, Direct Site).
             </p>
           </div>
 
           <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5 sm:gap-3 w-full lg:w-auto">
-            <Button variant="ghost" icon={Download} className="w-full sm:w-auto">
+            <Button
+              variant="ghost"
+              icon={Download}
+              className="w-full sm:w-auto"
+            >
               Export schema
             </Button>
             <Button
@@ -480,17 +619,41 @@ export const AdminPropertyManager: React.FC = () => {
             >
               Refresh
             </Button>
-            <Button icon={Plus} onClick={handleOpenCreateModal} className="w-full sm:w-auto uppercase tracking-widest">
+            <Button
+              icon={Plus}
+              onClick={handleOpenCreateModal}
+              className="w-full sm:w-auto uppercase tracking-widest"
+            >
               Add property
             </Button>
           </div>
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mt-6 sm:mt-8 pt-6 border-t border-white/10">
-          <MetricCard icon={Home} label="Total Properties" value={`${metrics.total} Units`} tone="text-white" />
-          <MetricCard icon={Check} label="Active Listings" value={`${metrics.available} Available`} tone="text-emerald-400" />
-          <MetricCard icon={LinkIcon} label="Active Platform Links" value={`${metrics.activeLinks} Active`} tone="text-[#FF8A73]" />
-          <MetricCard icon={TrendingUp} label="Total Net Monthly Yield" value={`~$${metrics.totalYield.toLocaleString()}/mo`} tone="text-emerald-400" />
+          <MetricCard
+            icon={Home}
+            label="Total Properties"
+            value={`${metrics.total} Units`}
+            tone="text-white"
+          />
+          <MetricCard
+            icon={Check}
+            label="Active Listings"
+            value={`${metrics.available} Available`}
+            tone="text-emerald-400"
+          />
+          <MetricCard
+            icon={LinkIcon}
+            label="Active Platform Links"
+            value={`${metrics.activeLinks} Active`}
+            tone="text-[#FF8A73]"
+          />
+          <MetricCard
+            icon={TrendingUp}
+            label="Total Net Monthly Yield"
+            value={`~$${metrics.totalYield.toLocaleString()}/mo`}
+            tone="text-emerald-400"
+          />
         </div>
       </Panel>
 
@@ -503,10 +666,15 @@ export const AdminPropertyManager: React.FC = () => {
               Property Management
             </h3>
             <p className="text-xs text-slate-400 mt-0.5">
-              Toggle platform links, edit financial specs, or add new luxury listings.
+              Toggle platform links, edit financial specs, or add new luxury
+              listings.
             </p>
           </div>
-          <Button icon={Plus} onClick={handleOpenCreateModal} className="w-full sm:w-auto">
+          <Button
+            icon={Plus}
+            onClick={handleOpenCreateModal}
+            className="w-full sm:w-auto"
+          >
             Add property
           </Button>
         </div>
@@ -517,13 +685,17 @@ export const AdminPropertyManager: React.FC = () => {
             type="text"
             placeholder="Filter by city..."
             value={filters.city}
-            onChange={(e) => setFilters((prev) => ({ ...prev, city: e.target.value }))}
+            onChange={(e) =>
+              setFilters((prev) => ({ ...prev, city: e.target.value }))
+            }
             className="flex-1 min-w-[140px] px-3 py-2 bg-white/5 border border-white/10 rounded-xl text-white text-xs focus:outline-none focus:border-[#E04F33] font-mono placeholder:text-slate-500"
           />
 
           <select
             value={filters.status}
-            onChange={(e) => setFilters((prev) => ({ ...prev, status: e.target.value }))}
+            onChange={(e) =>
+              setFilters((prev) => ({ ...prev, status: e.target.value }))
+            }
             className="px-3 py-2 bg-[#0F1014] border border-white/10 rounded-xl text-white text-xs focus:outline-none focus:border-[#E04F33] font-mono"
           >
             <option value="">All Statuses</option>
@@ -537,7 +709,12 @@ export const AdminPropertyManager: React.FC = () => {
           <button
             onClick={() => {
               if (filters.sortBy === "nearest") {
-                setFilters((prev) => ({ ...prev, sortBy: "default", userLat: null, userLng: null }));
+                setFilters((prev) => ({
+                  ...prev,
+                  sortBy: "default",
+                  userLat: null,
+                  userLng: null,
+                }));
               } else {
                 handleSortByNearest();
               }
@@ -549,8 +726,14 @@ export const AdminPropertyManager: React.FC = () => {
                 : "bg-white/5 border-white/10 text-slate-300 hover:border-white/30"
             }`}
           >
-            {gpsLoading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Navigation className="w-3.5 h-3.5" />}
-            {filters.sortBy === "nearest" ? "Nearest first ✓" : "Sort by nearest"}
+            {gpsLoading ? (
+              <Loader2 className="w-3.5 h-3.5 animate-spin" />
+            ) : (
+              <Navigation className="w-3.5 h-3.5" />
+            )}
+            {filters.sortBy === "nearest"
+              ? "Nearest first ✓"
+              : "Sort by nearest"}
           </button>
 
           {hasActiveFilters && (
@@ -564,7 +747,8 @@ export const AdminPropertyManager: React.FC = () => {
 
           {filters.sortBy === "nearest" && filters.userLat != null && (
             <span className="text-[10px] text-slate-500 font-mono flex items-center gap-1">
-              <MapPin className="w-3 h-3" /> {filters.userLat.toFixed(2)}, {filters.userLng?.toFixed(2)}
+              <MapPin className="w-3 h-3" /> {filters.userLat.toFixed(2)},{" "}
+              {filters.userLng?.toFixed(2)}
             </span>
           )}
         </div>
@@ -577,46 +761,78 @@ export const AdminPropertyManager: React.FC = () => {
             <EmptyState
               icon={Building}
               title="No properties found"
-              hint={hasActiveFilters ? "Try clearing filters." : "Add your first luxury listing to get started."}
-              action={!hasActiveFilters ? <Button icon={Plus} onClick={handleOpenCreateModal}>Add property</Button> : undefined}
+              hint={
+                hasActiveFilters
+                  ? "Try clearing filters."
+                  : "Add your first luxury listing to get started."
+              }
+              action={
+                !hasActiveFilters ? (
+                  <Button icon={Plus} onClick={handleOpenCreateModal}>
+                    Add property
+                  </Button>
+                ) : undefined
+              }
             />
           ) : (
             properties.map((deal) => {
-              const activeCount = deal.listings?.filter((l) => l.isActive).length || 0;
+              const activeCount =
+                deal.listings?.filter((l) => l.isActive).length || 0;
               return (
-                <div key={deal.id} className="bg-black/40 border border-white/10 rounded-2xl p-4 space-y-3.5 animate-[row-in_0.2s_ease-out]">
+                <div
+                  key={deal.id}
+                  className="bg-black/40 border border-white/10 rounded-2xl p-4 space-y-3.5 animate-[row-in_0.2s_ease-out]"
+                >
                   <div className="flex items-start gap-3">
                     <img
                       src={deal.imageUrl}
                       alt={deal.title}
                       className="w-16 h-16 rounded-xl object-cover border border-white/10 shrink-0"
-                      onError={(e) => ((e.target as HTMLImageElement).src = FALLBACK_IMAGE)}
+                      onError={(e) =>
+                        ((e.target as HTMLImageElement).src = FALLBACK_IMAGE)
+                      }
                     />
                     <div className="min-w-0 flex-1">
                       <div className="flex items-start justify-between gap-2">
-                        <h4 className="font-extrabold text-white text-sm font-serif leading-snug">{deal.title}</h4>
-                        <PropertyStatusToggle status={deal.status} onClick={() => handleToggleStatus(deal)} />
+                        <h4 className="font-extrabold text-white text-sm font-serif leading-snug">
+                          {deal.title}
+                        </h4>
+                        <PropertyStatusToggle
+                          status={deal.status}
+                          onClick={() => handleToggleStatus(deal)}
+                        />
                       </div>
                       <p className="text-[11px] text-slate-400 font-mono mt-1">
-                        {deal.location} • {deal.bedrooms} bed, {deal.bathrooms} bath
+                        {deal.location} • {deal.bedrooms} bed, {deal.bathrooms}{" "}
+                        bath
                       </p>
                     </div>
                   </div>
 
                   <div className="grid grid-cols-2 gap-2 p-2.5 bg-white/5 rounded-xl border border-white/5 text-xs font-mono">
                     <div>
-                      <span className="text-[9px] text-slate-400 block uppercase">Monthly Rent</span>
-                      <span className="font-bold text-slate-200">{deal.monthlyRent}</span>
+                      <span className="text-[9px] text-slate-400 block uppercase">
+                        Monthly Rent
+                      </span>
+                      <span className="font-bold text-slate-200">
+                        {deal.monthlyRent}
+                      </span>
                     </div>
                     <div>
-                      <span className="text-[9px] text-slate-400 block uppercase">Net Profit</span>
-                      <span className="font-extrabold text-emerald-400">{deal.netProfit}</span>
+                      <span className="text-[9px] text-slate-400 block uppercase">
+                        Net Profit
+                      </span>
+                      <span className="font-extrabold text-emerald-400">
+                        {deal.netProfit}
+                      </span>
                     </div>
                   </div>
 
                   <div>
                     <div className="flex items-center justify-between mb-1.5">
-                      <span className="text-[10px] text-slate-400 font-mono font-bold uppercase">Platforms</span>
+                      <span className="text-[10px] text-slate-400 font-mono font-bold uppercase">
+                        Platforms
+                      </span>
                       <span className="text-[9px] text-slate-400 font-mono">
                         {activeCount} of {deal.listings?.length || 0} Active
                       </span>
@@ -627,20 +843,33 @@ export const AdminPropertyManager: React.FC = () => {
                           key={idx}
                           platform={item.platform}
                           isActive={item.isActive}
-                          onClick={() => handleToggleListingActive(deal.id, idx)}
+                          onClick={() =>
+                            handleToggleListingActive(deal.id, idx)
+                          }
                         />
                       ))}
                       {deal.listings?.length === 0 && (
-                        <span className="text-[10px] text-slate-500 italic font-mono">No platforms linked</span>
+                        <span className="text-[10px] text-slate-500 italic font-mono">
+                          No platforms linked
+                        </span>
                       )}
                     </div>
                   </div>
 
                   <div className="flex items-center justify-end gap-2 pt-2 border-t border-white/10">
-                    <Button variant="ghost" icon={Edit} onClick={() => handleOpenEditModal(deal)} className="flex-1">
+                    <Button
+                      variant="ghost"
+                      icon={Edit}
+                      onClick={() => handleOpenEditModal(deal)}
+                      className="flex-1"
+                    >
                       Edit
                     </Button>
-                    <IconButton variant="danger" onClick={() => handleDeleteProperty(deal)} aria-label={`Delete ${deal.title}`}>
+                    <IconButton
+                      variant="danger"
+                      onClick={() => handleDeleteProperty(deal)}
+                      aria-label={`Delete ${deal.title}`}
+                    >
                       <Trash2 className="w-3.5 h-3.5" />
                     </IconButton>
                   </div>
@@ -655,12 +884,24 @@ export const AdminPropertyManager: React.FC = () => {
           <table className="w-full text-left text-xs text-slate-300 border-collapse min-w-[720px]">
             <thead>
               <tr className="border-b border-white/10 bg-white/[0.06] font-mono text-[11px] text-slate-300">
-                <th className="py-3.5 px-4 font-bold min-w-[220px]">Property &amp; Address</th>
-                <th className="py-3.5 px-4 font-bold min-w-[140px]">Status / Occupancy</th>
-                <th className="py-3.5 px-4 font-bold min-w-[110px]">Monthly Rent</th>
-                <th className="py-3.5 px-4 font-bold min-w-[130px]">Net Monthly Profit</th>
-                <th className="py-3.5 px-4 font-bold min-w-[160px]">Active Platforms</th>
-                <th className="py-3.5 px-4 text-right font-bold min-w-[110px]">Actions</th>
+                <th className="py-3.5 px-4 font-bold min-w-[220px]">
+                  Property &amp; Address
+                </th>
+                <th className="py-3.5 px-4 font-bold min-w-[140px]">
+                  Status / Occupancy
+                </th>
+                <th className="py-3.5 px-4 font-bold min-w-[110px]">
+                  Monthly Rent
+                </th>
+                <th className="py-3.5 px-4 font-bold min-w-[130px]">
+                  Net Monthly Profit
+                </th>
+                <th className="py-3.5 px-4 font-bold min-w-[160px]">
+                  Active Platforms
+                </th>
+                <th className="py-3.5 px-4 text-right font-bold min-w-[110px]">
+                  Actions
+                </th>
               </tr>
             </thead>
             <tbody className="divide-y divide-white/5">
@@ -677,27 +918,41 @@ export const AdminPropertyManager: React.FC = () => {
                     <EmptyState
                       icon={Building}
                       title="No properties found"
-                      hint={hasActiveFilters ? "Try clearing filters." : "Add your first luxury listing to get started."}
+                      hint={
+                        hasActiveFilters
+                          ? "Try clearing filters."
+                          : "Add your first luxury listing to get started."
+                      }
                     />
                   </td>
                 </tr>
               ) : (
                 properties.map((deal) => {
-                  const activeCount = deal.listings?.filter((l) => l.isActive).length || 0;
+                  const activeCount =
+                    deal.listings?.filter((l) => l.isActive).length || 0;
                   return (
-                    <tr key={deal.id} className="hover:bg-white/5 transition-colors">
+                    <tr
+                      key={deal.id}
+                      className="hover:bg-white/5 transition-colors"
+                    >
                       <td className="py-3.5 px-4 min-w-[220px]">
                         <div className="flex items-center gap-4 min-w-0">
                           <img
                             src={deal.imageUrl}
                             alt={deal.title}
                             className="w-12 h-12 rounded-lg object-cover border border-white/10 shrink-0"
-                            onError={(e) => ((e.target as HTMLImageElement).src = FALLBACK_IMAGE)}
+                            onError={(e) =>
+                              ((e.target as HTMLImageElement).src =
+                                FALLBACK_IMAGE)
+                            }
                           />
                           <div className="min-w-0 flex-1">
-                            <p className="font-extrabold text-white text-sm font-serif truncate">{deal.title}</p>
+                            <p className="font-extrabold text-white text-sm font-serif truncate">
+                              {deal.title}
+                            </p>
                             <p className="text-[10px] text-slate-400 font-mono break-words leading-tight mt-0.5">
-                              {deal.location} • {deal.bedrooms} bed, {deal.bathrooms} bath
+                              {deal.location} • {deal.bedrooms} bed,{" "}
+                              {deal.bathrooms} bath
                             </p>
                           </div>
                         </div>
@@ -705,13 +960,22 @@ export const AdminPropertyManager: React.FC = () => {
 
                       <td className="py-3.5 px-4 min-w-[140px]">
                         <div className="flex flex-col gap-1 min-w-0 items-start">
-                          <PropertyStatusToggle status={deal.status} onClick={() => handleToggleStatus(deal)} />
-                          <span className="block text-[10px] text-slate-400 font-mono">Est. Occ: {deal.occupancyEst}</span>
+                          <PropertyStatusToggle
+                            status={deal.status}
+                            onClick={() => handleToggleStatus(deal)}
+                          />
+                          <span className="block text-[10px] text-slate-400 font-mono">
+                            Est. Occ: {deal.occupancyEst}
+                          </span>
                         </div>
                       </td>
 
-                      <td className="py-3.5 px-4 font-mono font-bold text-slate-200">{deal.monthlyRent}</td>
-                      <td className="py-3.5 px-4 font-mono font-extrabold text-emerald-400">{deal.netProfit}</td>
+                      <td className="py-3.5 px-4 font-mono font-bold text-slate-200">
+                        {deal.monthlyRent}
+                      </td>
+                      <td className="py-3.5 px-4 font-mono font-extrabold text-emerald-400">
+                        {deal.netProfit}
+                      </td>
 
                       <td className="py-3.5 px-4">
                         <div className="flex flex-wrap items-center gap-1.5 max-w-[200px]">
@@ -720,11 +984,15 @@ export const AdminPropertyManager: React.FC = () => {
                               key={idx}
                               platform={item.platform}
                               isActive={item.isActive}
-                              onClick={() => handleToggleListingActive(deal.id, idx)}
+                              onClick={() =>
+                                handleToggleListingActive(deal.id, idx)
+                              }
                             />
                           ))}
                           {deal.listings?.length === 0 && (
-                            <span className="text-[10px] text-slate-500 italic font-mono">No platforms</span>
+                            <span className="text-[10px] text-slate-500 italic font-mono">
+                              No platforms
+                            </span>
                           )}
                         </div>
                         <span className="text-[9px] text-slate-400 font-mono block mt-1">
@@ -734,10 +1002,17 @@ export const AdminPropertyManager: React.FC = () => {
 
                       <td className="py-3.5 px-4 text-right">
                         <div className="flex items-center justify-end gap-2">
-                          <IconButton onClick={() => handleOpenEditModal(deal)} aria-label={`Edit ${deal.title}`}>
+                          <IconButton
+                            onClick={() => handleOpenEditModal(deal)}
+                            aria-label={`Edit ${deal.title}`}
+                          >
                             <Edit className="w-3.5 h-3.5" />
                           </IconButton>
-                          <IconButton variant="danger" onClick={() => handleDeleteProperty(deal)} aria-label={`Delete ${deal.title}`}>
+                          <IconButton
+                            variant="danger"
+                            onClick={() => handleDeleteProperty(deal)}
+                            aria-label={`Delete ${deal.title}`}
+                          >
                             <Trash2 className="w-3.5 h-3.5" />
                           </IconButton>
                         </div>
@@ -755,7 +1030,9 @@ export const AdminPropertyManager: React.FC = () => {
       <Modal
         open={showPropertyEditorModal}
         onClose={() => setShowPropertyEditorModal(false)}
-        title={editingDealId ? "Edit property specs" : "Create new luxury property"}
+        title={
+          editingDealId ? "Edit property specs" : "Create new luxury property"
+        }
         eyebrow="Property Portal"
         maxWidth="max-w-3xl"
       >
@@ -772,7 +1049,9 @@ export const AdminPropertyManager: React.FC = () => {
               type="text"
               autoFocus
               value={adminForm.title}
-              onChange={(e) => setAdminForm({ ...adminForm, title: e.target.value })}
+              onChange={(e) =>
+                setAdminForm({ ...adminForm, title: e.target.value })
+              }
               className={fieldInputCls(!!fieldErrors.title)}
             />
           </Field>
@@ -782,7 +1061,9 @@ export const AdminPropertyManager: React.FC = () => {
               <input
                 type="text"
                 value={adminForm.city}
-                onChange={(e) => setAdminForm({ ...adminForm, city: e.target.value })}
+                onChange={(e) =>
+                  setAdminForm({ ...adminForm, city: e.target.value })
+                }
                 placeholder="Pensacola"
                 className={fieldInputCls(!!fieldErrors.city)}
               />
@@ -792,7 +1073,12 @@ export const AdminPropertyManager: React.FC = () => {
               <input
                 type="text"
                 value={adminForm.state}
-                onChange={(e) => setAdminForm({ ...adminForm, state: e.target.value.toUpperCase().slice(0, 2) })}
+                onChange={(e) =>
+                  setAdminForm({
+                    ...adminForm,
+                    state: e.target.value.toUpperCase().slice(0, 2),
+                  })
+                }
                 placeholder="FL"
                 maxLength={2}
                 className={`${fieldInputCls(!!fieldErrors.state)} uppercase tracking-widest`}
@@ -810,7 +1096,9 @@ export const AdminPropertyManager: React.FC = () => {
                 }`}
               >
                 <MapPin className="w-3.5 h-3.5 shrink-0" />
-                {adminForm.lat ? `${adminForm.lat.toFixed(3)}, ${adminForm.lng?.toFixed(3)}` : "Pin on map"}
+                {adminForm.lat
+                  ? `${adminForm.lat.toFixed(3)}, ${adminForm.lng?.toFixed(3)}`
+                  : "Pin on map"}
               </button>
             </Field>
           </div>
@@ -858,7 +1146,9 @@ export const AdminPropertyManager: React.FC = () => {
               <input
                 type="text"
                 value={adminForm.monthlyRent}
-                onChange={(e) => setAdminForm({ ...adminForm, monthlyRent: e.target.value })}
+                onChange={(e) =>
+                  setAdminForm({ ...adminForm, monthlyRent: e.target.value })
+                }
                 className={fieldInputCls(!!fieldErrors.monthlyRent)}
               />
             </Field>
@@ -867,7 +1157,9 @@ export const AdminPropertyManager: React.FC = () => {
               <input
                 type="text"
                 value={adminForm.netProfit}
-                onChange={(e) => setAdminForm({ ...adminForm, netProfit: e.target.value })}
+                onChange={(e) =>
+                  setAdminForm({ ...adminForm, netProfit: e.target.value })
+                }
                 className={fieldInputCls(!!fieldErrors.netProfit)}
               />
             </Field>
@@ -875,7 +1167,12 @@ export const AdminPropertyManager: React.FC = () => {
             <Field label="Status">
               <select
                 value={adminForm.status}
-                onChange={(e) => setAdminForm({ ...adminForm, status: e.target.value as PropertyStatus })}
+                onChange={(e) =>
+                  setAdminForm({
+                    ...adminForm,
+                    status: e.target.value as PropertyStatus,
+                  })
+                }
                 className="w-full px-3.5 py-2.5 bg-[#0F1014] border border-white/10 rounded-xl text-white text-xs focus:outline-none focus:border-[#E04F33] font-mono"
               >
                 <option value="AVAILABLE">AVAILABLE</option>
@@ -886,31 +1183,88 @@ export const AdminPropertyManager: React.FC = () => {
               </select>
             </Field>
           </div>
+          {existingMedia.length > 0 && (
+            <Field label={`Current photos (${existingMedia.length})`}>
+              <div className="flex flex-wrap gap-2">
+                {existingMedia.map((m) => (
+                  <div key={m.id} className="relative w-16 h-16 shrink-0">
+                    <img
+                      src={m.cdn_url}
+                      alt="Property"
+                      className="w-full h-full rounded-lg object-cover border border-white/10"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => handleDeleteExistingImage(m.id)}
+                      disabled={deletingMediaId === m.id}
+                      className="absolute -top-1.5 -right-1.5 w-5 h-5 rounded-full bg-black/80 border border-white/20 flex items-center justify-center text-white hover:bg-red-500/80 disabled:opacity-50"
+                      aria-label="Delete photo"
+                    >
+                      {deletingMediaId === m.id ? (
+                        <Loader2 className="w-3 h-3 animate-spin" />
+                      ) : (
+                        <X className="w-3 h-3" />
+                      )}
+                    </button>
+                  </div>
+                ))}
+              </div>
+            </Field>
+          )}
 
-          <Field label="Cover image URL" error={fieldErrors.imageUrl}>
-            <div className="flex items-center gap-3">
+          <Field label="Upload photos">
+            <label
+              htmlFor="property-image-upload"
+              className="flex flex-col items-center justify-center gap-2 px-4 py-6 bg-white/5 border border-dashed border-white/15 rounded-xl text-slate-400 hover:border-[#E04F33]/50 hover:text-slate-200 cursor-pointer transition-all text-xs font-mono"
+            >
+              <Upload className="w-5 h-5" />
+              Click to select images — JPG, PNG, WEBP, up to 5MB each
               <input
-                type="url"
-                value={adminForm.imageUrl}
-                onChange={(e) => setAdminForm({ ...adminForm, imageUrl: e.target.value })}
-                className={`${fieldInputCls(!!fieldErrors.imageUrl)} flex-1`}
+                id="property-image-upload"
+                type="file"
+                accept="image/jpeg,image/png,image/webp"
+                multiple
+                className="hidden"
+                onChange={(e) => handleImageFilesSelected(e.target.files)}
               />
-              {adminForm.imageUrl && (
-                <img
-                  src={adminForm.imageUrl}
-                  alt="Preview"
-                  className="w-10 h-10 rounded-lg object-cover border border-white/10 shrink-0"
-                  onError={(e) => ((e.target as HTMLImageElement).style.visibility = "hidden")}
-                />
-              )}
-            </div>
+            </label>
+
+            {imagePreviews.length > 0 && (
+              <div className="flex flex-wrap gap-2 mt-3">
+                {imagePreviews.map((src, idx) => (
+                  <div key={idx} className="relative w-16 h-16 shrink-0">
+                    <img
+                      src={src}
+                      alt={`Upload ${idx + 1}`}
+                      className="w-full h-full rounded-lg object-cover border border-white/10"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => handleRemoveImageFile(idx)}
+                      className="absolute -top-1.5 -right-1.5 w-5 h-5 rounded-full bg-black/80 border border-white/20 flex items-center justify-center text-white hover:bg-red-500/80"
+                      aria-label="Remove image"
+                    >
+                      <X className="w-3 h-3" />
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {editingDealId === null && imageFiles.length > 0 && (
+              <p className="text-[10px] text-slate-500 mt-2 font-mono">
+                Photos upload right after the property is created.
+              </p>
+            )}
           </Field>
 
           <Field label="Description">
             <textarea
               rows={3}
               value={adminForm.description}
-              onChange={(e) => setAdminForm({ ...adminForm, description: e.target.value })}
+              onChange={(e) =>
+                setAdminForm({ ...adminForm, description: e.target.value })
+              }
               className={`${fieldInputCls()} font-sans resize-y`}
             />
           </Field>
@@ -926,7 +1280,10 @@ export const AdminPropertyManager: React.FC = () => {
                 onClick={() =>
                   setAdminForm({
                     ...adminForm,
-                    listings: [...adminForm.listings, { platform: "Airbnb", url: "", isActive: true }],
+                    listings: [
+                      ...adminForm.listings,
+                      { platform: "Airbnb", url: "", isActive: true },
+                    ],
                   })
                 }
                 className="px-3 py-1 bg-white/10 hover:bg-white/20 text-white rounded-lg text-[10px] font-bold font-mono border border-white/15 flex items-center gap-1 transition-all"
@@ -951,7 +1308,9 @@ export const AdminPropertyManager: React.FC = () => {
                     className="w-full sm:w-auto px-3.5 py-2 bg-[#0F1014] border border-white/10 rounded-xl text-white text-xs focus:outline-none focus:border-[#E04F33] font-mono"
                   >
                     {AVAILABLE_PLATFORMS.map((p) => (
-                      <option key={p} value={p}>{p}</option>
+                      <option key={p} value={p}>
+                        {p}
+                      </option>
                     ))}
                   </select>
 
@@ -965,7 +1324,9 @@ export const AdminPropertyManager: React.FC = () => {
                       setAdminForm({ ...adminForm, listings: updated });
                     }}
                     className={`flex-1 w-full px-3.5 py-2 bg-white/5 border rounded-xl text-white text-xs focus:outline-none transition-colors ${
-                      fieldErrors[`listings.${idx}.url`] ? "border-red-500" : "border-white/10 focus:border-[#E04F33]"
+                      fieldErrors[`listings.${idx}.url`]
+                        ? "border-red-500"
+                        : "border-white/10 focus:border-[#E04F33]"
                     }`}
                   />
 
@@ -983,7 +1344,9 @@ export const AdminPropertyManager: React.FC = () => {
                           : "bg-white/5 text-slate-400 border-white/10"
                       }`}
                     >
-                      {item.isActive && <Check className="w-3 h-3 text-emerald-400" />}
+                      {item.isActive && (
+                        <Check className="w-3 h-3 text-emerald-400" />
+                      )}
                       {item.isActive ? "Active" : "Hidden"}
                     </button>
 
@@ -991,7 +1354,9 @@ export const AdminPropertyManager: React.FC = () => {
                       variant="danger"
                       type="button"
                       onClick={() => {
-                        const updated = adminForm.listings.filter((_, i) => i !== idx);
+                        const updated = adminForm.listings.filter(
+                          (_, i) => i !== idx,
+                        );
                         setAdminForm({ ...adminForm, listings: updated });
                       }}
                       aria-label="Remove platform link"
@@ -1011,11 +1376,24 @@ export const AdminPropertyManager: React.FC = () => {
           </div>
 
           <div className="pt-4 border-t border-white/10 flex flex-col-reverse sm:flex-row justify-end gap-3">
-            <Button type="button" variant="ghost" onClick={() => setShowPropertyEditorModal(false)} className="w-full sm:w-auto">
+            <Button
+              type="button"
+              variant="ghost"
+              onClick={() => setShowPropertyEditorModal(false)}
+              className="w-full sm:w-auto"
+            >
               Cancel
             </Button>
-            <Button type="submit" loading={submitting} className="w-full sm:w-auto uppercase tracking-wider">
-              {editingDealId ? "Save changes" : "Create property"}
+            <Button
+              type="submit"
+              loading={submitting || uploadingImages}
+              className="w-full sm:w-auto uppercase tracking-wider"
+            >
+              {uploadingImages
+                ? "Uploading photos…"
+                : editingDealId
+                  ? "Save changes"
+                  : "Create property"}
             </Button>
           </div>
         </form>
@@ -1024,13 +1402,16 @@ export const AdminPropertyManager: React.FC = () => {
       {/* ── Map Picker Modal ── */}
       {showMapPicker && (
         <MapLocationPicker
-          initialLabel={adminForm.city ? `${adminForm.city}, ${adminForm.state}` : ""}
+          initialLabel={
+            adminForm.city ? `${adminForm.city}, ${adminForm.state}` : ""
+          }
           onClose={() => setShowMapPicker(false)}
           onConfirm={(loc) => {
             const parts = loc.label.split(",").map((s: string) => s.trim());
             const city = parts[0] ?? "";
             const stateRaw = parts[1] ?? "";
-            const state = stateRaw.length <= 3 ? stateRaw.toUpperCase() : stateRaw;
+            const state =
+              stateRaw.length <= 3 ? stateRaw.toUpperCase() : stateRaw;
             setAdminForm({
               ...adminForm,
               location: loc.label,
