@@ -138,7 +138,13 @@ export async function refreshAccessToken(): Promise<string | null> {
       try {
         const baseUrl = getApiBaseUrl();
         const csrfToken = getCookie("csrftoken");
-        const storedRefreshToken = getRefreshToken();
+        const storedRefreshToken = getRefreshToken();  // from localStorage
+
+        // ✅ Always send body token for cross-origin reliability
+        if (!storedRefreshToken) {
+          clearAllTokens();
+          return null;
+        }
 
         const response = await fetch(buildUrl(baseUrl, REFRESH_ENDPOINT), {
           method: "POST",
@@ -147,9 +153,7 @@ export async function refreshAccessToken(): Promise<string | null> {
             "Content-Type": "application/json",
             ...(csrfToken ? { "X-CSRFToken": csrfToken } : {}),
           },
-          ...(storedRefreshToken
-            ? { body: JSON.stringify({ refresh: storedRefreshToken }) }
-            : {}),
+          body: JSON.stringify({ refresh: storedRefreshToken }),  // ← always send
         });
 
         if (!response.ok) {
@@ -160,11 +164,17 @@ export async function refreshAccessToken(): Promise<string | null> {
         const data = await response.json().catch(() => ({}));
         const newToken: string | undefined = data.access;
         const newRefreshToken: string | undefined = data.refresh;
-        setAccessToken(newToken ?? null);
-        if (newRefreshToken) {
-          setRefreshToken(newRefreshToken);
+
+        if (!newToken) {
+          clearAllTokens();
+          return null;
         }
-        return newToken ?? null;
+
+        setAccessToken(newToken);
+        if (newRefreshToken) {
+          setRefreshToken(newRefreshToken);  // store rotated refresh token
+        }
+        return newToken;
       } catch {
         clearAllTokens();
         return null;
@@ -176,7 +186,6 @@ export async function refreshAccessToken(): Promise<string | null> {
 
   return refreshPromise;
 }
-
 export async function apiClient<T = unknown>(
   endpoint: string,
   options: ApiRequestOptions = {},

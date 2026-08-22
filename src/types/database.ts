@@ -1,12 +1,11 @@
 export interface User {
-  id: string | number;
+  id: number;
   username: string;
   email: string;
-  first_name: string;
-  last_name: string;
-  name?: string;
-  avatarUrl?: string;
-  company?: string;
+  first_name?: string;
+  last_name?: string;
+  name?: string;        // ← add
+  avatarUrl?: string;   // ← add
   is_staff?: boolean;
   is_superuser?: boolean;
 }

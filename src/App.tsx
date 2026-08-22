@@ -58,9 +58,9 @@ export default function App() {
 
   const isAdmin = Boolean(
     user?.is_staff ||
-      user?.is_superuser ||
-      user?.username === "admin" ||
-      user?.email === "admin@kaizen.com",
+    user?.is_superuser ||
+    user?.username === "admin" ||
+    user?.email === "admin@kaizen.com",
   );
 
   const triggerNotification = (
@@ -191,28 +191,28 @@ export default function App() {
           </motion.div>
 
           <nav className="hidden lg:flex items-center gap-6 text-xs font-bold uppercase tracking-widest">
-            {DESKTOP_NAV.filter((item) => !item.authOnly || isAuthenticated).map(
-              (item) => (
-                <button
-                  key={item.key}
-                  onClick={() => setActiveTab(item.key)}
-                  className={`relative pb-2 transition-colors ${
-                    activeTab === item.key
-                      ? "text-slate-900 dark:text-white"
-                      : "text-slate-500 hover:text-slate-900 dark:hover:text-white"
-                  }`}
-                >
-                  {item.label}
-                  {activeTab === item.key && (
-                    <motion.span
-                      layoutId="nav-underline"
-                      className="absolute left-0 right-0 -bottom-[1px] h-[2px] bg-[#E04F33] rounded-full"
-                      transition={{ type: "spring", stiffness: 380, damping: 32 }}
-                    />
-                  )}
-                </button>
-              ),
-            )}
+            {DESKTOP_NAV.filter(
+              (item) => !item.authOnly || isAuthenticated,
+            ).map((item) => (
+              <button
+                key={item.key}
+                onClick={() => setActiveTab(item.key)}
+                className={`relative pb-2 transition-colors ${
+                  activeTab === item.key
+                    ? "text-slate-900 dark:text-white"
+                    : "text-slate-500 hover:text-slate-900 dark:hover:text-white"
+                }`}
+              >
+                {item.label}
+                {activeTab === item.key && (
+                  <motion.span
+                    layoutId="nav-underline"
+                    className="absolute left-0 right-0 -bottom-[1px] h-[2px] bg-[#E04F33] rounded-full"
+                    transition={{ type: "spring", stiffness: 380, damping: 32 }}
+                  />
+                )}
+              </button>
+            ))}
           </nav>
 
           <div className="flex items-center gap-3">
@@ -253,13 +253,31 @@ export default function App() {
                   onClick={() => setUserDropdownOpen(!userDropdownOpen)}
                   className="flex items-center gap-2.5 p-1.5 pr-3 bg-[#1A2130]/90 border border-white/15 rounded-full hover:bg-white/10 transition-colors"
                 >
-                  <img
-                    src={user?.avatarUrl || "https://via.placeholder.com/150"}
-                    alt="User"
-                    className="w-8 h-8 rounded-full border border-[#E04F33] object-cover"
-                  />
-                  <span className="text-xs font-bold text-white hidden sm:inline">
-                    {user?.name}
+                  {user?.avatarUrl ? (
+                    <img
+                      src={user.avatarUrl}
+                      alt={user.name || "User"}
+                      className="w-8 h-8 rounded-full border border-[#E04F33] object-cover shrink-0"
+                      onError={(e) => {
+                        // If image fails to load, hide it so the fallback shows
+                        (e.target as HTMLImageElement).style.display = "none";
+                      }}
+                    />
+                  ) : (
+                    <div className="w-8 h-8 rounded-full border border-[#E04F33] bg-[#E04F33]/20 flex items-center justify-center text-[11px] font-black text-[#FF8A73] shrink-0 select-none">
+                      {(
+                        user?.name?.[0] ||
+                        user?.first_name?.[0] ||
+                        user?.username?.[0] ||
+                        "?"
+                      ).toUpperCase()}
+                    </div>
+                  )}
+                  <span className="text-xs font-bold text-white hidden sm:inline truncate max-w-[100px]">
+                    {user?.name ||
+                      `${user?.first_name ?? ""} ${user?.last_name ?? ""}`.trim() ||
+                      user?.username ||
+                      "Account"}
                   </span>
                 </motion.button>
 
@@ -273,7 +291,9 @@ export default function App() {
                       className="absolute right-0 mt-2 w-56 bg-[#141A26]/95 border border-white/15 rounded-2xl p-2 shadow-2xl z-50 text-white backdrop-blur-2xl origin-top-right"
                     >
                       <div className="px-3 py-2 border-b border-white/10 mb-1">
-                        <p className="text-xs font-bold truncate">{user?.name}</p>
+                        <p className="text-xs font-bold truncate">
+                          {user?.name}
+                        </p>
                         <p className="text-[10px] text-slate-400 font-mono truncate">
                           {user?.email}
                         </p>
@@ -366,7 +386,9 @@ export default function App() {
             )}
             {activeTab === "bookings" && <BookingsView />}
             {activeTab === "how-it-works" && (
-              <HowItWorks onBrowseProperties={() => setActiveTab("properties")} />
+              <HowItWorks
+                onBrowseProperties={() => setActiveTab("properties")}
+              />
             )}
             {activeTab === "properties" && (
               <PropertiesView
