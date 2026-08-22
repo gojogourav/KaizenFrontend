@@ -10,7 +10,6 @@ import { ErrorBoundary } from "../common/ErrorBoundary";
 import { PropertyCard } from "./PropertyCard";
 import type { PropertyFilters } from "../../api/services";
 
-// Same mapping used in AdminPropertyManager — keep both in sync
 const API_TO_STATUS: Record<string, string> = {
   active: "AVAILABLE",
   available: "AVAILABLE",
@@ -99,32 +98,33 @@ const PropertyGridContent: React.FC<PropertyGridProps> = ({
     );
   }
 
-  return (
-    <AnimatePresence mode="wait">
-      <motion.div
-        key={JSON.stringify(filters)}
-        role="list"
-        variants={containerVariants}
-        initial="hidden"
-        animate="visible"
-        className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 p-6"
-      >
-        {properties.map((property) => (
-          <motion.div role="listitem" key={property.id} variants={itemVariants}>
-            <PropertyCard
-              deal={property}
-              isFavorite={isFavorite(property.id)}
-              onToggleFavorite={(id, e) => {
-                if (e) e.stopPropagation();
-                toggleFavorite(id, property);
-              }}
-              onOpenProspectus={onOpenProspectus}
-            />
-          </motion.div>
-        ))}
-      </motion.div>
-    </AnimatePresence>
-  );
+    return (
+      <AnimatePresence mode="wait">
+        <motion.div
+          key={JSON.stringify(filters)}
+          role="list"
+          variants={containerVariants}
+          initial="hidden"
+          animate="visible"
+          // FIX: Max 2 columns, larger gaps on desktop
+          className="grid grid-cols-1 lg:grid-cols-2 gap-6 lg:gap-8 w-full min-w-0"
+        >
+          {properties.map((property) => (
+            <motion.div role="listitem" key={property.id} variants={itemVariants} className="min-w-0">
+              <PropertyCard
+                deal={property}
+                isFavorite={isFavorite(property.id)}
+                onToggleFavorite={(id, e) => {
+                  if (e) e.stopPropagation();
+                  toggleFavorite(id, property);
+                }}
+                onOpenProspectus={onOpenProspectus}
+              />
+            </motion.div>
+          ))}
+        </motion.div>
+      </AnimatePresence>
+    );
 };
 
 export const PropertyGrid: React.FC<PropertyGridProps> = (props) => (
