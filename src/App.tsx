@@ -474,7 +474,9 @@ export default function App() {
               {activeTab === "favorites" && (
                 <FavoriteView onSelectDeal={setSelectedDeal} />
               )}
-              {activeTab === "bookings" && <BookingsView />}
+              {activeTab === "bookings" && (
+                <BookingsView onOpenProspectus={setSelectedDeal} />
+              )}
             </motion.div>
           </AnimatePresence>
         ) : (
