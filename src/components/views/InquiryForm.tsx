@@ -19,14 +19,14 @@ export const InquiryForm: React.FC = () => {
           initial={{ scale: 0.5, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
           transition={{ type: "spring", stiffness: 300, damping: 16, delay: 0.1 }}
-          className="w-12 h-12 bg-emerald-100 dark:bg-emerald-950 text-emerald-600 dark:text-emerald-400 rounded-full flex items-center justify-center mx-auto border border-emerald-300 dark:border-emerald-500/40"
+          className="w-12 h-12 bg-emerald-950 text-emerald-400 rounded-full flex items-center justify-center mx-auto border border-emerald-500/40"
         >
           <CheckCircle2 className="w-6 h-6" aria-hidden="true" />
         </motion.div>
-        <h4 className="text-lg font-bold text-slate-900 dark:text-white">
+        <h4 className="text-lg font-bold text-white">
           Inquiry Received
         </h4>
-        <p className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed max-w-md mx-auto">
+        <p className="text-xs text-slate-300 leading-relaxed max-w-md mx-auto">
           Thank you! Our property acquisition specialist will review your
           request and reach out shortly.
         </p>
@@ -34,7 +34,7 @@ export const InquiryForm: React.FC = () => {
           whileHover={{ scale: 1.03 }}
           whileTap={{ scale: 0.97 }}
           onClick={reset}
-          className="mt-4 px-4 py-2 bg-slate-200 dark:bg-white/10 hover:bg-slate-300 dark:hover:bg-white/20 text-slate-900 dark:text-white rounded-xl text-xs font-mono font-bold border border-slate-300 dark:border-white/20"
+          className="mt-4 px-4 py-2 bg-white/10 hover:bg-white/20 text-white rounded-xl text-xs font-mono font-bold border border-white/20"
         >
           Submit Another Request
         </motion.button>
@@ -70,7 +70,7 @@ export const InquiryForm: React.FC = () => {
         <div>
           <label
             htmlFor="inq-name"
-            className="block font-bold text-slate-500 dark:text-slate-400 uppercase mb-1 font-mono"
+            className="block font-bold text-slate-400 uppercase mb-1 font-mono"
           >
             Your Name *
           </label>
@@ -80,13 +80,13 @@ export const InquiryForm: React.FC = () => {
             required
             value={form.name}
             onChange={(e) => updateField("name", e.target.value)}
-            className="w-full px-3.5 py-2.5 bg-white dark:bg-[#141226] border border-slate-200 dark:border-white/10 rounded-xl text-slate-900 dark:text-white text-xs focus:outline-none focus:border-[#E04F33] transition-colors"
+            className="w-full px-3.5 py-2.5 bg-[#141226] border border-white/10 rounded-xl text-white text-xs focus:outline-none focus:border-[#E04F33] transition-colors"
           />
         </div>
         <div>
           <label
             htmlFor="inq-email"
-            className="block font-bold text-slate-500 dark:text-slate-400 uppercase mb-1 font-mono"
+            className="block font-bold text-slate-400 uppercase mb-1 font-mono"
           >
             Email Address *
           </label>
@@ -96,7 +96,7 @@ export const InquiryForm: React.FC = () => {
             required
             value={form.email}
             onChange={(e) => updateField("email", e.target.value)}
-            className="w-full px-3.5 py-2.5 bg-white dark:bg-[#141226] border border-slate-200 dark:border-white/10 rounded-xl text-slate-900 dark:text-white text-xs focus:outline-none focus:border-[#E04F33] transition-colors"
+            className="w-full px-3.5 py-2.5 bg-[#141226] border border-white/10 rounded-xl text-white text-xs focus:outline-none focus:border-[#E04F33] transition-colors"
           />
         </div>
       </div>
@@ -105,7 +105,7 @@ export const InquiryForm: React.FC = () => {
         <div>
           <label
             htmlFor="inq-intent"
-            className="block font-bold text-slate-500 dark:text-slate-400 uppercase mb-1 font-mono"
+            className="block font-bold text-slate-400 uppercase mb-1 font-mono"
           >
             Primary Goal / Intent *
           </label>
@@ -113,7 +113,7 @@ export const InquiryForm: React.FC = () => {
             id="inq-intent"
             value={form.intent}
             onChange={(e) => updateField("intent", e.target.value)}
-            className="w-full px-3.5 py-2.5 bg-white dark:bg-[#141226] border border-slate-200 dark:border-white/10 rounded-xl text-slate-900 dark:text-white text-xs focus:outline-none focus:border-[#E04F33] font-mono transition-colors"
+            className="w-full px-3.5 py-2.5 bg-[#141226] border border-white/10 rounded-xl text-white text-xs focus:outline-none focus:border-[#E04F33] font-mono transition-colors"
           >
             <option value="Acquire Turnkey Lease Deal">
               Acquire Turnkey Lease Deal
@@ -132,7 +132,7 @@ export const InquiryForm: React.FC = () => {
         <div>
           <label
             htmlFor="inq-market"
-            className="block font-bold text-slate-500 dark:text-slate-400 uppercase mb-1 font-mono"
+            className="block font-bold text-slate-400 uppercase mb-1 font-mono"
           >
             Preferred Market
           </label>
@@ -140,7 +140,7 @@ export const InquiryForm: React.FC = () => {
             id="inq-market"
             value={form.preferredMarket}
             onChange={(e) => updateField("preferredMarket", e.target.value)}
-            className="w-full px-3.5 py-2.5 bg-white dark:bg-[#141226] border border-slate-200 dark:border-white/10 rounded-xl text-slate-900 dark:text-white text-xs focus:outline-none focus:border-[#E04F33] font-mono transition-colors"
+            className="w-full px-3.5 py-2.5 bg-[#141226] border border-white/10 rounded-xl text-white text-xs focus:outline-none focus:border-[#E04F33] font-mono transition-colors"
           >
             <option value="Pensacola, FL">Pensacola, FL</option>
             <option value="Scottsdale, AZ">Scottsdale, AZ</option>
@@ -153,7 +153,7 @@ export const InquiryForm: React.FC = () => {
       <div>
         <label
           htmlFor="inq-message"
-          className="block font-bold text-slate-500 dark:text-slate-400 uppercase mb-1 font-mono"
+          className="block font-bold text-slate-400 uppercase mb-1 font-mono"
         >
           Message / Specific Questions
         </label>
@@ -162,7 +162,7 @@ export const InquiryForm: React.FC = () => {
           rows={3}
           value={form.message}
           onChange={(e) => updateField("message", e.target.value)}
-          className="w-full px-3.5 py-2.5 bg-white dark:bg-[#141226] border border-slate-200 dark:border-white/10 rounded-xl text-slate-900 dark:text-white text-xs focus:outline-none focus:border-[#E04F33] transition-colors"
+          className="w-full px-3.5 py-2.5 bg-[#141226] border border-white/10 rounded-xl text-white text-xs focus:outline-none focus:border-[#E04F33] transition-colors"
         />
       </div>
 

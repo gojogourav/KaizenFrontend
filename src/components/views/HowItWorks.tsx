@@ -70,30 +70,30 @@ const checklistItem = {
 export const HowItWorks: React.FC<{ onBrowseProperties: () => void }> = ({
   onBrowseProperties,
 }) => (
-  <div className="space-y-12 text-slate-900 dark:text-slate-100 max-w-6xl mx-auto">
+  <div className="space-y-12 text-slate-100 max-w-6xl mx-auto">
     <motion.div
       initial={{ opacity: 0, y: -14 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.45, ease: [0.16, 1, 0.3, 1] }}
-      className="bg-white/80 dark:bg-white/5 rounded-3xl p-8 sm:p-10 border border-slate-200/80 dark:border-white/10 shadow-xl"
+      className="bg-white/5 rounded-3xl p-8 sm:p-10 border border-white/10 shadow-xl"
     >
       <div className="space-y-4 max-w-2xl">
         <motion.div
           initial={{ opacity: 0, scale: 0.9 }}
           animate={{ opacity: 1, scale: 1 }}
           transition={{ delay: 0.1, duration: 0.3 }}
-          className="inline-flex items-center gap-2 px-3.5 py-1.5 bg-[#E04F33]/10 dark:bg-white/10 rounded-full border border-[#E04F33]/20 dark:border-white/15"
+          className="inline-flex items-center gap-2 px-3.5 py-1.5 bg-white/10 rounded-full border border-white/15"
         >
           <Sparkles className="w-4 h-4 text-[#E04F33]" aria-hidden="true" />
-          <span className="text-[11px] font-bold text-[#E04F33] dark:text-[#FF8A73] uppercase tracking-widest font-mono">
+          <span className="text-[11px] font-bold text-[#FF8A73] uppercase tracking-widest font-mono">
             The Turnkey Acquisition Process
           </span>
         </motion.div>
-        <h1 className="text-3xl sm:text-4xl font-extrabold text-slate-900 dark:text-white tracking-tight leading-tight">
+        <h1 className="text-3xl sm:text-4xl font-extrabold text-white tracking-tight leading-tight">
           How Kaizen Works for{" "}
           <span className="text-[#E04F33]">Turnkey Buyers</span>
         </h1>
-        <p className="text-sm text-slate-600 dark:text-slate-300 leading-relaxed">
+        <p className="text-sm text-slate-300 leading-relaxed">
           From discovering high-yield luxury villas to securing exclusive
           15-minute lease locks and instant key handovers, Kaizen streamlines
           every phase of turnkey property acquisition.
@@ -121,7 +121,7 @@ export const HowItWorks: React.FC<{ onBrowseProperties: () => void }> = ({
         <span className="text-xs font-mono font-bold uppercase tracking-widest text-[#E04F33]">
           Step-by-Step Guide
         </span>
-        <h2 className="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white">
+        <h2 className="text-2xl sm:text-3xl font-extrabold text-white">
           4 Steps to Lock & Own Your Turnkey Property
         </h2>
       </motion.div>
@@ -139,31 +139,31 @@ export const HowItWorks: React.FC<{ onBrowseProperties: () => void }> = ({
               key={step.num}
               variants={stepItem}
               whileHover={{ y: -4 }}
-              className="bg-white/70 dark:bg-white/5 p-8 rounded-3xl border border-slate-200/70 dark:border-white/10 hover:border-slate-300 dark:hover:border-white/20 transition-colors duration-300 space-y-4"
+              className="bg-white/5 p-8 rounded-3xl border border-white/10 hover:border-white/20 transition-colors duration-300 space-y-4"
             >
               <div className="flex items-center justify-between">
                 <motion.div
                   whileHover={{ rotate: 6, scale: 1.08 }}
                   transition={{ type: "spring", stiffness: 300, damping: 15 }}
-                  className="w-12 h-12 rounded-2xl bg-slate-100 dark:bg-white/10 border border-slate-200 dark:border-white/15 flex items-center justify-center text-[#E04F33]"
+                  className="w-12 h-12 rounded-2xl bg-white/10 border border-white/15 flex items-center justify-center text-[#E04F33]"
                 >
                   <Icon className="w-6 h-6" aria-hidden="true" />
                 </motion.div>
                 <span
-                  className="text-3xl font-black text-slate-300 dark:text-slate-700 font-mono"
+                  className="text-3xl font-black text-slate-700 font-mono"
                   aria-hidden="true"
                 >
                   {step.num}
                 </span>
               </div>
               <div>
-                <span className="inline-block px-2.5 py-0.5 rounded-full bg-[#E04F33]/10 dark:bg-white/10 text-[#E04F33] dark:text-[#FF8A73] text-[10px] font-mono font-bold mb-2 border border-[#E04F33]/20 dark:border-white/15">
+                <span className="inline-block px-2.5 py-0.5 rounded-full bg-white/10 text-[#FF8A73] text-[10px] font-mono font-bold mb-2 border border-white/15">
                   {step.badge}
                 </span>
-                <h3 className="text-lg font-extrabold text-slate-900 dark:text-white">
+                <h3 className="text-lg font-extrabold text-white">
                   {step.title}
                 </h3>
-                <p className="text-xs text-slate-600 dark:text-slate-400 mt-2 leading-relaxed">
+                <p className="text-xs text-slate-400 mt-2 leading-relaxed">
                   {step.desc}
                 </p>
               </div>
@@ -178,16 +178,16 @@ export const HowItWorks: React.FC<{ onBrowseProperties: () => void }> = ({
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true, amount: 0.2 }}
       transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
-      className="bg-white/80 dark:bg-white/5 rounded-3xl border border-slate-200/80 dark:border-white/10 p-8 sm:p-10 shadow-xl grid grid-cols-1 lg:grid-cols-12 gap-8 items-center"
+      className="bg-white/5 rounded-3xl border border-white/10 p-8 sm:p-10 shadow-xl grid grid-cols-1 lg:grid-cols-12 gap-8 items-center"
     >
       <div className="lg:col-span-5 space-y-4">
-        <span className="text-[10px] font-mono font-bold uppercase tracking-widest text-[#E04F33] bg-[#E04F33]/10 dark:bg-white/10 px-3 py-1 rounded-full border border-[#E04F33]/20 dark:border-white/15">
+        <span className="text-[10px] font-mono font-bold uppercase tracking-widest text-[#E04F33] bg-white/10 px-3 py-1 rounded-full border border-white/15">
           Dedicated Customer Support
         </span>
-        <h3 className="text-2xl font-extrabold text-slate-900 dark:text-white">
+        <h3 className="text-2xl font-extrabold text-white">
           Have Questions About a Turnkey Listing?
         </h3>
-        <p className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed">
+        <p className="text-xs text-slate-300 leading-relaxed">
           Our property concierge team is available to assist buyers with lease
           specifications and walkthrough scheduling.
         </p>
@@ -196,7 +196,7 @@ export const HowItWorks: React.FC<{ onBrowseProperties: () => void }> = ({
           initial="hidden"
           whileInView="visible"
           viewport={{ once: true, amount: 0.5 }}
-          className="space-y-3 pt-2 text-xs text-slate-600 dark:text-slate-300 font-mono list-none"
+          className="space-y-3 pt-2 text-xs text-slate-300 font-mono list-none"
         >
           {[
             "Direct property owner approval guaranteed",
@@ -213,7 +213,7 @@ export const HowItWorks: React.FC<{ onBrowseProperties: () => void }> = ({
           ))}
         </motion.ul>
       </div>
-      <div className="lg:col-span-7 bg-slate-50/90 dark:bg-[#0B0A14] p-6 sm:p-8 rounded-2xl border border-slate-200 dark:border-white/10 shadow-lg">
+      <div className="lg:col-span-7 bg-[#0B0A14] p-6 sm:p-8 rounded-2xl border border-white/10 shadow-lg">
         <InquiryForm />
       </div>
     </motion.div>

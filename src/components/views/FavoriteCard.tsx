@@ -47,9 +47,9 @@ export const FavoriteCard: React.FC<FavoriteCardProps> = ({
           onSelect(prop);
         }
       }}
-      className="bg-white/80 dark:bg-white/5 hover:bg-white dark:hover:bg-white/10 rounded-2xl border border-slate-200/80 dark:border-white/10 hover:border-slate-300 dark:hover:border-white/20 focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#E04F33] overflow-hidden shadow-xl transition-colors duration-300 group cursor-pointer flex flex-col justify-between apple-specular"
+      className="bg-white/5 hover:bg-white/10 rounded-2xl border border-white/10 hover:border-white/20 focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#E04F33] overflow-hidden shadow-xl transition-colors duration-300 group cursor-pointer flex flex-col justify-between apple-specular"
     >
-      <div className="relative h-52 overflow-hidden bg-slate-100 dark:bg-[#06040a]">
+      <div className="relative h-52 overflow-hidden bg-[#06040a]">
         <img
           src={imageUrl}
           alt=""
@@ -79,16 +79,16 @@ export const FavoriteCard: React.FC<FavoriteCardProps> = ({
         <div>
           <h3
             id={headingId}
-            className="text-lg font-bold text-slate-900 dark:text-white group-hover:text-[#E04F33] dark:group-hover:text-[#FF8A73] transition-colors"
+            className="text-lg font-bold text-white group-hover:text-[#FF8A73] transition-colors"
           >
             {prop.title}
           </h3>
-          <p className="text-xs text-slate-500 dark:text-slate-400 flex items-center gap-1 mt-1">
+          <p className="text-xs text-slate-400 flex items-center gap-1 mt-1">
             <MapPin className="w-3.5 h-3.5 text-[#E04F33]" aria-hidden="true" />
             {location}
           </p>
         </div>
-        <div className="pt-2 flex items-center justify-between text-xs font-bold text-slate-600 dark:text-slate-300 group-hover:text-[#E04F33] dark:group-hover:text-[#FF8A73] transition-colors">
+        <div className="pt-2 flex items-center justify-between text-xs font-bold text-slate-300 group-hover:text-[#FF8A73] transition-colors">
           <span>View Villa Details</span>
           <ArrowRight
             className="w-4 h-4 group-hover:translate-x-1 transition-transform"

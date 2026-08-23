@@ -99,7 +99,7 @@ export const LockPurchaseModal: React.FC<LockPurchaseModalProps> = ({
             </div>
 
             {booking.payment_link && (
-            <a
+              <a
                 href={booking.payment_link}
                 target="_blank"
                 rel="noopener noreferrer"

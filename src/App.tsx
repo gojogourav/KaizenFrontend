@@ -24,7 +24,6 @@ import { HowItWorks } from "./components/views/HowItWorks";
 import { PropertiesView } from "./components/views/PropertiesView";
 
 import { AdminLayout } from "./components/admin/AdminLayout";
-// import { AdminPropertyManager } from "./components/admin/AdminPropertyManager"; // (assuming this is used inside AdminLayout)
 
 export type TabType =
   | "properties"
@@ -151,28 +150,28 @@ export default function App() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 text-slate-900 dark:bg-[#0F1014] dark:text-slate-100 font-sans flex flex-col relative selection:bg-[#E04F33] selection:text-white">
+    <div className="min-h-screen bg-[#0F1014] text-slate-100 font-sans flex flex-col relative selection:bg-[#E04F33] selection:text-white">
 
       {/* 1. Ambient Mesh Gradient Background */}
       <div className="fixed inset-0 overflow-hidden pointer-events-none z-0">
-        <div className="absolute inset-0 bg-slate-50 dark:bg-[#0F1014]" />
+        <div className="absolute inset-0 bg-[#0F1014]" />
         <motion.div
-          className="absolute -top-[12%] -left-[12%] w-[55vw] h-[55vw] max-w-[650px] max-h-[650px] rounded-full bg-[#E04F33]/10 dark:bg-[#E04F33]/15 blur-[120px]"
+          className="absolute -top-[12%] -left-[12%] w-[55vw] h-[55vw] max-w-[650px] max-h-[650px] rounded-full bg-[#E04F33]/15 blur-[120px]"
           animate={{ x: [0, 30, 0], y: [0, 20, 0] }}
           transition={{ duration: 22, repeat: Infinity, ease: "easeInOut" }}
         />
         <motion.div
-          className="absolute -bottom-[12%] -right-[12%] w-[60vw] h-[60vw] max-w-[700px] max-h-[700px] rounded-full bg-slate-200/60 dark:bg-slate-800/30 blur-[140px]"
+          className="absolute -bottom-[12%] -right-[12%] w-[60vw] h-[60vw] max-w-[700px] max-h-[700px] rounded-full bg-slate-800/30 blur-[140px]"
           animate={{ x: [0, -25, 0], y: [0, -15, 0] }}
           transition={{ duration: 26, repeat: Infinity, ease: "easeInOut" }}
         />
-        <div className="absolute top-[35%] right-[10%] w-[45vw] h-[45vw] max-w-[550px] max-h-[550px] rounded-full bg-amber-100/40 dark:bg-slate-700/20 blur-[130px] pointer-events-none" />
+        <div className="absolute top-[35%] right-[10%] w-[45vw] h-[45vw] max-w-[550px] max-h-[550px] rounded-full bg-slate-700/20 blur-[130px] pointer-events-none" />
       </div>
 
       {/* 2. Zero-JS First Paint Hybrid Splash Overlay */}
       {showSplash && (
         <div
-          className={`fixed inset-0 z-[9999] bg-slate-50 dark:bg-[#0F1014] flex flex-col items-center justify-center p-6 ${
+          className={`fixed inset-0 z-[9999] bg-[#0F1014] flex flex-col items-center justify-center p-6 ${
             splashFading ? 'animate-splash-fade-out' : 'opacity-100'
           }`}
         >
@@ -182,7 +181,7 @@ export default function App() {
             </div>
 
             <div className="text-center space-y-1">
-              <h2 className="text-xl font-heading font-extrabold tracking-[0.25em] text-slate-900 dark:text-white uppercase">
+              <h2 className="text-xl font-heading font-extrabold tracking-[0.25em] text-white uppercase">
                 KAIZEN ESTATES
               </h2>
               <p className="text-[10px] font-mono text-[#E04F33] uppercase tracking-[0.3em] font-bold">
@@ -190,7 +189,7 @@ export default function App() {
               </p>
             </div>
 
-            <div className="w-48 h-1 bg-slate-200 dark:bg-white/10 rounded-full overflow-hidden mt-2">
+            <div className="w-48 h-1 bg-black/40 rounded-full overflow-hidden mt-2">
               <div className="h-full bg-[#E04F33] rounded-full animate-kaizen-bar" />
             </div>
           </div>
@@ -219,7 +218,7 @@ export default function App() {
         )}
       </AnimatePresence>
 
-      <header className="sticky top-0 z-40 bg-white/2 backdrop-blur-2xl border-b border-slate-200/60 dark:border-white/10 shadow-xl shadow-slate-200/50 dark:shadow-apple-glass apple-specular">
+      <header className="sticky top-0 z-40 bg-black/40 backdrop-blur-2xl border-b border-white/10 shadow-xl shadow-apple-glass apple-specular">
         <div className="max-w-7xl mx-auto px-6 h-20 flex items-center justify-between relative z-10">
 
           <motion.div
@@ -236,10 +235,10 @@ export default function App() {
               <span className="text-white font-extrabold text-base font-sans">改</span>
             </motion.div>
             <div>
-              <span className="font-extrabold text-lg tracking-[0.08em] text-slate-900 dark:text-white leading-none block font-heading">
+              <span className="font-extrabold text-lg tracking-[0.08em] text-white leading-none block font-heading">
                 KAIZEN
               </span>
-              <span className="text-[9px] text-[#E04F33] dark:text-[#FF8A73] font-mono font-bold tracking-widest block uppercase mt-0.5">
+              <span className="text-[9px] text-[#FF8A73] font-mono font-bold tracking-widest block uppercase mt-0.5">
                 REAL ESTATE
               </span>
             </div>
@@ -254,8 +253,8 @@ export default function App() {
                 onClick={() => setActiveTab(item.key)}
                 className={`relative pb-2 transition-colors ${
                   activeTab === item.key
-                    ? "text-slate-900 dark:text-white"
-                    : "text-slate-500 hover:text-slate-900 dark:hover:text-white"
+                    ? "text-white"
+                    : "text-slate-500 hover:text-white"
                 }`}
               >
                 {item.label}
@@ -279,7 +278,7 @@ export default function App() {
               className={`p-2.5 rounded-full transition-colors relative border ${
                 activeTab === "favorites"
                   ? "text-rose-400 bg-rose-950/50 border-rose-500/40"
-                  : "text-slate-300 hover:text-rose-400 hover:bg-white/5 border-white/10"
+                  : "text-slate-300 hover:text-rose-400 hover:bg-black/40 border-white/10"
               }`}
             >
               <Heart
@@ -306,7 +305,7 @@ export default function App() {
                 <motion.button
                   whileTap={{ scale: 0.97 }}
                   onClick={() => setUserDropdownOpen(!userDropdownOpen)}
-                  className="flex items-center gap-2.5 p-1.5 pr-3 bg-[#1A2130]/90 border border-white/15 rounded-full hover:bg-white/10 transition-colors"
+                  className="flex items-center gap-2.5 p-1.5 pr-3 bg-[#1A2130]/90 border border-white/15 rounded-full hover:bg-black/60 transition-colors"
                 >
                   {user?.avatarUrl ? (
                     <img
@@ -369,7 +368,7 @@ export default function App() {
                           setActiveTab("dashboard");
                           setUserDropdownOpen(false);
                         }}
-                        className="w-full text-left px-3 py-2 text-xs font-medium hover:bg-white/10 rounded-xl flex items-center gap-2 transition-colors"
+                        className="w-full text-left px-3 py-2 text-xs font-medium hover:bg-black/40 rounded-xl flex items-center gap-2 transition-colors"
                       >
                         <LayoutDashboard className="w-4 h-4 text-[#E04F33]" />{" "}
                         Dashboard
@@ -449,7 +448,7 @@ export default function App() {
               {activeTab === tab && (
                 <motion.span
                   layoutId="mobile-tab-pill"
-                  className="absolute inset-0 bg-white/20 border border-white/25 rounded-xl shadow-md"
+                  className="absolute inset-0 bg-black/60 border border-white/25 rounded-xl shadow-md"
                   transition={{ type: "spring", stiffness: 400, damping: 32 }}
                 />
               )}
@@ -487,11 +486,11 @@ export default function App() {
               initial={{ opacity: 0, x: -20 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ type: 'spring', stiffness: 100, damping: 18, delay: 0.15 }}
-              className="hidden lg:flex lg:col-span-4 bg-white/5 backdrop-blur-2xl rounded-2xl p-6 sm:p-8 border border-white/10 shadow-2xl shadow-black/40 flex-col justify-between min-h-0 lg:min-h-[520px] relative overflow-hidden apple-specular"
+              className="hidden lg:flex lg:col-span-4 bg-black/30 backdrop-blur-2xl rounded-2xl p-6 sm:p-8 border border-white/10 shadow-2xl shadow-black/40 flex-col justify-between min-h-0 lg:min-h-[520px] relative overflow-hidden apple-specular"
             >
               <div className="absolute inset-0 ring-1 ring-inset ring-white/10 rounded-2xl pointer-events-none" />
               <div>
-                <div className="inline-flex items-center gap-2 px-3 py-1 bg-white/10 backdrop-blur-xl rounded-full mb-6 border border-white/10">
+                <div className="inline-flex items-center gap-2 px-3 py-1 bg-black/40 backdrop-blur-xl rounded-full mb-6 border border-white/10">
                   <Sparkles className="w-3.5 h-3.5 text-[#E04F33] animate-pulse" />
                   <span className="text-[9px] font-bold text-[#FF8A73] tracking-[0.2em] uppercase font-mono">Kaizen Luxury Collection</span>
                 </div>
@@ -521,8 +520,8 @@ export default function App() {
                     onClick={() => setActiveTab('properties')}
                     className={`p-4 rounded-xl border cursor-pointer group transition-all duration-300 backdrop-blur-2xl ${
                       activeTab === 'properties'
-                        ? 'bg-white/15 border-white/20 shadow-2xl shadow-black/40 ring-1 ring-white/20'
-                        : 'bg-white/5 border-white/10 hover:border-white/20 hover:bg-white/10'
+                        ? 'bg-black/60 border-white/20 shadow-2xl shadow-black/40 ring-1 ring-white/20'
+                        : 'bg-black/20 border-white/10 hover:border-white/20 hover:bg-black/40'
                     }`}
                   >
                     <div className="flex items-center justify-between">
@@ -539,8 +538,8 @@ export default function App() {
                     onClick={() => setActiveTab('how-it-works')}
                     className={`p-4 rounded-xl border cursor-pointer group transition-all duration-300 backdrop-blur-2xl ${
                       activeTab === 'how-it-works'
-                        ? 'bg-white/15 border-white/20 shadow-2xl shadow-black/40 ring-1 ring-white/20'
-                        : 'bg-white/5 border-white/10 hover:border-white/20 hover:bg-white/10'
+                        ? 'bg-black/60 border-white/20 shadow-2xl shadow-black/40 ring-1 ring-white/20'
+                        : 'bg-black/20 border-white/10 hover:border-white/20 hover:bg-black/40'
                     }`}
                   >
                     <div className="flex items-center justify-between">
@@ -557,8 +556,8 @@ export default function App() {
                     onClick={() => setActiveTab('experiences')}
                     className={`p-4 rounded-xl border cursor-pointer group transition-all duration-300 backdrop-blur-2xl ${
                       activeTab === 'experiences'
-                        ? 'bg-white/15 border-white/20 shadow-2xl shadow-black/40 ring-1 ring-white/20'
-                        : 'bg-white/5 border-white/10 hover:border-white/20 hover:bg-white/10'
+                        ? 'bg-black/60 border-white/20 shadow-2xl shadow-black/40 ring-1 ring-white/20'
+                        : 'bg-black/20 border-white/10 hover:border-white/20 hover:bg-black/40'
                     }`}
                   >
                     <div className="flex items-center justify-between">
@@ -602,59 +601,59 @@ export default function App() {
                   )}
 
                   {activeTab === 'blogs' && (
-                    <div className="space-y-8 animate-fade-in text-slate-900 dark:text-slate-100">
-                      <div className="glass-card bg-white/80 dark:bg-white/5 rounded-3xl border border-slate-200/80 dark:border-white/10 p-8 shadow-xl shadow-slate-200/50 dark:shadow-2xl apple-specular">
-                        <span className="text-[10px] font-extrabold text-[#E04F33] dark:text-[#FF8A73] bg-[#E04F33]/10 dark:bg-white/10 px-3 py-1 rounded-full uppercase tracking-widest border border-[#E04F33]/20 dark:border-white/15 font-mono">
+                    <div className="space-y-8 animate-fade-in text-slate-100">
+                      <div className="glass-card bg-black/30 rounded-3xl border border-white/10 p-8 shadow-2xl apple-specular">
+                        <span className="text-[10px] font-extrabold text-[#FF8A73] bg-black/40 px-3 py-1 rounded-full uppercase tracking-widest border border-white/15 font-mono">
                           Kaizen Editorial
                         </span>
-                        <h2 className="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white mt-4 font-serif">
+                        <h2 className="text-2xl sm:text-3xl font-extrabold text-white mt-4 font-serif">
                           The Art of Luxury Vacation Rentals & Design
                         </h2>
-                        <p className="text-slate-600 dark:text-slate-400 text-sm mt-2 leading-relaxed">
+                        <p className="text-slate-400 text-sm mt-2 leading-relaxed">
                           Exclusive columns on luxury real estate curation, interior design secrets, and guest experience benchmarks.
                         </p>
                       </div>
 
                       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                        <div className="glass-card bg-white/80 dark:bg-white/5 rounded-2xl border border-slate-200/80 dark:border-white/10 overflow-hidden flex flex-col justify-between transition-all shadow-xl shadow-slate-200/50 dark:shadow-2xl apple-specular">
+                        <div className="glass-card bg-black/30 rounded-2xl border border-white/10 overflow-hidden flex flex-col justify-between transition-all shadow-2xl apple-specular">
                           <div>
                             <div className="h-40 relative">
                               <img src="https://images.unsplash.com/photo-1540555700478-4be289fbecef?auto=format&fit=crop&w=600&q=80" alt="Luxury Scottsdale Villa design" className="w-full h-full object-cover"/>
                             </div>
                             <div className="p-5 space-y-2">
-                              <p className="text-[10px] text-[#E04F33] dark:text-[#FF8A73] font-bold uppercase tracking-wider font-mono">July 18, 2026 • 5 min read</p>
-                              <h3 className="font-extrabold text-base text-slate-900 dark:text-white">Curating Kaizen Scottsdale: Inside Our Design Playbook</h3>
-                              <p className="text-xs text-slate-600 dark:text-slate-400 leading-relaxed line-clamp-3">
+                              <p className="text-[10px] text-[#FF8A73] font-bold uppercase tracking-wider font-mono">July 18, 2026 • 5 min read</p>
+                              <h3 className="font-extrabold text-base text-white">Curating Kaizen Scottsdale: Inside Our Design Playbook</h3>
+                              <p className="text-xs text-slate-400 leading-relaxed line-clamp-3">
                                 How we integrated custom local cactus gardens, heated infinity pools, and warm neutral linens to boost Scottsdale guest satisfaction.
                               </p>
                             </div>
                           </div>
                         </div>
 
-                        <div className="glass-card bg-white/80 dark:bg-white/5 rounded-2xl border border-slate-200/80 dark:border-white/10 overflow-hidden flex flex-col justify-between transition-all shadow-xl shadow-slate-200/50 dark:shadow-2xl apple-specular">
+                        <div className="glass-card bg-black/30 rounded-2xl border border-white/10 overflow-hidden flex flex-col justify-between transition-all shadow-2xl apple-specular">
                           <div>
                             <div className="h-40 relative">
                               <img src="https://images.unsplash.com/photo-1556910103-1c02745aae4d?auto=format&fit=crop&w=600&q=80" alt="Private Chef Table Experience" className="w-full h-full object-cover"/>
                             </div>
                             <div className="p-5 space-y-2">
-                              <p className="text-[10px] text-[#E04F33] dark:text-[#FF8A73] font-bold uppercase tracking-wider font-mono">July 14, 2026 • 7 min read</p>
-                              <h3 className="font-extrabold text-base text-slate-900 dark:text-white">The Jain-Friendly Gourmet Advantage in Modern Luxury</h3>
-                              <p className="text-xs text-slate-600 dark:text-slate-400 leading-relaxed line-clamp-3">
+                              <p className="text-[10px] text-[#FF8A73] font-bold uppercase tracking-wider font-mono">July 14, 2026 • 7 min read</p>
+                              <h3 className="font-extrabold text-base text-white">The Jain-Friendly Gourmet Advantage in Modern Luxury</h3>
+                              <p className="text-xs text-slate-400 leading-relaxed line-clamp-3">
                                 A 5-star trip is more than just handing over a check-in code. We explore how catering to specialized dietary travelers secures top reviews.
                               </p>
                             </div>
                           </div>
                         </div>
 
-                        <div className="glass-card bg-white/80 dark:bg-white/5 rounded-2xl border border-slate-200/80 dark:border-white/10 overflow-hidden flex flex-col justify-between transition-all shadow-xl shadow-slate-200/50 dark:shadow-2xl apple-specular">
+                        <div className="glass-card bg-black/30 rounded-2xl border border-white/10 overflow-hidden flex flex-col justify-between transition-all shadow-2xl apple-specular">
                           <div>
                             <div className="h-40 relative">
                               <img src="https://images.unsplash.com/photo-1450622238302-a223f43d35fc?auto=format&fit=crop&w=600&q=80" alt="Florida Coastal Villa" className="w-full h-full object-cover"/>
                             </div>
                             <div className="p-5 space-y-2">
-                              <p className="text-[10px] text-[#E04F33] dark:text-[#FF8A73] font-bold uppercase tracking-wider font-mono">June 29, 2026 • 6 min read</p>
-                              <h3 className="font-extrabold text-base text-slate-900 dark:text-white">Pensacola Coastal Living: High Amenities & Unmatched Comfort</h3>
-                              <p className="text-xs text-slate-600 dark:text-slate-400 leading-relaxed line-clamp-3">
+                              <p className="text-[10px] text-[#FF8A73] font-bold uppercase tracking-wider font-mono">June 29, 2026 • 6 min read</p>
+                              <h3 className="font-extrabold text-base text-white">Pensacola Coastal Living: High Amenities & Unmatched Comfort</h3>
+                              <p className="text-xs text-slate-400 leading-relaxed line-clamp-3">
                                 Coastal luxury requires absolute precision in design and private beach club access.
                               </p>
                             </div>
@@ -665,42 +664,42 @@ export default function App() {
                   )}
 
                   {activeTab === 'stories' && (
-                    <div className="space-y-8 animate-fade-in text-slate-900 dark:text-slate-100">
-                      <div className="glass-card bg-white/80 dark:bg-white/5 rounded-3xl border border-slate-200/80 dark:border-white/10 p-8 shadow-xl shadow-slate-200/50 dark:shadow-2xl apple-specular">
-                        <span className="text-[10px] font-extrabold text-[#E04F33] dark:text-[#FF8A73] bg-[#E04F33]/10 dark:bg-white/10 px-3 py-1 rounded-full uppercase tracking-widest border border-[#E04F33]/20 dark:border-white/15 font-mono">
+                    <div className="space-y-8 animate-fade-in text-slate-100">
+                      <div className="glass-card bg-black/30 rounded-3xl border border-white/10 p-8 shadow-2xl apple-specular">
+                        <span className="text-[10px] font-extrabold text-[#FF8A73] bg-black/40 px-3 py-1 rounded-full uppercase tracking-widest border border-white/15 font-mono">
                           Guest Chronicles
                         </span>
-                        <h2 className="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white mt-4 font-serif">
+                        <h2 className="text-2xl sm:text-3xl font-extrabold text-white mt-4 font-serif">
                           The Stories Behind Kaizen
                         </h2>
-                        <p className="text-slate-600 dark:text-slate-400 text-sm mt-2 leading-relaxed">
+                        <p className="text-slate-400 text-sm mt-2 leading-relaxed">
                           Read real testimonials from travelers who have experienced the Kaizen difference.
                         </p>
                       </div>
 
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <div className="glass-card bg-white/80 dark:bg-white/5 p-6 rounded-2xl border border-slate-200/80 dark:border-white/10 flex flex-col justify-between space-y-4 shadow-xl shadow-slate-200/50 dark:shadow-2xl apple-specular">
-                          <p className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed italic">
+                        <div className="glass-card bg-black/30 p-6 rounded-2xl border border-white/10 flex flex-col justify-between space-y-4 shadow-2xl apple-specular">
+                          <p className="text-xs text-slate-300 leading-relaxed italic">
                             "Finding rental homes that accommodate specialized dietary needs and custom concierge dining is challenging. Kaizen curated a flawless family experience for us in Scottsdale. The absolute gold standard."
                           </p>
-                          <div className="flex items-center gap-3 pt-4 border-t border-slate-200 dark:border-white/10">
-                            <div className="w-10 h-10 rounded-full bg-[#E04F33]/10 dark:bg-white/10 text-[#E04F33] dark:text-[#FF8A73] font-bold flex items-center justify-center font-mono text-xs border border-[#E04F33]/20 dark:border-white/15">AK</div>
+                          <div className="flex items-center gap-3 pt-4 border-t border-white/10">
+                            <div className="w-10 h-10 rounded-full bg-black/40 text-[#FF8A73] font-bold flex items-center justify-center font-mono text-xs border border-white/15">AK</div>
                             <div>
-                              <p className="font-extrabold text-slate-900 dark:text-white text-xs">Anand Kapoor</p>
-                              <p className="text-[10px] text-slate-500 dark:text-slate-400 font-mono">Scottsdale Villa Guest</p>
+                              <p className="font-extrabold text-white text-xs">Anand Kapoor</p>
+                              <p className="text-[10px] text-slate-400 font-mono">Scottsdale Villa Guest</p>
                             </div>
                           </div>
                         </div>
 
-                        <div className="glass-card bg-white/80 dark:bg-white/5 p-6 rounded-2xl border border-slate-200/80 dark:border-white/10 flex flex-col justify-between space-y-4 shadow-xl shadow-slate-200/50 dark:shadow-2xl apple-specular">
-                          <p className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed italic">
+                        <div className="glass-card bg-black/30 p-6 rounded-2xl border border-white/10 flex flex-col justify-between space-y-4 shadow-2xl apple-specular">
+                          <p className="text-xs text-slate-300 leading-relaxed italic">
                             "Kaizen handles designer styling, 24/7 guest check-ins, and bespoke concierge requests effortlessly. Highly recommend their collection."
                           </p>
-                          <div className="flex items-center gap-3 pt-4 border-t border-slate-200 dark:border-white/10">
-                            <div className="w-10 h-10 rounded-full bg-[#E04F33]/10 dark:bg-white/10 text-[#E04F33] dark:text-[#FF8A73] font-bold flex items-center justify-center font-mono text-xs border border-[#E04F33]/20 dark:border-white/15">MR</div>
+                          <div className="flex items-center gap-3 pt-4 border-t border-white/10">
+                            <div className="w-10 h-10 rounded-full bg-black/40 text-[#FF8A73] font-bold flex items-center justify-center font-mono text-xs border border-white/15">MR</div>
                             <div>
-                              <p className="font-extrabold text-slate-900 dark:text-white text-xs">Marcus Roberts</p>
-                              <p className="text-[10px] text-slate-500 dark:text-slate-400 font-mono">Pensacola Retreat Guest</p>
+                              <p className="font-extrabold text-white text-xs">Marcus Roberts</p>
+                              <p className="text-[10px] text-slate-400 font-mono">Pensacola Retreat Guest</p>
                             </div>
                           </div>
                         </div>
@@ -709,31 +708,31 @@ export default function App() {
                   )}
 
                   {activeTab === 'experiences' && (
-                    <div className="space-y-8 animate-fade-in text-slate-900 dark:text-slate-100">
-                      <div className="glass-card bg-white/80 dark:bg-white/5 rounded-3xl border border-slate-200/80 dark:border-white/10 p-8 shadow-xl shadow-slate-200/50 dark:shadow-2xl apple-specular">
-                        <span className="text-[10px] font-extrabold text-[#E04F33] dark:text-[#FF8A73] bg-[#E04F33]/10 dark:bg-white/10 px-3 py-1 rounded-full uppercase tracking-widest border border-[#E04F33]/20 dark:border-white/15 font-mono">
+                    <div className="space-y-8 animate-fade-in text-slate-100">
+                      <div className="glass-card bg-black/30 rounded-3xl border border-white/10 p-8 shadow-2xl apple-specular">
+                        <span className="text-[10px] font-extrabold text-[#FF8A73] bg-black/40 px-3 py-1 rounded-full uppercase tracking-widest border border-white/15 font-mono">
                           The Kaizen Signature
                         </span>
-                        <h2 className="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white mt-4 font-serif">
+                        <h2 className="text-2xl sm:text-3xl font-extrabold text-white mt-4 font-serif">
                           Elevating Travel into Artistry
                         </h2>
-                        <p className="text-slate-600 dark:text-slate-400 text-sm mt-2 leading-relaxed">
+                        <p className="text-slate-400 text-sm mt-2 leading-relaxed">
                           We believe hospitality lies in custom, invisible luxuries. At every Kaizen villa, your trip is accompanied by curated personal services, premium amenities, and dedicated concierge lines.
                         </p>
                       </div>
 
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                        <div className="glass-card bg-white/80 dark:bg-white/5 p-6 rounded-2xl border border-slate-200/80 dark:border-white/10 space-y-3 shadow-xl shadow-slate-200/50 dark:shadow-2xl apple-specular">
+                        <div className="glass-card bg-black/30 p-6 rounded-2xl border border-white/10 space-y-3 shadow-2xl apple-specular">
                           <Sparkles className="w-6 h-6 text-[#E04F33]" />
-                          <h3 className="font-extrabold text-base text-slate-900 dark:text-white font-serif">Heated Infinity Pools</h3>
-                          <p className="text-xs text-slate-600 dark:text-slate-400 leading-relaxed">
+                          <h3 className="font-extrabold text-base text-white font-serif">Heated Infinity Pools</h3>
+                          <p className="text-xs text-slate-400 leading-relaxed">
                             Year-round temperature control, resort lighting, and private cabana loungers.
                           </p>
                         </div>
-                        <div className="glass-card bg-white/80 dark:bg-white/5 p-6 rounded-2xl border border-slate-200/80 dark:border-white/10 space-y-3 shadow-xl shadow-slate-200/50 dark:shadow-2xl apple-specular">
+                        <div className="glass-card bg-black/30 p-6 rounded-2xl border border-white/10 space-y-3 shadow-2xl apple-specular">
                           <Award className="w-6 h-6 text-[#E04F33]" />
-                          <h3 className="font-extrabold text-base text-slate-900 dark:text-white font-serif">24/7 Concierge Service</h3>
-                          <p className="text-xs text-slate-600 dark:text-slate-400 leading-relaxed">
+                          <h3 className="font-extrabold text-base text-white font-serif">24/7 Concierge Service</h3>
+                          <p className="text-xs text-slate-400 leading-relaxed">
                             Instant WhatsApp communication for dining reservations, airport transfers, and private chefs.
                           </p>
                         </div>
@@ -742,15 +741,15 @@ export default function App() {
                   )}
 
                   {activeTab === 'about' && (
-                    <div className="space-y-8 animate-fade-in text-slate-900 dark:text-slate-100">
-                      <div className="glass-card bg-white/80 dark:bg-white/5 rounded-3xl border border-slate-200/80 dark:border-white/10 p-8 shadow-xl shadow-slate-200/50 dark:shadow-2xl apple-specular">
-                        <span className="text-[10px] font-extrabold text-[#E04F33] dark:text-[#FF8A73] bg-[#E04F33]/10 dark:bg-white/10 px-3 py-1 rounded-full uppercase tracking-widest border border-[#E04F33]/20 dark:border-white/15 font-mono">
+                    <div className="space-y-8 animate-fade-in text-slate-100">
+                      <div className="glass-card bg-black/30 rounded-3xl border border-white/10 p-8 shadow-2xl apple-specular">
+                        <span className="text-[10px] font-extrabold text-[#FF8A73] bg-black/40 px-3 py-1 rounded-full uppercase tracking-widest border border-white/15 font-mono">
                           The Kaizen Philosophy
                         </span>
-                        <h2 className="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white mt-4 font-serif">
+                        <h2 className="text-2xl sm:text-3xl font-extrabold text-white mt-4 font-serif">
                           Continuous Improvement. Exceptional Hospitality.
                         </h2>
-                        <p className="text-slate-600 dark:text-slate-400 text-sm mt-2 leading-relaxed">
+                        <p className="text-slate-400 text-sm mt-2 leading-relaxed">
                           At Kaizen, we merge high-end, culturally-inclusive hospitality with continuous operational improvement.
                         </p>
                       </div>
@@ -764,26 +763,25 @@ export default function App() {
         )}
       </main>
 
-      {/* 4. Missing Footer Area */}
-      <footer className="backdrop-blur-xl bg-white/40 dark:bg-black/20 border-t border-slate-200/50 dark:border-white/10 mt-16 py-10 transition-colors duration-300 relative z-10">
+      <footer className="backdrop-blur-xl bg-black/20 border-t border-white/10 mt-16 py-10 transition-colors duration-300 relative z-10">
         <div className="max-w-7xl mx-auto px-6 flex flex-col md:flex-row items-center justify-between gap-6">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 bg-[#E04F33] rounded-lg flex items-center justify-center shadow-lg shadow-[#E04F33]/25 border border-white/20 shrink-0">
               <span className="text-white font-extrabold text-base tracking-normal font-sans">改</span>
             </div>
             <div>
-              <p className="font-extrabold text-sm text-slate-900 dark:text-white tracking-wide font-serif">KAIZEN LUXURY ESTATES</p>
-              <p className="text-slate-500 dark:text-slate-400 text-xs tracking-widest font-mono uppercase leading-none mt-0.5">PREMIUM VACATION RENTALS</p>
+              <p className="font-extrabold text-sm text-white tracking-wide font-serif">KAIZEN LUXURY ESTATES</p>
+              <p className="text-slate-400 text-xs tracking-widest font-mono uppercase leading-none mt-0.5">PREMIUM VACATION RENTALS</p>
             </div>
           </div>
 
           <div className="flex items-center gap-6 font-mono font-bold">
-            <button onClick={() => { setActiveTab('properties'); window.location.hash = ''; }} className="text-slate-600 dark:text-slate-300 transition-colors duration-200 hover:text-[#E04F33] text-sm">Properties</button>
-            <button onClick={() => { setActiveTab('experiences'); window.location.hash = ''; }} className="text-slate-600 dark:text-slate-300 transition-colors duration-200 hover:text-[#E04F33] text-sm">Experience</button>
-            <button onClick={() => { setActiveTab('about'); window.location.hash = ''; }} className="text-slate-600 dark:text-slate-300 transition-colors duration-200 hover:text-[#E04F33] text-sm">About Us</button>
+            <button onClick={() => { setActiveTab('properties'); window.location.hash = ''; }} className="text-slate-300 transition-colors duration-200 hover:text-[#E04F33] text-sm">Properties</button>
+            <button onClick={() => { setActiveTab('experiences'); window.location.hash = ''; }} className="text-slate-300 transition-colors duration-200 hover:text-[#E04F33] text-sm">Experience</button>
+            <button onClick={() => { setActiveTab('about'); window.location.hash = ''; }} className="text-slate-300 transition-colors duration-200 hover:text-[#E04F33] text-sm">About Us</button>
           </div>
 
-          <p className="text-slate-400 dark:text-slate-500 text-xs font-mono text-center md:text-right">
+          <p className="text-slate-500 text-xs font-mono text-center md:text-right">
             © 2026 Kaizen Luxury Real Estate LLC. All rights reserved.
           </p>
         </div>

@@ -6,14 +6,12 @@ import { SkeletonList } from '../common/Skeleton';
 import { EmptyState } from '../common/EmptyState';
 import { ErrorBoundary } from '../common/ErrorBoundary';
 import { BookingListItem } from './BookingListItem';
-
 const containerVariants = {
   hidden: {},
   visible: {
     transition: { staggerChildren: 0.08, delayChildren: 0.05 },
   },
 };
-
 const itemVariants = {
   hidden: { opacity: 0, y: 20, scale: 0.98 },
   visible: {
@@ -23,12 +21,9 @@ const itemVariants = {
     transition: { duration: 0.4, ease: [0.16, 1, 0.3, 1] },
   },
 };
-
 const BookingsContent: React.FC = () => {
   const { bookings, loading, error } = useMyBookings();
-
   if (loading) return <SkeletonList label="Loading your bookings" rows={2} rowHeightClass="h-28" />;
-
   if (error)
     return (
       <motion.p
@@ -40,7 +35,6 @@ const BookingsContent: React.FC = () => {
         {error}
       </motion.p>
     );
-
   if (bookings.length === 0) {
     return (
       <motion.div
@@ -56,7 +50,6 @@ const BookingsContent: React.FC = () => {
       </motion.div>
     );
   }
-
   return (
     <motion.div
       variants={containerVariants}
@@ -74,16 +67,15 @@ const BookingsContent: React.FC = () => {
     </motion.div>
   );
 };
-
 export const BookingsView: React.FC = () => (
-  <div className="max-w-6xl mx-auto p-6 space-y-6 text-slate-900 dark:text-slate-100">
+  <div className="max-w-6xl mx-auto p-6 space-y-6 text-slate-100">
     <motion.div
       initial={{ opacity: 0, y: -10 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
-      className="pb-4 border-b border-slate-200 dark:border-white/10"
+      className="pb-4 border-b border-white/10"
     >
-      <h1 className="text-2xl md:text-3xl font-black text-slate-900 dark:text-white flex items-center gap-2">
+      <h1 className="text-2xl md:text-3xl font-black text-white flex items-center gap-2">
         <motion.span
           initial={{ scale: 0.6, rotate: -15, opacity: 0 }}
           animate={{ scale: 1, rotate: 0, opacity: 1 }}
@@ -93,7 +85,7 @@ export const BookingsView: React.FC = () => (
         </motion.span>
         My <span className="text-[#E04F33]">Lease Transactions & Locks</span>
       </h1>
-      <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
+      <p className="text-xs text-slate-400 mt-1">
         Real-time status of secured villa leases and active hold locks on Kaizen.
       </p>
     </motion.div>

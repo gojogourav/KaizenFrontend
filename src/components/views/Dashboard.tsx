@@ -36,9 +36,9 @@ const DashboardContent: React.FC = () => {
       initial={{ opacity: 0, y: 16 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1], delay: 0.1 }}
-      className="bg-white/80 dark:bg-white/5 backdrop-blur-2xl rounded-3xl border border-slate-200/80 dark:border-white/10 p-6 shadow-xl space-y-4"
+      className="bg-white/5 backdrop-blur-2xl rounded-3xl border border-white/10 p-6 shadow-xl space-y-4"
     >
-      <h3 className="text-lg font-bold text-slate-900 dark:text-white flex items-center gap-2">
+      <h3 className="text-lg font-bold text-white flex items-center gap-2">
         <motion.span
           initial={{ scale: 0.5, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
@@ -61,12 +61,12 @@ export const DashboardView: React.FC = () => {
     user?.username;
 
   return (
-    <div className="max-w-6xl mx-auto p-6 space-y-8 text-slate-900 dark:text-slate-100">
+    <div className="max-w-6xl mx-auto p-6 space-y-8 text-slate-100">
       <motion.div
         initial={{ opacity: 0, y: -10 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
-        className="bg-white/80 dark:bg-white/5 backdrop-blur-2xl rounded-3xl p-8 border border-slate-200/80 dark:border-white/10 shadow-xl flex flex-col md:flex-row items-start md:items-center justify-between gap-6"
+        className="bg-white/5 backdrop-blur-2xl rounded-3xl p-8 border border-white/10 shadow-xl flex flex-col md:flex-row items-start md:items-center justify-between gap-6"
       >
         <div className="flex items-center gap-5">
           {user?.avatarUrl ? (
@@ -83,18 +83,18 @@ export const DashboardView: React.FC = () => {
               initial={{ scale: 0.7, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               transition={{ type: "spring", stiffness: 260, damping: 18, delay: 0.1 }}
-              className="w-16 h-16 rounded-2xl bg-[#E04F33]/10 dark:bg-white/10 border-2 border-[#E04F33]/40 flex items-center justify-center text-2xl font-black text-[#E04F33] dark:text-white"
+              className="w-16 h-16 rounded-2xl bg-white/10 border-2 border-[#E04F33]/40 flex items-center justify-center text-2xl font-black text-white"
               aria-hidden="true"
             >
               {displayName?.[0] || "K"}
             </motion.div>
           )}
           <div>
-            <h1 className="text-2xl md:text-3xl font-black text-slate-900 dark:text-white">
+            <h1 className="text-2xl md:text-3xl font-black text-white">
               Welcome back,{" "}
               <span className="text-[#E04F33]">{displayName}</span>
             </h1>
-            <p className="text-xs text-slate-500 dark:text-slate-400 font-mono mt-1">
+            <p className="text-xs text-slate-400 font-mono mt-1">
               Buyer Account • {user?.company || "Turnkey Member"} •{" "}
               {user?.email}
             </p>
@@ -104,7 +104,7 @@ export const DashboardView: React.FC = () => {
           initial={{ opacity: 0, scale: 0.9 }}
           animate={{ opacity: 1, scale: 1 }}
           transition={{ delay: 0.2, duration: 0.3 }}
-          className="inline-flex items-center gap-2 bg-[#E04F33]/10 dark:bg-white/10 px-4 py-2 rounded-xl border border-[#E04F33]/20 dark:border-white/15 text-xs font-mono font-bold text-[#E04F33] dark:text-[#FF8A73]"
+          className="inline-flex items-center gap-2 bg-white/10 px-4 py-2 rounded-xl border border-white/15 text-xs font-mono font-bold text-[#FF8A73]"
         >
           <ShieldCheck
             className="w-4 h-4 text-emerald-500"
