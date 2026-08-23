@@ -42,10 +42,12 @@ export const PropertyCard: React.FC<PropertyCardProps> = ({
   const locationText = deal.city
     ? `${deal.city}, ${deal.state}`
     : deal.location || "";
+
   const coverImage =
-    deal.images?.[0] ||
+    deal.images?.find((url: string) => !!url) ||
     deal.imageUrl ||
     "https://images.unsplash.com/photo-1512917774080-9991f1c4c750?auto=format&fit=crop&w=800&q=80";
+
   const displayPrice = deal.price ?? deal.rent_monthly ?? deal.adr ?? 0;
   const displayBeds =
     deal.bedsBaths ||

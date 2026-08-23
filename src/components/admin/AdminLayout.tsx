@@ -8,6 +8,7 @@ import {
   Database,
   KeyRound,
   Bell,
+  CalendarClock,
 } from "lucide-react";
 import { AdminHeader } from "./AdminHeader";
 import { AdminSidebar, type AdminSection } from "./AdminSidebar";
@@ -15,6 +16,7 @@ import { AdminPropertyManager } from "./AdminPropertyManager";
 import { AdminLeadsManager } from "./AdminLeadsManager";
 import { AdminBlogManager } from "./AdminBlogManager";
 import { AdminStoriesManager } from "./AdminStoriesManager";
+import { AdminBookingsReview } from "./AdminBookingsReview";
 import { useAuth } from "../../context/AuthContext";
 import { AdminUIProvider } from "./AdminUIProvider";
 import { AdminAnimations } from "./Animations";
@@ -36,6 +38,12 @@ const NAV_ITEMS = [
     label: "Leads & Bookings",
     icon: Users,
     description: "Inbound inquiries & leaseholds",
+  },
+  {
+    id: "payment_review" as AdminSection,
+    label: "Payment Review",
+    icon: CalendarClock,
+    description: "Approve or reject PayPal payments",
   },
   {
     id: "blogs" as AdminSection,
@@ -72,7 +80,6 @@ const SettingsPanel: React.FC = () => (
         </p>
       </div>
     </div>
-
     <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
       {[
         { icon: Database, label: "Database", value: "Supabase (PostGIS)", tone: "text-emerald-400" },
@@ -90,7 +97,6 @@ const SettingsPanel: React.FC = () => (
         </div>
       ))}
     </div>
-
     <div className="p-5 rounded-2xl bg-white/5 border border-white/10 text-xs font-mono text-slate-300 space-y-2">
       <p className="text-emerald-400 font-bold flex items-center gap-2">
         <span className="relative flex w-1.5 h-1.5">
@@ -108,7 +114,6 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({ onExitAdmin }) => {
   const { user } = useAuth();
   const [activeSection, setActiveSection] = useState<AdminSection>("properties");
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-
   const activeMeta = NAV_ITEMS.find((n) => n.id === activeSection);
 
   return (
@@ -123,7 +128,6 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({ onExitAdmin }) => {
           onExitAdmin={onExitAdmin}
           onToggleMenu={() => setIsSidebarOpen((prev) => !prev)}
         />
-
         <div className="flex-1 max-w-7xl w-full mx-auto p-4 sm:p-6 lg:p-8 flex flex-col lg:flex-row gap-6 lg:gap-8 items-start">
           <AdminSidebar
             items={NAV_ITEMS}
@@ -132,10 +136,10 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({ onExitAdmin }) => {
             onClose={() => setIsSidebarOpen(false)}
             onSelect={(id) => setActiveSection(id)}
           />
-
           <main className="flex-1 min-w-0 w-full space-y-6">
             {activeSection === "properties" && <AdminPropertyManager />}
             {activeSection === "leads_bookings" && <AdminLeadsManager />}
+            {activeSection === "payment_review" && <AdminBookingsReview />}
             {activeSection === "blogs" && <AdminBlogManager />}
             {activeSection === "stories" && <AdminStoriesManager />}
             {activeSection === "settings" && <SettingsPanel />}

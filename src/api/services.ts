@@ -9,7 +9,6 @@ import {
 import type {
   User,
   Property,
-  Booking,
   Favorite,
   LeadPayload,
   DashboardResponse,
@@ -205,6 +204,90 @@ export const authService = {
 };
 
 
+// ── Bookings (single unified export — merged from the two prior versions) ──
+
+export interface BookingRecord {
+  id: number;
+  property: number;
+  property_title: string;
+  buyer: number | null;
+  buyer_email: string | null;
+  lead: number | null;
+  state: "locked" | "pending_review" | "purchased" | "cancelled" | "expired";
+  check_in: string | null;
+  check_out: string | null;
+  payment_link: string | null;
+  payment_reference: string | null;
+  locked_at: string | null;
+  expires_at: string | null;
+  submitted_at: string | null;
+  purchased_at: string | null;
+  cancelled_at: string | null;
+  created_at: string;
+}
+
+export const bookingService = {
+  async lockProperty(
+    propertyId: string | number,
+    data: { check_in?: string; check_out?: string },
+    opts?: RequestOpts,
+  ): Promise<BookingRecord> {
+    return apiClient(`/api/properties/${propertyId}/lock/`, {
+      method: "POST",
+      body: JSON.stringify(data),
+      ...opts,
+    });
+  },
+
+  async getBooking(bookingId: string | number, opts?: RequestOpts): Promise<BookingRecord> {
+    return apiClient(`/api/bookings/${bookingId}/`, { method: "GET", ...opts });
+  },
+
+  async submitPaymentReference(
+    bookingId: string | number,
+    reference: string,
+    opts?: RequestOpts,
+  ): Promise<BookingRecord> {
+    return apiClient(`/api/bookings/${bookingId}/submit-payment/`, {
+      method: "POST",
+      body: JSON.stringify({ reference }),
+      ...opts,
+    });
+  },
+
+  async cancelBooking(bookingId: string | number, opts?: RequestOpts): Promise<BookingRecord> {
+    return apiClient(`/api/bookings/${bookingId}/cancel/`, { method: "POST", ...opts });
+  },
+
+  async getUserBookings(opts?: RequestOpts): Promise<BookingRecord[]> {
+    const res = await apiClient<any>("/api/me/bookings/", { method: "GET", ...opts });
+    return extractArray<BookingRecord>(res, "GET /api/me/bookings/");
+  },
+};
+
+export const adminBookingService = {
+  async getBookings(
+    state?: string,
+    opts?: RequestOpts,
+  ): Promise<BookingRecord[]> {
+    const res = await apiClient<any>("/api/admin/bookings/", {
+      method: "GET",
+      params: state ? { state } : undefined,
+      ...opts,
+    });
+    return extractArray<BookingRecord>(res, "GET /api/admin/bookings/");
+  },
+
+  async approvePayment(bookingId: string | number, opts?: RequestOpts): Promise<BookingRecord> {
+    return apiClient(`/api/admin/bookings/${bookingId}/approve/`, { method: "POST", ...opts });
+  },
+
+  async rejectPayment(bookingId: string | number, opts?: RequestOpts): Promise<BookingRecord> {
+    return apiClient(`/api/admin/bookings/${bookingId}/reject/`, { method: "POST", ...opts });
+  },
+};
+
+
 export const propertyService = {
 
   async getProperties(
@@ -336,63 +419,6 @@ export const propertyService = {
 };
 
 
-export const bookingService = {
-
-  async lockProperty(
-    propertyId: string | number,
-    data: { check_in?: string; check_out?: string },
-    opts?: RequestOpts,
-  ): Promise<{ booking_id: number; status: string; check_in?: string; check_out?: string }> {
-    return apiClient(`/api/properties/${propertyId}/lock/`, {
-      method: "POST",
-      body: JSON.stringify(data),
-      ...opts,
-    });
-  },
-
-
-  async createPaymentIntent(
-    bookingId: string | number,
-    opts?: RequestOpts,
-  ): Promise<{ clientSecret: string; mock?: boolean }> {
-    return apiClient(`/api/bookings/${bookingId}/payment-intent/`, {
-      method: "POST",
-      ...opts,
-    });
-  },
-
-
-  async purchaseBooking(
-    bookingId: string | number,
-    opts?: RequestOpts,
-  ): Promise<Booking> {
-    return apiClient<Booking>(`/api/bookings/${bookingId}/purchase/`, {
-      method: "POST",
-      ...opts,
-    });
-  },
-
-
-  async cancelBooking(
-    bookingId: string | number,
-    opts?: RequestOpts,
-  ): Promise<Booking> {
-    return apiClient<Booking>(`/api/bookings/${bookingId}/cancel/`, {
-      method: "POST",
-      ...opts,
-    });
-  },
-
-  async getUserBookings(opts?: RequestOpts): Promise<Booking[]> {
-    const res = await apiClient<any>("/api/me/bookings/", {
-      method: "GET",
-      ...opts,
-    });
-    return extractArray<Booking>(res, "GET /api/me/bookings/");
-  },
-};
-
-
 export const favoriteService = {
   async addFavorite(
     propertyId: string | number,
@@ -464,12 +490,12 @@ export const adminService = {
     return extractArray<User>(res, "GET /api/admin/users/");
   },
 
-  async getBookings(opts?: RequestOpts): Promise<Booking[]> {
+  async getBookings(opts?: RequestOpts): Promise<BookingRecord[]> {
     const res = await apiClient<any>("/api/admin/bookings/", {
       method: "GET",
       ...opts,
     });
-    return extractArray<Booking>(res, "GET /api/admin/bookings/");
+    return extractArray<BookingRecord>(res, "GET /api/admin/bookings/");
   },
 
   async getLeads(opts?: RequestOpts): Promise<LeadPayload[]> {

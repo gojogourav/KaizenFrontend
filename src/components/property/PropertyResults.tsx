@@ -116,7 +116,10 @@ const PropertyCard: React.FC<{
   onSelect?: (p: Property) => void;
 }> = ({ property, checkIn, checkOut, onSelect }) => {
   const p = property as any;
-  const mediaUrl = p.media?.[0]?.cdn_url ?? p.images?.[0] ?? "";
+  const mediaUrl =
+    p.media?.find((m: any) => !!m?.cdn_url)?.cdn_url ??
+    p.images?.find((url: string) => !!url) ??
+    "";
   const rent = p.rent_monthly ?? p.price ?? 0;
   const profit = p.net_profit_monthly ?? Math.round(Number(rent) * 0.75);
 
