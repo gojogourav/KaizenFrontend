@@ -67,6 +67,29 @@
   }
 }
 
+/* Mobile Scrolling & High FPS Optimizations */
+@media (max-width: 768px) {
+  body::before {
+    display: none !important;
+  }
+
+  .backdrop-blur-md,
+  .backdrop-blur-lg,
+  .backdrop-blur-xl,
+  .backdrop-blur-sm,
+  .backdrop-blur {
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+  }
+}
+
+.card-gpu {
+  transform: translateZ(0);
+  will-change: transform;
+  content-visibility: auto;
+  contain-intrinsic-size: 1px 440px;
+}
+
 /* Typography Utility Classes */
 .font-display {
   font-family: 'Space Grotesk', 'Plus Jakarta Sans', system-ui, sans-serif;

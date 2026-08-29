@@ -115,12 +115,12 @@ export const PropertyCard: React.FC<PropertyCardProps> = ({
   return (
     <motion.article
       onClick={() => onOpenProspectus(deal)}
-      whileHover={{ y: -6, scale: 1.01 }}
-      whileTap={{ scale: 0.99 }}
-      transition={{ type: "spring", stiffness: 300, damping: 24 }}
-      className={`group relative rounded-3xl border shadow-xl overflow-hidden flex flex-col justify-between cursor-pointer transition-all duration-300 h-full w-full min-w-0 ${
+      whileHover={{ y: -4 }}
+      whileTap={{ scale: 0.98 }}
+      transition={{ duration: 0.2 }}
+      className={`card-gpu group relative rounded-3xl border shadow-xl overflow-hidden flex flex-col justify-between cursor-pointer transition-all duration-300 h-full w-full min-w-0 ${
         isDark
-          ? "bg-slate-900/70 border-slate-800 hover:border-blue-500/40 shadow-slate-950/40 apple-specular"
+          ? "bg-slate-900/90 border-slate-800 hover:border-blue-500/40 shadow-slate-950/40"
           : "bg-white border-slate-200 hover:border-blue-400 shadow-slate-200/50"
       }`}
     >
@@ -130,7 +130,8 @@ export const PropertyCard: React.FC<PropertyCardProps> = ({
           src={coverImage}
           alt={deal.title}
           loading="lazy"
-          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 ease-out filter brightness-[0.92] group-hover:brightness-100"
+          decoding="async"
+          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 ease-out filter brightness-[0.92] group-hover:brightness-100"
           onError={(e) => {
             (e.target as HTMLImageElement).src =
               "https://images.unsplash.com/photo-1512917774080-9991f1c4c750?auto=format&fit=crop&w=800&q=80";

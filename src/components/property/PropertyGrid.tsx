@@ -99,9 +99,9 @@ const PropertyGridContent: React.FC<PropertyGridProps> = ({
           <motion.div
             role="listitem"
             key={property.id}
-            initial={{ opacity: 0, y: 20 }}
+            initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.4, delay: idx * 0.05 }}
+            transition={{ duration: 0.25, delay: Math.min(idx * 0.03, 0.12) }}
             className="min-w-0"
           >
             <PropertyCard
