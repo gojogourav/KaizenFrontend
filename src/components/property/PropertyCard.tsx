@@ -1,5 +1,4 @@
 import React from "react";
-import { motion, AnimatePresence } from "motion/react";
 import {
   MapPin,
   Heart,
@@ -21,7 +20,7 @@ export interface PropertyCardProps {
   onRate?: (deal: any, e: React.MouseEvent) => void;
 }
 
-export const PropertyCard: React.FC<PropertyCardProps> = ({
+export const PropertyCard = React.memo<PropertyCardProps>(({
   deal,
   isFavorite,
   onToggleFavorite,
@@ -67,44 +66,49 @@ export const PropertyCard: React.FC<PropertyCardProps> = ({
     : deal.location || "";
 
   const coverImage = ((): string => {
-    if (!deal) return "https://images.unsplash.com/photo-1512917774080-9991f1c4c750?auto=format&fit=crop&w=800&q=80";
-
-    // Check deal.images array
-    if (Array.isArray(deal.images) && deal.images.length > 0) {
-      for (const item of deal.images) {
-        if (typeof item === "string" && item.trim()) return item;
-        if (item && typeof item === "object") {
-          const url = item.cdn_url || item.url || item.file || item.image || item.src;
-          if (typeof url === "string" && url.trim()) return url;
+    let rawUrl = "";
+    if (deal) {
+      if (Array.isArray(deal.images) && deal.images.length > 0) {
+        for (const item of deal.images) {
+          if (typeof item === "string" && item.trim()) { rawUrl = item; break; }
+          if (item && typeof item === "object") {
+            const url = item.cdn_url || item.url || item.file || item.image || item.src;
+            if (typeof url === "string" && url.trim()) { rawUrl = url; break; }
+          }
         }
       }
-    }
-
-    // Check deal.media array (Django API response)
-    if (Array.isArray(deal.media) && deal.media.length > 0) {
-      for (const item of deal.media) {
-        if (typeof item === "string" && item.trim()) return item;
-        if (item && typeof item === "object") {
-          const url = item.cdn_url || item.url || item.file || item.image || item.src;
-          if (typeof url === "string" && url.trim()) return url;
+      if (!rawUrl && Array.isArray(deal.media) && deal.media.length > 0) {
+        for (const item of deal.media) {
+          if (typeof item === "string" && item.trim()) { rawUrl = item; break; }
+          if (item && typeof item === "object") {
+            const url = item.cdn_url || item.url || item.file || item.image || item.src;
+            if (typeof url === "string" && url.trim()) { rawUrl = url; break; }
+          }
         }
       }
+      if (!rawUrl && typeof deal.imageUrl === "string" && deal.imageUrl.trim()) rawUrl = deal.imageUrl;
+      if (!rawUrl && typeof deal.image_url === "string" && deal.image_url.trim()) rawUrl = deal.image_url;
+      if (!rawUrl && typeof deal.cover_image === "string" && deal.cover_image.trim()) rawUrl = deal.cover_image;
+      if (!rawUrl && typeof deal.image === "string" && deal.image.trim()) rawUrl = deal.image;
     }
 
-    // String property fallbacks
-    if (typeof deal.imageUrl === "string" && deal.imageUrl.trim()) return deal.imageUrl;
-    if (typeof deal.image_url === "string" && deal.image_url.trim()) return deal.image_url;
-    if (typeof deal.cover_image === "string" && deal.cover_image.trim()) return deal.cover_image;
-    if (typeof deal.image === "string" && deal.image.trim()) return deal.image;
+    if (!rawUrl) {
+      const hashVal = String(deal?.id || 0).split("").reduce((acc, c) => acc + c.charCodeAt(0), 0);
+      const fallbacks = [
+        "https://images.unsplash.com/photo-1512917774080-9991f1c4c750?auto=format&fit=crop&w=600&q=70",
+        "https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?auto=format&fit=crop&w=600&q=70",
+        "https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&w=600&q=70",
+        "https://images.unsplash.com/photo-1580587771525-78b9dba3b914?auto=format&fit=crop&w=600&q=70",
+      ];
+      return fallbacks[hashVal % fallbacks.length];
+    }
 
-    const hashVal = String(deal.id || 0).split("").reduce((acc, c) => acc + c.charCodeAt(0), 0);
-    const fallbacks = [
-      "https://images.unsplash.com/photo-1512917774080-9991f1c4c750?auto=format&fit=crop&w=800&q=80",
-      "https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?auto=format&fit=crop&w=800&q=80",
-      "https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&w=800&q=80",
-      "https://images.unsplash.com/photo-1580587771525-78b9dba3b914?auto=format&fit=crop&w=800&q=80",
-    ];
-    return fallbacks[hashVal % fallbacks.length];
+    // Optimize Unsplash images for quick mobile loading
+    if (rawUrl.includes("unsplash.com") && !rawUrl.includes("w=600")) {
+      return rawUrl.replace(/w=\d+/, "w=600").replace(/q=\d+/, "q=70");
+    }
+
+    return rawUrl;
   })();
 
   const displayPrice = deal.price ?? deal.rent_monthly ?? deal.adr ?? 0;
@@ -113,19 +117,16 @@ export const PropertyCard: React.FC<PropertyCardProps> = ({
     `${deal.bedrooms || 3} bed, ${Number(deal.bathrooms || 2)} bath`;
 
   return (
-    <motion.article
+    <article
       onClick={() => onOpenProspectus(deal)}
-      whileHover={{ y: -4 }}
-      whileTap={{ scale: 0.98 }}
-      transition={{ duration: 0.2 }}
-      className={`card-gpu group relative rounded-3xl border shadow-xl overflow-hidden flex flex-col justify-between cursor-pointer transition-all duration-300 h-full w-full min-w-0 ${
+      className={`card-gpu group relative rounded-3xl border shadow-xl overflow-hidden flex flex-col justify-between cursor-pointer transition-transform duration-200 hover:-translate-y-1 active:scale-[0.99] h-full w-full min-w-0 ${
         isDark
           ? "bg-slate-900/90 border-slate-800 hover:border-blue-500/40 shadow-slate-950/40"
           : "bg-white border-slate-200 hover:border-blue-400 shadow-slate-200/50"
       }`}
     >
       {/* Property Image Container */}
-      <div className="relative h-64 sm:h-[19rem] w-full overflow-hidden bg-slate-900 shrink-0">
+      <div className="relative h-60 sm:h-72 w-full overflow-hidden bg-slate-900 shrink-0">
         <img
           src={coverImage}
           alt={deal.title}
@@ -134,52 +135,40 @@ export const PropertyCard: React.FC<PropertyCardProps> = ({
           className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 ease-out filter brightness-[0.92] group-hover:brightness-100"
           onError={(e) => {
             (e.target as HTMLImageElement).src =
-              "https://images.unsplash.com/photo-1512917774080-9991f1c4c750?auto=format&fit=crop&w=800&q=80";
+              "https://images.unsplash.com/photo-1512917774080-9991f1c4c750?auto=format&fit=crop&w=600&q=70";
           }}
         />
         <div className="absolute inset-0 bg-gradient-to-t from-slate-950/85 via-transparent to-black/35 opacity-90 group-hover:opacity-60 transition-opacity duration-300" />
 
         {/* Top Badges overlay */}
         <div className="absolute top-3.5 left-3.5 right-3.5 flex items-center justify-between z-10 gap-2 min-w-0">
-          <div className="px-3 py-1.5 bg-slate-900/85 backdrop-blur-md rounded-xl text-[10px] font-bold tracking-widest text-slate-100 border border-white/10 flex items-center gap-1.5 shadow-lg font-mono uppercase min-w-0">
+          <div className="px-3 py-1.5 bg-slate-900/85 rounded-xl text-[10px] font-bold tracking-widest text-slate-100 border border-white/10 flex items-center gap-1.5 shadow-lg font-mono uppercase min-w-0">
             <MapPin className="w-3 h-3 text-blue-400 shrink-0" />
             <span className="truncate text-white">{locationText}</span>
           </div>
 
           <div className="flex items-center gap-2 shrink-0">
-            <motion.button
+            <button
               type="button"
-              whileTap={{ scale: 0.8 }}
               onClick={(e) => {
                 e.stopPropagation();
                 onToggleFavorite(deal.id, e);
               }}
-              className="p-2 rounded-xl bg-slate-900/85 hover:bg-rose-950/60 backdrop-blur-md text-slate-300 hover:text-rose-400 border border-white/10 hover:border-rose-500/40 shadow-lg transition-colors duration-200 cursor-pointer"
+              className="p-2 rounded-xl bg-slate-900/85 hover:bg-rose-950/60 text-slate-300 hover:text-rose-400 border border-white/10 hover:border-rose-500/40 shadow-lg transition-colors duration-200 cursor-pointer active:scale-90"
               title={isFavorite ? "Remove from Saved" : "Save Property"}
             >
-              <AnimatePresence mode="wait" initial={false}>
-                <motion.span
-                  key={isFavorite ? "filled" : "empty"}
-                  initial={{ scale: 0.5, opacity: 0 }}
-                  animate={{ scale: 1, opacity: 1 }}
-                  exit={{ scale: 0.5, opacity: 0 }}
-                  transition={{ duration: 0.15 }}
-                  className="block"
-                >
-                  <Heart
-                    className={`w-4 h-4 transition-colors ${
-                      isFavorite ? "fill-rose-500 text-rose-500" : "text-white"
-                    }`}
-                  />
-                </motion.span>
-              </AnimatePresence>
-            </motion.button>
+              <Heart
+                className={`w-4 h-4 transition-colors ${
+                  isFavorite ? "fill-rose-500 text-rose-500" : "text-white"
+                }`}
+              />
+            </button>
           </div>
         </div>
 
         {/* Bottom Image Info Badges */}
         <div className="absolute bottom-3.5 left-3.5 right-3.5 z-10 flex items-center justify-between min-w-0 gap-2">
-          <div className="px-3 py-1.5 bg-slate-900/85 backdrop-blur-md border border-white/10 rounded-xl text-[10px] font-bold text-slate-200 tracking-wider font-mono flex items-center gap-2.5 shadow-lg min-w-0 truncate">
+          <div className="px-3 py-1.5 bg-slate-900/85 border border-white/10 rounded-xl text-[10px] font-bold text-slate-200 tracking-wider font-mono flex items-center gap-2.5 shadow-lg min-w-0 truncate">
             <span className="flex items-center gap-1.5 text-white shrink-0">
               <BedDouble className="w-3.5 h-3.5 text-blue-400" />
               {displayBeds}
@@ -195,7 +184,7 @@ export const PropertyCard: React.FC<PropertyCardProps> = ({
             )}
           </div>
 
-          <div className="flex items-center gap-1.5 px-3 py-1.5 bg-slate-900/85 backdrop-blur-md border border-emerald-500/30 rounded-xl text-[10px] font-bold text-emerald-400 font-mono shadow-lg shrink-0">
+          <div className="flex items-center gap-1.5 px-3 py-1.5 bg-slate-900/85 border border-emerald-500/30 rounded-xl text-[10px] font-bold text-emerald-400 font-mono shadow-lg shrink-0">
             <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" />
             <span className="text-emerald-400 uppercase tracking-widest">
               Verified
@@ -204,109 +193,130 @@ export const PropertyCard: React.FC<PropertyCardProps> = ({
         </div>
       </div>
 
-      {/* Card Content Body */}
+      {/* Property Details Content Body */}
       <div className="p-5 flex-1 flex flex-col justify-between space-y-4 min-w-0">
-        <div className="min-w-0">
-          <div className="flex justify-between items-start gap-4 mb-2.5 min-w-0">
-            <div className="space-y-1 min-w-0 flex-1">
-              <h3
-                className={`font-serif font-bold text-lg leading-tight transition-colors duration-200 truncate ${
-                  isDark
-                    ? "text-white group-hover:text-blue-400"
-                    : "text-slate-900 group-hover:text-blue-600"
-                }`}
-              >
-                {deal.title}
-              </h3>
+        <div>
+          <div className="flex items-start justify-between gap-3 mb-2">
+            <h3
+              className={`text-lg font-bold font-heading line-clamp-1 leading-snug ${
+                isDark ? "text-white" : "text-slate-900"
+              }`}
+            >
+              {deal.title}
+            </h3>
 
-              {/* Rating & Review info */}
-              <div className="flex flex-wrap items-center gap-2 text-[11px] font-mono uppercase tracking-wider">
-                <div className="flex items-center gap-1 font-bold text-amber-500 shrink-0">
-                  <Star className="w-3.5 h-3.5 fill-amber-400 stroke-amber-400" />
-                  <span>{Number(ratingValue).toFixed(2)}</span>
-                </div>
-                <span className="text-slate-400 shrink-0">•</span>
-                <span className="text-slate-400 shrink-0 font-medium">
-                  {reviewCount} reviews
-                </span>
-                {userRating && (
-                  <span className="ml-1 inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-amber-500/10 border border-amber-500/30 text-[9px] font-bold text-amber-500">
-                    Your Rating: {userRating.rating}★
-                  </span>
-                )}
-              </div>
-            </div>
-
-            <div className="text-right shrink-0">
-              <span className="text-[9px] font-bold text-slate-400 uppercase tracking-[0.15em] font-mono block mb-0.5">
-                MONTHLY RENT
-              </span>
-              <span className="font-mono font-bold text-lg text-blue-600 dark:text-blue-400 tracking-tight block">
-                ${Number(displayPrice).toLocaleString()}
-              </span>
+            <div className="px-2.5 py-1 bg-blue-500/10 border border-blue-500/20 text-blue-600 dark:text-blue-400 rounded-lg text-[10px] font-bold font-mono tracking-wider uppercase shrink-0">
+              {statusDisplay}
             </div>
           </div>
 
-          {/* Bio / Description display */}
+          {/* Rating & Review Bar */}
+          <div className="flex items-center gap-2 mb-3">
+            <div className="flex items-center gap-1 bg-amber-500/10 border border-amber-500/20 px-2.5 py-0.5 rounded-full text-amber-500 font-mono text-[10px] font-bold">
+              <Star className="w-3 h-3 fill-amber-400 text-amber-400" />
+              <span>{Number(ratingValue).toFixed(2)}</span>
+            </div>
+            <span className="text-[10px] text-slate-400 font-mono">
+              ({reviewCount} reviews)
+            </span>
+            {userRating && (
+              <span className="text-[9px] bg-blue-600 text-white font-mono px-2 py-0.5 rounded-md font-bold">
+                Your Rating
+              </span>
+            )}
+          </div>
+
+          {/* Property / Host Bio snippet */}
           <div
-            className={`mt-3 p-3 rounded-2xl border text-xs leading-relaxed transition-colors ${
+            className={`p-3 rounded-2xl border text-xs leading-relaxed line-clamp-2 ${
               isDark
                 ? "bg-slate-950/60 border-slate-800 text-slate-300"
-                : "bg-slate-50 border-slate-100 text-slate-700"
+                : "bg-slate-50 border-slate-200 text-slate-600"
             }`}
           >
-            <div className="flex items-center gap-1.5 text-[10px] font-mono font-bold uppercase tracking-widest text-blue-600 dark:text-blue-400 mb-1">
-              <UserCheck className="w-3 h-3 text-blue-500" />
-              <span>Property &amp; Host Bio</span>
+            <div className="flex items-center gap-1.5 text-[9px] font-bold font-mono text-blue-600 dark:text-blue-400 uppercase tracking-widest mb-1">
+              <UserCheck className="w-3 h-3" />
+              Host &amp; Property Bio
             </div>
-            <p className="line-clamp-2">{bioText}</p>
+            {bioText}
           </div>
         </div>
 
-        {/* Card Footer Actions */}
-        <div
-          className={`pt-3.5 border-t flex items-center justify-between gap-2 mt-auto min-w-0 ${
-            isDark ? "border-slate-800" : "border-slate-100"
-          }`}
-        >
-          <div className="flex items-center gap-1.5 text-[11px] font-mono truncate">
-            {activeListings.length > 0 ? (
-              <span
-                className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-lg border text-[10px] font-bold uppercase tracking-widest shrink-0 ${
-                  isDark
-                    ? "bg-slate-800/80 border-slate-700 text-slate-300"
-                    : "bg-slate-100 border-slate-200 text-slate-700"
-                }`}
-              >
-                <ShieldCheck className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400" />
-                {activeListings.length} Channels
-              </span>
-            ) : (
-              <span className="text-slate-400 text-[10px]">Turnkey Ready</span>
+        {/* Pricing & Call-to-action Footer */}
+        <div className="pt-3 border-t border-slate-200 dark:border-slate-800 space-y-3 min-w-0">
+          <div className="flex items-baseline justify-between">
+            <div>
+              <p className="text-[9px] font-mono font-bold text-slate-400 uppercase tracking-wider">
+                Monthly Lease
+              </p>
+              <p className="text-xl font-extrabold font-mono text-blue-600 dark:text-blue-400">
+                ${Number(displayPrice).toLocaleString()}
+                <span className="text-xs text-slate-400 font-normal font-sans">
+                  /mo
+                </span>
+              </p>
+            </div>
+
+            {deal.occupancy_rate && (
+              <div className="text-right">
+                <p className="text-[9px] font-mono font-bold text-slate-400 uppercase tracking-wider">
+                  Avg Occupancy
+                </p>
+                <p className="text-xs font-bold font-mono text-emerald-500">
+                  {deal.occupancy_rate}%
+                </p>
+              </div>
             )}
           </div>
 
-          <div className="flex items-center gap-2">
-            {onRate && (
-              <button
-                type="button"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onRate(deal, e);
-                }}
-                className="px-2.5 py-1.5 bg-amber-500/10 hover:bg-amber-500/20 text-amber-500 border border-amber-500/30 rounded-xl text-[10px] font-bold font-mono transition-colors cursor-pointer flex items-center gap-1"
-              >
-                <Star className="w-3 h-3 fill-amber-500" />
-                Rate
-              </button>
-            )}
+          <div
+            className={`p-2.5 rounded-2xl border flex items-center justify-between ${
+              isDark
+                ? "bg-slate-950/60 border-slate-800/80"
+                : "bg-slate-50 border-slate-200/80"
+            }`}
+          >
+            <div className="flex items-center gap-1.5 text-[11px] font-mono truncate">
+              {activeListings.length > 0 ? (
+                <span
+                  className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-lg border text-[10px] font-bold uppercase tracking-widest shrink-0 ${
+                    isDark
+                      ? "bg-slate-800/80 border-slate-700 text-slate-300"
+                      : "bg-slate-100 border-slate-200 text-slate-700"
+                  }`}
+                >
+                  <ShieldCheck className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400" />
+                  {activeListings.length} Channels
+                </span>
+              ) : (
+                <span className="text-slate-400 text-[10px]">Turnkey Ready</span>
+              )}
+            </div>
 
-            <span className="text-xs font-bold text-blue-600 dark:text-blue-400 group-hover:translate-x-0.5 transition-transform flex items-center gap-1">
-              View Prospectus
-            </span>
+            <div className="flex items-center gap-2">
+              {onRate && (
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onRate(deal, e);
+                  }}
+                  className="px-2.5 py-1.5 bg-amber-500/10 hover:bg-amber-500/20 text-amber-500 border border-amber-500/30 rounded-xl text-[10px] font-bold font-mono transition-colors cursor-pointer flex items-center gap-1 active:scale-95"
+                >
+                  <Star className="w-3 h-3 fill-amber-500" />
+                  Rate
+                </button>
+              )}
+
+              <span className="text-xs font-bold text-blue-600 dark:text-blue-400 group-hover:translate-x-0.5 transition-transform flex items-center gap-1">
+                View Prospectus
+              </span>
+            </div>
           </div>
         </div>
       </div>
-    </motion.article>
+    </article>
   );
-};
+});
+
+PropertyCard.displayName = "PropertyCard";
