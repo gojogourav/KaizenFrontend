@@ -2,8 +2,12 @@ import React from "react";
 import { motion, AnimatePresence } from "motion/react";
 import { Send, CheckCircle2 } from "lucide-react";
 import { useInquiryForm } from "../../hooks/useInquiryForm";
+import { useTheme } from "../../context/ThemeContext";
 
 export const InquiryForm: React.FC = () => {
+  const { theme } = useTheme();
+  const isDark = theme === "dark";
+
   const { form, updateField, submitted, submitting, error, submit, reset } =
     useInquiryForm();
 
@@ -19,14 +23,14 @@ export const InquiryForm: React.FC = () => {
           initial={{ scale: 0.5, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
           transition={{ type: "spring", stiffness: 300, damping: 16, delay: 0.1 }}
-          className="w-12 h-12 bg-emerald-950 text-emerald-400 rounded-full flex items-center justify-center mx-auto border border-emerald-500/40"
+          className="w-12 h-12 bg-emerald-500/10 text-emerald-500 rounded-full flex items-center justify-center mx-auto border border-emerald-500/30"
         >
           <CheckCircle2 className="w-6 h-6" aria-hidden="true" />
         </motion.div>
-        <h4 className="text-lg font-bold text-white">
+        <h4 className={`text-lg font-bold ${isDark ? "text-white" : "text-slate-900"}`}>
           Inquiry Received
         </h4>
-        <p className="text-xs text-slate-300 leading-relaxed max-w-md mx-auto">
+        <p className={`text-xs leading-relaxed max-w-md mx-auto ${isDark ? "text-slate-300" : "text-slate-600"}`}>
           Thank you! Our property acquisition specialist will review your
           request and reach out shortly.
         </p>
@@ -34,7 +38,11 @@ export const InquiryForm: React.FC = () => {
           whileHover={{ scale: 1.03 }}
           whileTap={{ scale: 0.97 }}
           onClick={reset}
-          className="mt-4 px-4 py-2 bg-white/10 hover:bg-white/20 text-white rounded-xl text-xs font-mono font-bold border border-white/20"
+          className={`mt-4 px-4 py-2 rounded-xl text-xs font-mono font-bold border transition-colors cursor-pointer ${
+            isDark
+              ? "bg-slate-800 hover:bg-slate-700 text-white border-slate-700"
+              : "bg-slate-100 hover:bg-slate-200 text-slate-800 border-slate-200"
+          }`}
         >
           Submit Another Request
         </motion.button>
@@ -59,7 +67,7 @@ export const InquiryForm: React.FC = () => {
             exit={{ opacity: 0, y: -8, height: 0 }}
             transition={{ duration: 0.25 }}
             role="alert"
-            className="p-3 bg-rose-950/80 border border-rose-500/50 text-rose-200 rounded-xl text-xs font-medium overflow-hidden"
+            className="p-3 bg-rose-500/15 border border-rose-500/40 text-rose-500 rounded-xl text-xs font-medium overflow-hidden"
           >
             {error}
           </motion.div>
@@ -80,7 +88,11 @@ export const InquiryForm: React.FC = () => {
             required
             value={form.name}
             onChange={(e) => updateField("name", e.target.value)}
-            className="w-full px-3.5 py-2.5 bg-[#141226] border border-white/10 rounded-xl text-white text-xs focus:outline-none focus:border-[#E04F33] transition-colors"
+            className={`w-full px-3.5 py-2.5 border rounded-xl text-xs focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors ${
+              isDark
+                ? "bg-slate-900 border-slate-800 text-white placeholder-slate-500"
+                : "bg-white border-slate-200 text-slate-900 placeholder-slate-400"
+            }`}
           />
         </div>
         <div>
@@ -96,7 +108,11 @@ export const InquiryForm: React.FC = () => {
             required
             value={form.email}
             onChange={(e) => updateField("email", e.target.value)}
-            className="w-full px-3.5 py-2.5 bg-[#141226] border border-white/10 rounded-xl text-white text-xs focus:outline-none focus:border-[#E04F33] transition-colors"
+            className={`w-full px-3.5 py-2.5 border rounded-xl text-xs focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors ${
+              isDark
+                ? "bg-slate-900 border-slate-800 text-white placeholder-slate-500"
+                : "bg-white border-slate-200 text-slate-900 placeholder-slate-400"
+            }`}
           />
         </div>
       </div>
@@ -113,7 +129,11 @@ export const InquiryForm: React.FC = () => {
             id="inq-intent"
             value={form.intent}
             onChange={(e) => updateField("intent", e.target.value)}
-            className="w-full px-3.5 py-2.5 bg-[#141226] border border-white/10 rounded-xl text-white text-xs focus:outline-none focus:border-[#E04F33] font-mono transition-colors"
+            className={`w-full px-3.5 py-2.5 border rounded-xl text-xs focus:outline-none focus:ring-2 focus:ring-blue-500 font-mono transition-colors cursor-pointer ${
+              isDark
+                ? "bg-slate-900 border-slate-800 text-white"
+                : "bg-white border-slate-200 text-slate-900"
+            }`}
           >
             <option value="Acquire Turnkey Lease Deal">
               Acquire Turnkey Lease Deal
@@ -140,7 +160,11 @@ export const InquiryForm: React.FC = () => {
             id="inq-market"
             value={form.preferredMarket}
             onChange={(e) => updateField("preferredMarket", e.target.value)}
-            className="w-full px-3.5 py-2.5 bg-[#141226] border border-white/10 rounded-xl text-white text-xs focus:outline-none focus:border-[#E04F33] font-mono transition-colors"
+            className={`w-full px-3.5 py-2.5 border rounded-xl text-xs focus:outline-none focus:ring-2 focus:ring-blue-500 font-mono transition-colors cursor-pointer ${
+              isDark
+                ? "bg-slate-900 border-slate-800 text-white"
+                : "bg-white border-slate-200 text-slate-900"
+            }`}
           >
             <option value="Pensacola, FL">Pensacola, FL</option>
             <option value="Scottsdale, AZ">Scottsdale, AZ</option>
@@ -162,7 +186,11 @@ export const InquiryForm: React.FC = () => {
           rows={3}
           value={form.message}
           onChange={(e) => updateField("message", e.target.value)}
-          className="w-full px-3.5 py-2.5 bg-[#141226] border border-white/10 rounded-xl text-white text-xs focus:outline-none focus:border-[#E04F33] transition-colors"
+          className={`w-full px-3.5 py-2.5 border rounded-xl text-xs focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors ${
+            isDark
+              ? "bg-slate-900 border-slate-800 text-white placeholder-slate-500"
+              : "bg-white border-slate-200 text-slate-900 placeholder-slate-400"
+          }`}
         />
       </div>
 
@@ -171,7 +199,7 @@ export const InquiryForm: React.FC = () => {
         whileTap={{ scale: submitting ? 1 : 0.98 }}
         type="submit"
         disabled={submitting}
-        className="w-full py-3 bg-[#E04F33] hover:bg-[#ED5B3F] text-white font-bold rounded-xl text-xs uppercase tracking-wider shadow-lg shadow-[#E04F33]/25 flex items-center justify-center gap-2 font-mono disabled:opacity-50"
+        className="w-full py-3 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl text-xs uppercase tracking-wider shadow-lg shadow-blue-600/25 flex items-center justify-center gap-2 font-mono disabled:opacity-50 cursor-pointer transition-all"
       >
         <Send className="w-4 h-4" aria-hidden="true" />
         {submitting ? "Submitting…" : "Submit Acquisition Inquiry"}

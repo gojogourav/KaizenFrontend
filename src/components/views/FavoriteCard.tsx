@@ -2,6 +2,7 @@ import React from "react";
 import { motion } from "motion/react";
 import { MapPin, Trash2, ArrowRight } from "lucide-react";
 import type { Favorite } from "../../types/database";
+import { useTheme } from "../../context/ThemeContext";
 
 interface FavoriteCardProps {
   favorite: Favorite;
@@ -14,6 +15,9 @@ export const FavoriteCard: React.FC<FavoriteCardProps> = ({
   onSelect,
   onRemove,
 }) => {
+  const { theme } = useTheme();
+  const isDark = theme === "dark";
+
   const prop = favorite.property;
   const imageUrl =
     (prop.images && prop.images.length > 0 && prop.images[0]) ||
@@ -32,10 +36,9 @@ export const FavoriteCard: React.FC<FavoriteCardProps> = ({
   return (
     <motion.div
       layout
-      initial={{ opacity: 0, y: 20, scale: 0.98 }}
-      animate={{ opacity: 1, y: 0, scale: 1 }}
-      exit={{ opacity: 0, scale: 0.92, transition: { duration: 0.2 } }}
-      transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0, scale: 0.92 }}
       whileHover={{ y: -6 }}
       role="button"
       tabIndex={0}
@@ -47,30 +50,32 @@ export const FavoriteCard: React.FC<FavoriteCardProps> = ({
           onSelect(prop);
         }
       }}
-      className="bg-white/5 hover:bg-white/10 rounded-2xl border border-white/10 hover:border-white/20 focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#E04F33] overflow-hidden shadow-xl transition-colors duration-300 group cursor-pointer flex flex-col justify-between apple-specular"
+      className={`rounded-2xl border overflow-hidden shadow-xl transition-all duration-300 group cursor-pointer flex flex-col justify-between ${
+        isDark
+          ? "bg-slate-900/80 border-slate-800 hover:border-blue-500/40 shadow-slate-950/40"
+          : "bg-white border-slate-200 hover:border-blue-400 shadow-slate-200/50"
+      }`}
     >
-      <div className="relative h-52 overflow-hidden bg-[#06040a]">
+      <div className="relative h-52 overflow-hidden bg-slate-950">
         <img
           src={imageUrl}
           alt=""
           className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
         />
         <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-black/30" />
-        <motion.button
+        <button
           type="button"
-          whileHover={{ scale: 1.08 }}
-          whileTap={{ scale: 0.85, rotate: -6 }}
           onClick={(e) => {
             e.stopPropagation();
             onRemove(prop.id);
           }}
           aria-label={`Remove ${prop.title} from favorites`}
-          className="absolute top-3.5 right-3.5 p-2.5 rounded-full bg-black/50 hover:bg-rose-950/90 text-rose-400 border border-white/20 backdrop-blur-md transition-colors cursor-pointer"
+          className="absolute top-3.5 right-3.5 p-2.5 rounded-full bg-slate-950/70 hover:bg-rose-950/90 text-rose-400 border border-white/20 backdrop-blur-md transition-colors cursor-pointer"
         >
           <Trash2 className="w-3.5 h-3.5" aria-hidden="true" />
-        </motion.button>
+        </button>
         {priceText && (
-          <div className="absolute bottom-3.5 left-3.5 bg-black/60 backdrop-blur-md border border-white/20 px-3 py-1 rounded-full text-[10px] font-bold text-white font-mono">
+          <div className="absolute bottom-3.5 left-3.5 bg-slate-950/70 backdrop-blur-md border border-white/20 px-3 py-1 rounded-full text-[10px] font-bold text-white font-mono">
             {priceText}
           </div>
         )}
@@ -79,21 +84,20 @@ export const FavoriteCard: React.FC<FavoriteCardProps> = ({
         <div>
           <h3
             id={headingId}
-            className="text-lg font-bold text-white group-hover:text-[#FF8A73] transition-colors"
+            className={`text-lg font-bold group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors ${
+              isDark ? "text-white" : "text-slate-900"
+            }`}
           >
             {prop.title}
           </h3>
-          <p className="text-xs text-slate-400 flex items-center gap-1 mt-1">
-            <MapPin className="w-3.5 h-3.5 text-[#E04F33]" aria-hidden="true" />
+          <p className="text-xs text-blue-600 dark:text-blue-400 flex items-center gap-1 mt-1 font-mono font-semibold">
+            <MapPin className="w-3.5 h-3.5" aria-hidden="true" />
             {location}
           </p>
         </div>
-        <div className="pt-2 flex items-center justify-between text-xs font-bold text-slate-300 group-hover:text-[#FF8A73] transition-colors">
+        <div className="pt-2 flex items-center justify-between text-xs font-bold text-blue-600 dark:text-blue-400 group-hover:translate-x-0.5 transition-transform">
           <span>View Villa Details</span>
-          <ArrowRight
-            className="w-4 h-4 group-hover:translate-x-1 transition-transform"
-            aria-hidden="true"
-          />
+          <ArrowRight className="w-4 h-4" aria-hidden="true" />
         </div>
       </div>
     </motion.div>

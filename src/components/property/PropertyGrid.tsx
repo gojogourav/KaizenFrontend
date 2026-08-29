@@ -25,28 +25,13 @@ const API_TO_STATUS: Record<string, string> = {
 interface PropertyGridProps {
   filters?: PropertyFilters;
   onOpenProspectus: (property: any) => void;
+  onRateDeal?: (property: any) => void;
 }
-
-const containerVariants = {
-  hidden: {},
-  visible: {
-    transition: { staggerChildren: 0.07, delayChildren: 0.04 },
-  },
-};
-
-const itemVariants = {
-  hidden: { opacity: 0, y: 28, scale: 0.98 },
-  visible: {
-    opacity: 1,
-    y: 0,
-    scale: 1,
-    transition: { duration: 0.5, ease: [0.16, 1, 0.3, 1] },
-  },
-};
 
 const PropertyGridContent: React.FC<PropertyGridProps> = ({
   filters,
   onOpenProspectus,
+  onRateDeal,
 }) => {
   const { isFavorite, toggleFavorite } = useAuth();
   const { data, loading, error } = useAsync<any>(
@@ -64,7 +49,7 @@ const PropertyGridContent: React.FC<PropertyGridProps> = ({
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         role="alert"
-        className="text-sm text-rose-300 text-center py-12"
+        className="text-sm text-rose-500 text-center py-12 font-medium"
       >
         {error}
       </motion.p>
@@ -76,9 +61,11 @@ const PropertyGridContent: React.FC<PropertyGridProps> = ({
     ...prop,
     images: prop.media?.length > 0
       ? prop.media.map((m: any) => m.cdn_url)
-      : ['https://images.unsplash.com/photo-1512917774080-9991f1c4c750?auto=format&fit=crop&w=800&q=80'],
+      : prop.images?.length > 0
+        ? prop.images
+        : ['https://images.unsplash.com/photo-1512917774080-9991f1c4c750?auto=format&fit=crop&w=800&q=80'],
     price: prop.rent_monthly ? Number(prop.rent_monthly) : prop.price,
-    bedsBaths: `${prop.bedrooms || 0} bed, ${Number(prop.bathrooms || 0)} bath`,
+    bedsBaths: prop.bedsBaths || `${prop.bedrooms || 0} bed, ${Number(prop.bathrooms || 0)} bath`,
     status: API_TO_STATUS[(prop.status ?? "active").toLowerCase()] ?? "AVAILABLE",
   }));
 
@@ -98,33 +85,40 @@ const PropertyGridContent: React.FC<PropertyGridProps> = ({
     );
   }
 
-    return (
-      <AnimatePresence mode="wait">
-        <motion.div
-          key={JSON.stringify(filters)}
-          role="list"
-          variants={containerVariants}
-          initial="hidden"
-          animate="visible"
-          // FIX: Max 2 columns, larger gaps on desktop
-          className="grid grid-cols-1 lg:grid-cols-2 gap-6 lg:gap-8 w-full min-w-0"
-        >
-          {properties.map((property) => (
-            <motion.div role="listitem" key={property.id} variants={itemVariants} className="min-w-0">
-              <PropertyCard
-                deal={property}
-                isFavorite={isFavorite(property.id)}
-                onToggleFavorite={(id, e) => {
-                  if (e) e.stopPropagation();
-                  toggleFavorite(id, property);
-                }}
-                onOpenProspectus={onOpenProspectus}
-              />
-            </motion.div>
-          ))}
-        </motion.div>
-      </AnimatePresence>
-    );
+  return (
+    <AnimatePresence mode="wait">
+      <motion.div
+        key={JSON.stringify(filters)}
+        role="list"
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ duration: 0.3 }}
+        className="grid grid-cols-1 lg:grid-cols-2 gap-6 lg:gap-8 w-full min-w-0"
+      >
+        {properties.map((property: any, idx: number) => (
+          <motion.div
+            role="listitem"
+            key={property.id}
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.4, delay: idx * 0.05 }}
+            className="min-w-0"
+          >
+            <PropertyCard
+              deal={property}
+              isFavorite={isFavorite(property.id)}
+              onToggleFavorite={(id, e) => {
+                if (e) e.stopPropagation();
+                toggleFavorite(id, property);
+              }}
+              onOpenProspectus={onOpenProspectus}
+              onRate={onRateDeal ? (deal) => onRateDeal(deal) : undefined}
+            />
+          </motion.div>
+        ))}
+      </motion.div>
+    </AnimatePresence>
+  );
 };
 
 export const PropertyGrid: React.FC<PropertyGridProps> = (props) => (

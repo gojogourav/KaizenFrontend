@@ -121,7 +121,7 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({ onExitAdmin }) => {
       <AdminAnimations />
       <div
         className="min-h-screen bg-[#0B0C10] text-slate-100 font-sans flex flex-col selection:bg-[#E04F33]/30 selection:text-white"
-        style={{ "--admin-header-height": "73px" } as React.CSSProperties}
+        style={{ "--admin-header-height": "73px" } as Record<string, string>}
       >
         <AdminHeader
           admin={user}

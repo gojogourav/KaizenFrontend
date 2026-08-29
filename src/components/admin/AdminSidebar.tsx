@@ -2,7 +2,7 @@ import React from "react";
 import { Sparkles, ChevronRight, X, type LucideIcon } from "lucide-react";
 
 export type AdminSection =
-  "properties" | "leads_bookings" | "blogs" | "stories" | "settings";
+  "properties" | "leads_bookings" | "payment_review" | "blogs" | "stories" | "settings";
 
 interface NavItem {
   id: AdminSection;

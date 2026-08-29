@@ -4,8 +4,9 @@ export interface User {
   email: string;
   first_name?: string;
   last_name?: string;
-  name?: string;        // ← add
-  avatarUrl?: string;   // ← add
+  name?: string;
+  avatarUrl?: string;
+  company?: string;
   is_staff?: boolean;
   is_superuser?: boolean;
 }
@@ -34,10 +35,18 @@ export interface Property {
   price?: number;
   adr?: number;
   images?: string[];
+  media?: any[];
   bedsBaths?: string;
   squareFeet?: string | number;
   furnished?: 'Yes' | 'No' | string;
   status?: 'AVAILABLE' | 'OCCUPIED' | 'UNDER CONTRACT' | 'UNDER REVIEW' | 'MAINTENANCE' | string;
+  bio?: string;
+  host_bio?: string;
+  rating?: number;
+  average_rating?: number;
+  rating_score?: number;
+  reviewCount?: number;
+  review_count?: number;
   listings?: PlatformListing[];
   owner?: string | number;
   created_at?: string;

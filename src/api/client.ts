@@ -51,10 +51,16 @@ export const api = {
   removeFavorite: (propertyId: string | number, opts?: RequestOpts) =>
     favoriteService.removeFavorite(propertyId, opts),
 
-  lockProperty: (propertyId: string | number, opts?: RequestOpts) =>
-    bookingService.lockProperty(propertyId, opts),
-  purchaseProperty: (bookingId: string | number, opts?: RequestOpts) =>
-    bookingService.purchaseBooking(bookingId, opts),
+  lockProperty: (
+    propertyId: string | number,
+    data?: { check_in?: string; check_out?: string },
+    opts?: RequestOpts,
+  ) => bookingService.lockProperty(propertyId, data || {}, opts),
+  submitPaymentReference: (
+    bookingId: string | number,
+    reference: string,
+    opts?: RequestOpts,
+  ) => bookingService.submitPaymentReference(bookingId, reference, opts),
   cancelBooking: (bookingId: string | number, opts?: RequestOpts) =>
     bookingService.cancelBooking(bookingId, opts),
   getMyBookings: (opts?: RequestOpts) => bookingService.getUserBookings(opts),

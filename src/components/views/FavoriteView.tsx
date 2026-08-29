@@ -7,14 +7,13 @@ import { EmptyState } from '../common/EmptyState';
 import { ErrorBoundary } from '../common/ErrorBoundary';
 import { PropertyCard } from '../property/PropertyCard';
 import type { Property } from '../../types/database';
+import { useTheme } from '../../context/ThemeContext';
 
 interface FavoritesViewProps {
   onSelectDeal: (property: Property) => void;
+  onRateDeal?: (property: Property) => void;
 }
 
-// Same mapping used in PropertyGrid — keep both in sync.
-// favorite.property comes back in the raw API shape (media/rent_monthly/etc.),
-// but PropertyCard expects the transformed shape (images/price/bedsBaths/status).
 const API_TO_STATUS: Record<string, string> = {
   active: "AVAILABLE",
   available: "AVAILABLE",
@@ -41,26 +40,7 @@ function toCardDeal(prop: any) {
   };
 }
 
-// Same stagger rhythm as PropertyGrid, so favorites feel like the same system
-const containerVariants = {
-  hidden: {},
-  visible: {
-    transition: { staggerChildren: 0.07, delayChildren: 0.04 },
-  },
-};
-
-const itemVariants = {
-  hidden: { opacity: 0, y: 28, scale: 0.98 },
-  visible: {
-    opacity: 1,
-    y: 0,
-    scale: 1,
-    transition: { duration: 0.5, ease: [0.16, 1, 0.3, 1] },
-  },
-  exit: { opacity: 0, scale: 0.92, transition: { duration: 0.2 } },
-};
-
-const FavoritesContent: React.FC<FavoritesViewProps> = ({ onSelectDeal }) => {
+const FavoritesContent: React.FC<FavoritesViewProps> = ({ onSelectDeal, onRateDeal }) => {
   const { favorites, favoritesLoading, toggleFavorite } = useAuth();
 
   if (favoritesLoading) {
@@ -77,25 +57,27 @@ const FavoritesContent: React.FC<FavoritesViewProps> = ({ onSelectDeal }) => {
         <EmptyState
           icon={Heart}
           title="No saved favorites yet"
-          description="Click the heart icon on any villa property card in the search grid to bookmark it here for quick access."
+          description="Click the heart icon on any property card in the catalog grid to bookmark it here."
         />
       </motion.div>
     );
   }
 
   return (
-    <motion.div
-      role="list"
-      variants={containerVariants}
-      initial="hidden"
-      animate="visible"
-      className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 p-6"
-    >
+    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-6 p-2">
       <AnimatePresence mode="popLayout">
         {favorites.map((favorite) => {
           const prop = toCardDeal(favorite.property);
           return (
-            <motion.div role="listitem" key={favorite.id} layout variants={itemVariants} exit="exit">
+            <motion.div
+              role="listitem"
+              key={favorite.id}
+              layout
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.9 }}
+              transition={{ duration: 0.3 }}
+            >
               <PropertyCard
                 deal={prop}
                 isFavorite
@@ -104,41 +86,47 @@ const FavoritesContent: React.FC<FavoritesViewProps> = ({ onSelectDeal }) => {
                   toggleFavorite(id, favorite.property);
                 }}
                 onOpenProspectus={() => onSelectDeal(favorite.property)}
+                onRate={onRateDeal ? () => onRateDeal(favorite.property) : undefined}
               />
             </motion.div>
           );
         })}
       </AnimatePresence>
-    </motion.div>
+    </div>
   );
 };
 
-export const FavoritesView: React.FC<FavoritesViewProps> = ({ onSelectDeal }) => (
-  <div className="space-y-6">
-    <motion.div
-      initial={{ opacity: 0, y: -8 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
-      className="flex items-center justify-between px-6"
-    >
-      <div>
-        <h2 className="text-2xl font-bold text-white font-heading flex items-center gap-2">
-          <motion.span
-            initial={{ scale: 0.6, rotate: -15 }}
-            animate={{ scale: 1, rotate: 0 }}
-            transition={{ type: 'spring', stiffness: 260, damping: 14, delay: 0.1 }}
-          >
-            <Heart className="w-6 h-6 text-rose-500 fill-rose-500" aria-hidden="true" />
-          </motion.span>
-          Saved <span className="text-[#E04F33]">Favorites</span>
-        </h2>
-        <p className="text-xs text-slate-400 mt-1 font-mono">
-          Your shortlisted arbitrage deals & luxury villas saved for review
-        </p>
-      </div>
-    </motion.div>
-    <ErrorBoundary fallbackTitle="Couldn't load your favorites">
-      <FavoritesContent onSelectDeal={onSelectDeal} />
-    </ErrorBoundary>
-  </div>
-);
+export const FavoritesView: React.FC<FavoritesViewProps> = ({ onSelectDeal, onRateDeal }) => {
+  const { theme } = useTheme();
+  const isDark = theme === "dark";
+
+  return (
+    <div className="space-y-6">
+      <motion.div
+        initial={{ opacity: 0, y: -8 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.4 }}
+        className="flex items-center justify-between px-2"
+      >
+        <div>
+          <h2 className={`text-2xl font-bold font-heading flex items-center gap-2 ${isDark ? "text-white" : "text-slate-900"}`}>
+            <motion.span
+              initial={{ scale: 0.6, rotate: -15 }}
+              animate={{ scale: 1, rotate: 0 }}
+              transition={{ type: 'spring', stiffness: 260, damping: 14, delay: 0.1 }}
+            >
+              <Heart className="w-6 h-6 text-rose-500 fill-rose-500" aria-hidden="true" />
+            </motion.span>
+            Saved <span className="text-blue-600 dark:text-blue-400">Favorites</span>
+          </h2>
+          <p className="text-xs text-blue-600 dark:text-blue-400 mt-1 font-mono font-semibold">
+            Your shortlisted arbitrage deals & luxury villas saved for review
+          </p>
+        </div>
+      </motion.div>
+      <ErrorBoundary fallbackTitle="Couldn't load your favorites">
+        <FavoritesContent onSelectDeal={onSelectDeal} onRateDeal={onRateDeal} />
+      </ErrorBoundary>
+    </div>
+  );
+};
